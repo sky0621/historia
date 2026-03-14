@@ -1,4 +1,3 @@
-import type { Route } from "next";
 import Link from "next/link";
 
 type ListingPageProps = {
@@ -7,7 +6,7 @@ type ListingPageProps = {
   columns: string[];
   rows: string[][];
   primaryAction: {
-    href: Route;
+    href: string;
     label: string;
   };
 };

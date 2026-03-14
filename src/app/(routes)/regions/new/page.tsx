@@ -1,10 +1,13 @@
-import { PlaceholderEditor } from "@/components/forms/placeholder-editor";
+import { RegionForm } from "@/features/regions/components/region-form";
+import { getRegionOptions } from "@/server/services/regions";
 
 export default function NewRegionPage() {
   return (
-    <PlaceholderEditor
+    <RegionForm
       title="地域作成"
-      description="地域フォームは Sprint 2 で実装します。"
+      description="地域名、親地域、別名、説明、メモを登録します。"
+      submitLabel="地域を作成"
+      parentOptions={getRegionOptions()}
     />
   );
 }

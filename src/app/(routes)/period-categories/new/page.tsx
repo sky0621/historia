@@ -1,10 +1,11 @@
-import { PlaceholderEditor } from "@/components/forms/placeholder-editor";
+import { PeriodCategoryForm } from "@/features/periods/components/period-category-form";
 
 export default function NewPeriodCategoryPage() {
   return (
-    <PlaceholderEditor
+    <PeriodCategoryForm
       title="時代区分カテゴリ作成"
-      description="カテゴリフォームは Sprint 2 で実装します。"
+      description="時代区分の分類軸を登録します。"
+      submitLabel="カテゴリを作成"
     />
   );
 }

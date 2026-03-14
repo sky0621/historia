@@ -1,4 +1,3 @@
-import type { Route } from "next";
 import Link from "next/link";
 
 const navigation = [
@@ -11,7 +10,7 @@ const navigation = [
   { href: "/religions", label: "宗教" },
   { href: "/sects", label: "宗派" },
   { href: "/regions", label: "地域" }
-] as const satisfies ReadonlyArray<{ href: Route; label: string }>;
+] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
