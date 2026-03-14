@@ -89,8 +89,20 @@ export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
                       {period.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-4">{period.categoryName}</td>
-                  <td className="px-5 py-4">{period.polityName ?? period.regionLabel ?? "-"}</td>
+                  <td className="px-5 py-4">
+                    <Link href={`/period-categories/${period.categoryId}`} className="underline-offset-4 hover:underline">
+                      {period.categoryName}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-4">
+                    {period.polityId && period.polityName ? (
+                      <Link href={`/polities/${period.polityId}`} className="underline-offset-4 hover:underline">
+                        {period.polityName}
+                      </Link>
+                    ) : (
+                      period.regionLabel ?? "-"
+                    )}
+                  </td>
                   <td className="px-5 py-4">{period.timeLabel}</td>
                 </tr>
               ))

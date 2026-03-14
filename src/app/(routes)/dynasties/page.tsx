@@ -90,7 +90,11 @@ export default async function DynastiesPage({ searchParams }: DynastiesPageProps
                       {dynasty.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-4">{dynasty.polityName}</td>
+                  <td className="px-5 py-4">
+                    <Link href={`/polities/${dynasty.polityId}`} className="underline-offset-4 hover:underline">
+                      {dynasty.polityName}
+                    </Link>
+                  </td>
                   <td className="px-5 py-4">{dynasty.timeLabel}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{dynasty.regionNames.join(", ") || "-"}</td>
                 </tr>

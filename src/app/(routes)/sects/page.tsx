@@ -99,7 +99,11 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
                       {sect.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-4">{sect.religionName}</td>
+                  <td className="px-5 py-4">
+                    <Link href={`/religions/${sect.religionId}`} className="underline-offset-4 hover:underline">
+                      {sect.religionName}
+                    </Link>
+                  </td>
                   <td className="px-5 py-4">{sect.timeLabel}</td>
                   <td className="px-5 py-4">{sect.founderNames.join(", ") || "-"}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{sect.regionNames.join(", ") || "-"}</td>
