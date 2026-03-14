@@ -47,6 +47,13 @@ type ReligionListFilters = {
   hasFounders?: boolean;
 };
 
+type SectListFilters = {
+  query?: string;
+  religionId?: number;
+  regionId?: number;
+  hasFounders?: boolean;
+};
+
 export function getReligionListView(filters: ReligionListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const religions = listReligions();
@@ -91,8 +98,8 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
     );
 }
 
-export function getSectListView(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+export function getSectListView(filters: SectListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const sects = listSects();
   const religions = listReligions();
   const regions = listRegions();
@@ -108,15 +115,33 @@ export function getSectListView(query?: string) {
       ...sect,
       religionName: religionNameById.get(sect.religionId) ?? "不明",
       timeLabel: formatStoredTime("time", sect),
+      religionId: sect.religionId,
       regionNames: regionLinks
         .filter((link) => link.sectId === sect.id)
         .map((link) => regionNameById.get(link.regionId))
         .filter((name): name is string => Boolean(name)),
+      regionIds: regionLinks.filter((link) => link.sectId === sect.id).map((link) => link.regionId),
       founderNames: founderLinks
         .filter((link) => link.sectId === sect.id)
         .map((link) => personNameById.get(link.personId))
-        .filter((name): name is string => Boolean(name))
+        .filter((name): name is string => Boolean(name)),
+      founderIds: founderLinks.filter((link) => link.sectId === sect.id).map((link) => link.personId)
     }))
+    .filter((sect) => {
+      if (filters.religionId && sect.religionId !== filters.religionId) {
+        return false;
+      }
+
+      if (filters.regionId && !sect.regionIds.includes(filters.regionId)) {
+        return false;
+      }
+
+      if (filters.hasFounders && sect.founderIds.length === 0) {
+        return false;
+      }
+
+      return true;
+    })
     .filter((sect) =>
       matchesQuery(
         [sect.name, sect.aliases, sect.description, sect.note, sect.religionName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
