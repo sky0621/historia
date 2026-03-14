@@ -75,43 +75,46 @@ export function getEventsListView(filters: EventListFilters = {}) {
 
   return events
     .map((event) => {
-      const personNames = links.personLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => peopleById.get(link.personId))
-        .filter((name): name is string => Boolean(name));
-      const polityNames = links.polityLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => politiesById.get(link.polityId))
-        .filter((name): name is string => Boolean(name));
-      const dynastyNames = links.dynastyLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => dynastiesById.get(link.dynastyId))
-        .filter((name): name is string => Boolean(name));
-      const periodNames = links.periodLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => periodsById.get(link.periodId))
-        .filter((name): name is string => Boolean(name));
-      const religionNames = links.religionLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => religionsById.get(link.religionId))
-        .filter((name): name is string => Boolean(name));
-      const sectNames = links.sectLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => sectsById.get(link.sectId))
-        .filter((name): name is string => Boolean(name));
-      const regionNames = links.regionLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => regionsById.get(link.regionId))
-        .filter((name): name is string => Boolean(name));
-      const tagNames = links.tagLinks
-        .filter((link) => link.eventId === event.id)
-        .map((link) => tagsById.get(link.tagId))
-        .filter((name): name is string => Boolean(name));
+      const relationSummaryItems = [
+        ...links.personLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "people" as const, id: link.personId, name: peopleById.get(link.personId) }))
+          .filter((item): item is { type: "people"; id: number; name: string } => Boolean(item.name)),
+        ...links.polityLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "polities" as const, id: link.polityId, name: politiesById.get(link.polityId) }))
+          .filter((item): item is { type: "polities"; id: number; name: string } => Boolean(item.name)),
+        ...links.dynastyLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "dynasties" as const, id: link.dynastyId, name: dynastiesById.get(link.dynastyId) }))
+          .filter((item): item is { type: "dynasties"; id: number; name: string } => Boolean(item.name)),
+        ...links.periodLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "periods" as const, id: link.periodId, name: periodsById.get(link.periodId) }))
+          .filter((item): item is { type: "periods"; id: number; name: string } => Boolean(item.name)),
+        ...links.religionLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "religions" as const, id: link.religionId, name: religionsById.get(link.religionId) }))
+          .filter((item): item is { type: "religions"; id: number; name: string } => Boolean(item.name)),
+        ...links.sectLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "sects" as const, id: link.sectId, name: sectsById.get(link.sectId) }))
+          .filter((item): item is { type: "sects"; id: number; name: string } => Boolean(item.name)),
+        ...links.regionLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "regions" as const, id: link.regionId, name: regionsById.get(link.regionId) }))
+          .filter((item): item is { type: "regions"; id: number; name: string } => Boolean(item.name)),
+        ...links.tagLinks
+          .filter((link) => link.eventId === event.id)
+          .map((link) => ({ type: "tags" as const, id: link.tagId, name: tagsById.get(link.tagId) }))
+          .filter((item): item is { type: "tags"; id: number; name: string } => Boolean(item.name))
+      ].slice(0, 4);
 
       return {
         ...event,
         timeLabel: formatEventTime(event),
-        relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames, ...regionNames, ...tagNames].slice(0, 4).join(", "),
+        relationSummaryItems,
+        relationSummary: relationSummaryItems.map((item) => item.name).join(", "),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
         dynastyIds: links.dynastyLinks.filter((link) => link.eventId === event.id).map((link) => link.dynastyId),

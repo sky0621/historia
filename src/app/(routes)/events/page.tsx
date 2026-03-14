@@ -197,7 +197,20 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   </td>
                   <td className="px-5 py-4">{event.timeLabel}</td>
                   <td className="px-5 py-4">{event.eventType}</td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{event.relationSummary || "-"}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {event.relationSummaryItems.length === 0 ? (
+                      "-"
+                    ) : (
+                      event.relationSummaryItems.map((item, index) => (
+                        <span key={`${event.id}-${item.type}-${item.id}`}>
+                          {index > 0 ? ", " : null}
+                          <Link href={`/${item.type}/${item.id}`} className="underline-offset-4 hover:underline">
+                            {item.name}
+                          </Link>
+                        </span>
+                      ))
+                    )}
+                  </td>
                 </tr>
               ))
             )}
