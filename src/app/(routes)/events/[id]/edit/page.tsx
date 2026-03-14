@@ -43,6 +43,16 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         })),
         conflictOutcome: view.conflictOutcome
           ? {
+              winnerParticipants: view.conflictOutcome.winnerParticipants.map((participant) => ({
+                side: "winner" as const,
+                participantType: participant.participantType,
+                participantId: participant.participantId
+              })),
+              loserParticipants: view.conflictOutcome.loserParticipants.map((participant) => ({
+                side: "loser" as const,
+                participantType: participant.participantType,
+                participantId: participant.participantId
+              })),
               winnerSummary: view.conflictOutcome.winnerSummary ?? "",
               loserSummary: view.conflictOutcome.loserSummary ?? "",
               settlementSummary: view.conflictOutcome.settlementSummary ?? "",

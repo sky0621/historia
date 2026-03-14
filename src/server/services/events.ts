@@ -8,12 +8,14 @@ import {
   deleteEvent,
   deleteEventLinksAndRelations,
   getEventById,
+  getConflictOutcomeParticipantsByEventIds,
   getConflictOutcomesByEventIds,
   getConflictParticipantsByEventIds,
   getEventLinks,
   getEventRelationsByEventIds,
   listEvents,
   replaceConflictOutcome,
+  replaceConflictOutcomeParticipants,
   replaceConflictParticipants,
   replaceEventLinks,
   replaceEventRelations,
@@ -124,6 +126,7 @@ export function getEventDetailView(id: number) {
   const relations = getEventRelationsByEventIds([id]);
   const participants = getConflictParticipantsByEventIds([id]);
   const outcomes = getConflictOutcomesByEventIds([id]);
+  const outcomeParticipants = getConflictOutcomeParticipantsByEventIds([id]);
   const options = getEventFormOptions();
   const eventNameById = new Map(options.events.map((item) => [item.id, item.name]));
   const participantNameByType = {
@@ -162,7 +165,31 @@ export function getEventDetailView(id: number) {
           participant.participantId
         ) ?? `#${participant.participantId}`
     })),
-    conflictOutcome: outcomes[0] ?? null,
+    conflictOutcome: outcomes[0]
+      ? {
+          ...outcomes[0],
+          winnerParticipants: outcomeParticipants
+            .filter((participant) => participant.eventId === id && participant.side === "winner")
+            .map((participant) => ({
+              ...participant,
+              participantType: participant.participantType as "person" | "polity" | "religion" | "sect",
+              participantName:
+                participantNameByType[participant.participantType as "person" | "polity" | "religion" | "sect"]?.get(
+                  participant.participantId
+                ) ?? `#${participant.participantId}`
+            })),
+          loserParticipants: outcomeParticipants
+            .filter((participant) => participant.eventId === id && participant.side === "loser")
+            .map((participant) => ({
+              ...participant,
+              participantType: participant.participantType as "person" | "polity" | "religion" | "sect",
+              participantName:
+                participantNameByType[participant.participantType as "person" | "polity" | "religion" | "sect"]?.get(
+                  participant.participantId
+                ) ?? `#${participant.participantId}`
+            }))
+        }
+      : null,
     defaultTimeExpression: extractTimeExpression("time", event),
     defaultStartTimeExpression: extractStandaloneTime("start", event),
     defaultEndTimeExpression: extractStandaloneTime("end", event),
@@ -230,6 +257,18 @@ export function createEventFromInput(input: EventInput) {
         : null
     );
 
+    replaceConflictOutcomeParticipants(
+      eventId,
+      input.conflictOutcome
+        ? [...input.conflictOutcome.winnerParticipants, ...input.conflictOutcome.loserParticipants].map((participant) => ({
+            eventId,
+            side: participant.side,
+            participantType: participant.participantType,
+            participantId: participant.participantId
+          }))
+        : []
+    );
+
     return eventId;
   });
 }
@@ -287,6 +326,18 @@ export function updateEventFromInput(id: number, input: EventInput) {
             note: nullable(input.conflictOutcome.note)
           }
         : null
+    );
+
+    replaceConflictOutcomeParticipants(
+      id,
+      input.conflictOutcome
+        ? [...input.conflictOutcome.winnerParticipants, ...input.conflictOutcome.loserParticipants].map((participant) => ({
+            eventId: id,
+            side: participant.side,
+            participantType: participant.participantType,
+            participantId: participant.participantId
+          }))
+        : []
     );
   });
 }

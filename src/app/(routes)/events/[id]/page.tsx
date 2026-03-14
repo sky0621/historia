@@ -101,11 +101,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">勝者側</dt>
-              <dd className="mt-1 whitespace-pre-wrap">{view.conflictOutcome?.winnerSummary ?? "-"}</dd>
+              <dd className="mt-1 whitespace-pre-wrap">
+                {view.conflictOutcome?.winnerParticipants.length ? (
+                  <div className="space-y-2">
+                    {view.conflictOutcome.winnerParticipants.map((participant) => (
+                      <div key={`winner-${participant.id}`} className="rounded-2xl border border-[var(--border)] px-3 py-2">
+                        {renderParticipantLink(participant)}
+                      </div>
+                    ))}
+                    {view.conflictOutcome.winnerSummary ? <div className="text-[var(--muted)]">{view.conflictOutcome.winnerSummary}</div> : null}
+                  </div>
+                ) : (
+                  view.conflictOutcome?.winnerSummary ?? "-"
+                )}
+              </dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">敗者側</dt>
-              <dd className="mt-1 whitespace-pre-wrap">{view.conflictOutcome?.loserSummary ?? "-"}</dd>
+              <dd className="mt-1 whitespace-pre-wrap">
+                {view.conflictOutcome?.loserParticipants.length ? (
+                  <div className="space-y-2">
+                    {view.conflictOutcome.loserParticipants.map((participant) => (
+                      <div key={`loser-${participant.id}`} className="rounded-2xl border border-[var(--border)] px-3 py-2">
+                        {renderParticipantLink(participant)}
+                      </div>
+                    ))}
+                    {view.conflictOutcome.loserSummary ? <div className="text-[var(--muted)]">{view.conflictOutcome.loserSummary}</div> : null}
+                  </div>
+                ) : (
+                  view.conflictOutcome?.loserSummary ?? "-"
+                )}
+              </dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">結果要約</dt>

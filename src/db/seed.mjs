@@ -611,6 +611,18 @@ function runSeed() {
     settlement_summary: "1099年にエルサレムが攻略され、十字軍国家が成立した。",
     note: "その後の十字軍運動の端緒となった。"
   });
+  insert("conflict_outcome_participants", {
+    event_id: eventIds.crusade,
+    side: "winner",
+    participant_type: "religion",
+    participant_id: religionIds.christianity
+  });
+  insert("conflict_outcome_participants", {
+    event_id: eventIds.crusade,
+    side: "winner",
+    participant_type: "polity",
+    participant_id: polityIds.france
+  });
 
   insert("conflict_participants", {
     event_id: eventIds.onin,
@@ -632,6 +644,12 @@ function runSeed() {
     loser_summary: "室町幕府の統治秩序",
     settlement_summary: "京都は荒廃し、室町幕府の権威は大きく低下した。",
     note: "戦国時代への移行を促した。"
+  });
+  insert("conflict_outcome_participants", {
+    event_id: eventIds.onin,
+    side: "loser",
+    participant_type: "polity",
+    participant_id: polityIds.japan
   });
 
   console.log(`Seeded historia database: ${resolvedDatabasePath}`);

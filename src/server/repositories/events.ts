@@ -1,6 +1,7 @@
 import { asc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  conflictOutcomeParticipants,
   conflictOutcomes,
   conflictParticipants,
   eventDynastyLinks,
@@ -18,6 +19,7 @@ export type EventInsert = typeof events.$inferInsert;
 export type EventRelationInsert = typeof eventRelations.$inferInsert;
 export type ConflictParticipantInsert = typeof conflictParticipants.$inferInsert;
 export type ConflictOutcomeInsert = typeof conflictOutcomes.$inferInsert;
+export type ConflictOutcomeParticipantInsert = typeof conflictOutcomeParticipants.$inferInsert;
 
 export function listEvents() {
   return db.select().from(events).orderBy(asc(events.title)).all();
@@ -107,6 +109,14 @@ export function replaceConflictOutcome(eventId: number, outcome: ConflictOutcome
   }
 }
 
+export function replaceConflictOutcomeParticipants(eventId: number, participants: ConflictOutcomeParticipantInsert[]) {
+  db.delete(conflictOutcomeParticipants).where(eq(conflictOutcomeParticipants.eventId, eventId)).run();
+
+  if (participants.length > 0) {
+    db.insert(conflictOutcomeParticipants).values(participants).run();
+  }
+}
+
 export function getEventLinks(eventIds: number[]) {
   if (eventIds.length === 0) {
     return {
@@ -172,6 +182,18 @@ export function getConflictOutcomesByEventIds(eventIds: number[]) {
     .all();
 }
 
+export function getConflictOutcomeParticipantsByEventIds(eventIds: number[]) {
+  if (eventIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(conflictOutcomeParticipants)
+    .where(inArray(conflictOutcomeParticipants.eventId, eventIds))
+    .all();
+}
+
 export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventPersonLinks).where(eq(eventPersonLinks.eventId, eventId)).run();
   db.delete(eventPolityLinks).where(eq(eventPolityLinks.eventId, eventId)).run();
@@ -183,4 +205,5 @@ export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventRelations).where(or(eq(eventRelations.fromEventId, eventId), eq(eventRelations.toEventId, eventId))).run();
   db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
   db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
+  db.delete(conflictOutcomeParticipants).where(eq(conflictOutcomeParticipants.eventId, eventId)).run();
 }

@@ -11,6 +11,12 @@ export const conflictParticipantSchema = z.object({
   note: z.string().trim().optional()
 });
 
+export const conflictOutcomeParticipantSchema = z.object({
+  side: z.enum(["winner", "loser"]),
+  participantType: z.enum(["polity", "person", "religion", "sect"]),
+  participantId: z.number().int().positive()
+});
+
 export const eventRelationSchema = z.object({
   toEventId: z.number().int().positive(),
   relationType: z.enum(["before", "after", "cause", "related"])
@@ -34,6 +40,8 @@ export const eventSchema = z.object({
   conflictParticipants: z.array(conflictParticipantSchema).default([]),
   conflictOutcome: z
     .object({
+      winnerParticipants: z.array(conflictOutcomeParticipantSchema).default([]),
+      loserParticipants: z.array(conflictOutcomeParticipantSchema).default([]),
       winnerSummary: z.string().trim().optional(),
       loserSummary: z.string().trim().optional(),
       settlementSummary: z.string().trim().optional(),
@@ -122,19 +130,57 @@ function parseConflictOutcome(formData: FormData) {
   const winnerSummary = formData.get("conflictOutcome.winnerSummary");
   const loserSummary = formData.get("conflictOutcome.loserSummary");
   const note = formData.get("conflictOutcome.note");
+  const winnerParticipants = parseConflictOutcomeParticipants(formData.getAll("conflictOutcome.winnerParticipants"), "winner");
+  const loserParticipants = parseConflictOutcomeParticipants(formData.getAll("conflictOutcome.loserParticipants"), "loser");
   const normalizedWinner = typeof winnerSummary === "string" ? winnerSummary.trim() : "";
   const normalizedLoser = typeof loserSummary === "string" ? loserSummary.trim() : "";
   const normalizedSettlement = typeof settlementSummary === "string" ? settlementSummary.trim() : "";
   const normalizedNote = typeof note === "string" ? note.trim() : "";
 
-  if (!normalizedWinner && !normalizedLoser && !normalizedSettlement && !normalizedNote) {
+  if (
+    winnerParticipants.length === 0 &&
+    loserParticipants.length === 0 &&
+    !normalizedWinner &&
+    !normalizedLoser &&
+    !normalizedSettlement &&
+    !normalizedNote
+  ) {
     return undefined;
   }
 
   return {
+    winnerParticipants,
+    loserParticipants,
     winnerSummary: normalizedWinner || undefined,
     loserSummary: normalizedLoser || undefined,
     settlementSummary: normalizedSettlement || undefined,
     note: normalizedNote || undefined
   };
+}
+
+function parseConflictOutcomeParticipants(values: FormDataEntryValue[], side: "winner" | "loser") {
+  return values
+    .map((value) => {
+      if (typeof value !== "string") {
+        return null;
+      }
+
+      const [participantType, rawParticipantId] = value.split(":");
+      const participantId = Number(rawParticipantId);
+
+      if (
+        !["polity", "person", "religion", "sect"].includes(participantType) ||
+        !Number.isFinite(participantId) ||
+        participantId <= 0
+      ) {
+        return null;
+      }
+
+      return {
+        side,
+        participantType: participantType as "polity" | "person" | "religion" | "sect",
+        participantId
+      };
+    })
+    .filter((item): item is z.infer<typeof conflictOutcomeParticipantSchema> => item !== null);
 }

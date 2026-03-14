@@ -13,6 +13,11 @@ type ParticipantDefault = {
   role: "attacker" | "defender" | "leader" | "ally" | "other";
   note: string;
 };
+type OutcomeParticipantDefault = {
+  side: "winner" | "loser";
+  participantType: "polity" | "person" | "religion" | "sect";
+  participantId: number;
+};
 
 type Props = {
   title: string;
@@ -46,6 +51,8 @@ type Props = {
     relations: RelationDefault[];
     conflictParticipants: ParticipantDefault[];
     conflictOutcome?: {
+      winnerParticipants: OutcomeParticipantDefault[];
+      loserParticipants: OutcomeParticipantDefault[];
       winnerSummary: string;
       loserSummary: string;
       settlementSummary: string;
@@ -68,15 +75,26 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
       return defaultValues?.conflictParticipants[index]?.participantType ?? "polity";
     })
   );
+  const [participantIds, setParticipantIds] = useState<Array<number>>(
+    Array.from({ length: Math.max(defaultValues?.conflictParticipants.length ?? 0, 1) }, (_, index) => {
+      return defaultValues?.conflictParticipants[index]?.participantId ?? 0;
+    })
+  );
   const isConflictEvent = eventType !== "general";
 
   const addParticipant = () => {
     setParticipantCount((count) => count + 1);
     setParticipantTypes((current) => [...current, "polity"]);
+    setParticipantIds((current) => [...current, 0]);
   };
 
   const updateParticipantType = (index: number, value: ParticipantDefault["participantType"]) => {
     setParticipantTypes((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
+    setParticipantIds((current) => current.map((item, itemIndex) => (itemIndex === index ? 0 : item)));
+  };
+
+  const updateParticipantId = (index: number, value: number) => {
+    setParticipantIds((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
   };
 
   return (
@@ -242,7 +260,8 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                           <span>対象</span>
                           <select
                             name={`participants.${index}.participantId`}
-                            defaultValue={participant?.participantId ?? ""}
+                            value={participantIds[index] > 0 ? String(participantIds[index]) : ""}
+                            onChange={(event) => updateParticipantId(index, Number(event.target.value) || 0)}
                             className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
                           >
                             <option value="">未設定</option>
@@ -283,6 +302,20 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
 
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-[var(--muted)]">結果要約</h3>
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <OutcomeParticipantSelection
+                    label="勝者側参加勢力"
+                    name="conflictOutcome.winnerParticipants"
+                    participants={buildOutcomeParticipantOptions(participantTypes, participantIds, options)}
+                    selectedValues={toSelectedOutcomeValues(defaultValues?.conflictOutcome?.winnerParticipants ?? [])}
+                  />
+                  <OutcomeParticipantSelection
+                    label="敗者側参加勢力"
+                    name="conflictOutcome.loserParticipants"
+                    participants={buildOutcomeParticipantOptions(participantTypes, participantIds, options)}
+                    selectedValues={toSelectedOutcomeValues(defaultValues?.conflictOutcome?.loserParticipants ?? [])}
+                  />
+                </div>
                 <div className="grid gap-4">
                   <label className="grid gap-2 text-sm">
                     <span>勝者側</span>
@@ -347,6 +380,71 @@ function getParticipantOptions(
     default:
       return options.polities;
   }
+}
+
+function buildOutcomeParticipantOptions(
+  participantTypes: Array<ParticipantDefault["participantType"]>,
+  participantIds: number[],
+  options: Props["options"]
+) {
+  return participantTypes
+    .map((participantType, index) => {
+      const participantId = participantIds[index] ?? 0;
+      if (participantId <= 0) {
+        return null;
+      }
+
+      const option = getParticipantOptions(participantType, options).find((item) => item.id === participantId);
+      if (!option) {
+        return null;
+      }
+
+      return {
+        value: `${participantType}:${participantId}`,
+        label: option.name
+      };
+    })
+    .filter((item, index, values): item is { value: string; label: string } => {
+      if (!item) {
+        return false;
+      }
+
+      return values.findIndex((candidate) => candidate?.value === item.value) === index;
+    });
+}
+
+function toSelectedOutcomeValues(values: OutcomeParticipantDefault[]) {
+  return values.map((value) => `${value.participantType}:${value.participantId}`);
+}
+
+function OutcomeParticipantSelection({
+  label,
+  name,
+  participants,
+  selectedValues
+}: {
+  label: string;
+  name: string;
+  participants: Array<{ value: string; label: string }>;
+  selectedValues: string[];
+}) {
+  return (
+    <fieldset className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
+      <legend className="px-2 text-sm font-semibold text-[var(--muted)]">{label}</legend>
+      <div className="mt-3 grid gap-3">
+        {participants.length === 0 ? (
+          <p className="text-sm text-[var(--muted)]">先に参加勢力を選択してください。</p>
+        ) : (
+          participants.map((participant) => (
+            <label key={participant.value} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+              <input type="checkbox" name={name} value={participant.value} defaultChecked={selectedValues.includes(participant.value)} />
+              {participant.label}
+            </label>
+          ))
+        )}
+      </div>
+    </fieldset>
+  );
 }
 
 function SelectionGroup({
