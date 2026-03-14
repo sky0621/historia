@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPeopleListView } from "@/server/services/people";
+import { getPeopleListView, getPersonFormOptions } from "@/server/services/people";
 
 type PeoplePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -8,7 +8,13 @@ type PeoplePageProps = {
 export default async function PeoplePage({ searchParams }: PeoplePageProps) {
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
-  const people = getPeopleListView(query);
+  const regionId = getNumericParam(params.regionId);
+  const religionId = getNumericParam(params.religionId);
+  const sectId = getNumericParam(params.sectId);
+  const periodId = getNumericParam(params.periodId);
+  const hasRoles = getSingleParam(params.hasRoles) === "1";
+  const people = getPeopleListView({ query, regionId, religionId, sectId, periodId, hasRoles });
+  const options = getPersonFormOptions();
 
   return (
     <section className="space-y-6">
@@ -24,12 +30,63 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
         </Link>
       </div>
 
-      <form className="flex flex-col gap-3 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:flex-row md:items-end">
-        <label className="flex-1 space-y-2 text-sm">
+      <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-3">
+        <label className="space-y-2 text-sm md:col-span-2 xl:col-span-3">
           <span className="font-medium text-[var(--muted)]">名称検索</span>
           <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="氏名・別名・役職・地域" />
         </label>
-        <div className="flex gap-3">
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">地域</span>
+          <select name="regionId" defaultValue={regionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.regions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">宗教</span>
+          <select name="religionId" defaultValue={religionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.religions.map((religion) => (
+              <option key={religion.id} value={religion.id}>
+                {religion.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">宗派</span>
+          <select name="sectId" defaultValue={sectId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.sects.map((sect) => (
+              <option key={sect.id} value={sect.id}>
+                {sect.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">時代区分</span>
+          <select name="periodId" defaultValue={periodId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.periods.map((period) => (
+              <option key={period.id} value={period.id}>
+                {period.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">役職</span>
+          <select name="hasRoles" defaultValue={hasRoles ? "1" : ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            <option value="1">役職あり</option>
+          </select>
+        </label>
+        <div className="flex items-end gap-3">
           <button type="submit" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
             検索
           </button>
@@ -85,4 +142,14 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
 
 function getSingleParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getNumericParam(value: string | string[] | undefined) {
+  const single = getSingleParam(value);
+  if (!single) {
+    return undefined;
+  }
+
+  const parsed = Number(single);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

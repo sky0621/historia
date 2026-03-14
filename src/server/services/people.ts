@@ -43,8 +43,17 @@ export function getPersonFormOptions() {
   };
 }
 
-export function getPeopleListView(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+type PeopleListFilters = {
+  query?: string;
+  regionId?: number;
+  religionId?: number;
+  sectId?: number;
+  periodId?: number;
+  hasRoles?: boolean;
+};
+
+export function getPeopleListView(filters: PeopleListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const people = listPeopleDetailed();
   const regions = listRegions();
   const regionById = new Map(regions.map((region) => [region.id, region.name]));
@@ -74,18 +83,22 @@ export function getPeopleListView(query?: string) {
         .filter((link) => link.personId === person.id)
         .map((link) => regionById.get(link.regionId))
         .filter((name): name is string => Boolean(name)),
+      regionIds: regionLinks.filter((link) => link.personId === person.id).map((link) => link.regionId),
       religionNames: religionLinks
         .filter((link) => link.personId === person.id)
         .map((link) => religionById.get(link.religionId))
         .filter((name): name is string => Boolean(name)),
+      religionIds: religionLinks.filter((link) => link.personId === person.id).map((link) => link.religionId),
       sectNames: sectLinks
         .filter((link) => link.personId === person.id)
         .map((link) => sectById.get(link.sectId))
         .filter((name): name is string => Boolean(name)),
+      sectIds: sectLinks.filter((link) => link.personId === person.id).map((link) => link.sectId),
       periodNames: periodLinks
         .filter((link) => link.personId === person.id)
         .map((link) => periodById.get(link.periodId))
         .filter((name): name is string => Boolean(name)),
+      periodIds: periodLinks.filter((link) => link.personId === person.id).map((link) => link.periodId),
       roles: roles.filter((role) => role.personId === person.id).map((role) => ({
         ...role,
         affiliationName:
@@ -95,19 +108,7 @@ export function getPeopleListView(query?: string) {
       }))
     }))
     .filter((person) =>
-      matchesQuery(
-        [
-          person.name,
-          person.aliases,
-          person.note,
-          person.regionNames.join(", "),
-          person.religionNames.join(", "),
-          person.sectNames.join(", "),
-          person.periodNames.join(", "),
-          person.roles.map((role) => `${role.title} ${role.affiliationName}`.trim()).join(", ")
-        ],
-        normalizedQuery
-      )
+      matchesPeopleFilters(person, normalizedQuery, filters)
     );
 }
 
@@ -257,4 +258,64 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
+}
+
+function matchesPeopleFilters(
+  person: {
+    name: string;
+    aliases: string | null;
+    note: string | null;
+    regionNames: string[];
+    religionNames: string[];
+    sectNames: string[];
+    periodNames: string[];
+    regionIds: number[];
+    religionIds: number[];
+    sectIds: number[];
+    periodIds: number[];
+    roles: Array<{ title: string; affiliationName: string }>;
+    id: number;
+  },
+  query: string,
+  filters: PeopleListFilters
+) {
+  if (
+    !matchesQuery(
+      [
+        person.name,
+        person.aliases,
+        person.note,
+        person.regionNames.join(", "),
+        person.religionNames.join(", "),
+        person.sectNames.join(", "),
+        person.periodNames.join(", "),
+        person.roles.map((role) => `${role.title} ${role.affiliationName}`.trim()).join(", ")
+      ],
+      query
+    )
+  ) {
+    return false;
+  }
+
+  if (filters.hasRoles && person.roles.length === 0) {
+    return false;
+  }
+
+  if (filters.regionId && !person.regionIds.includes(filters.regionId)) {
+    return false;
+  }
+
+  if (filters.religionId && !person.religionIds.includes(filters.religionId)) {
+    return false;
+  }
+
+  if (filters.sectId && !person.sectIds.includes(filters.sectId)) {
+    return false;
+  }
+
+  if (filters.periodId && !person.periodIds.includes(filters.periodId)) {
+    return false;
+  }
+
+  return true;
 }
