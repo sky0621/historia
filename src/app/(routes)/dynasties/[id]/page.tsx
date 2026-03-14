@@ -40,9 +40,15 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
               <dt className="font-medium text-[var(--muted)]">所属国家</dt>
               <dd className="mt-1">
                 {view.polity ? (
-                  <Link href={`/polities/${view.polity.id}`} className="underline-offset-4 hover:underline">
-                    {view.polity.name}
-                  </Link>
+                  <>
+                    <Link href={`/polities/${view.polity.id}`} className="underline-offset-4 hover:underline">
+                      {view.polity.name}
+                    </Link>
+                    <span className="text-[var(--muted)]"> / </span>
+                    <Link href={`/polities/${view.polity.id}`} className="text-[var(--muted)] underline-offset-4 hover:underline">
+                      国家詳細へ
+                    </Link>
+                  </>
                 ) : (
                   "不明"
                 )}
