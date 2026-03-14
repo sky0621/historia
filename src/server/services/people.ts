@@ -49,11 +49,20 @@ export function getPeopleListView(query?: string) {
   const regions = listRegions();
   const regionById = new Map(regions.map((region) => [region.id, region.name]));
   const regionLinks = getPersonRegionLinks(people.map((person) => person.id));
+  const religionLinks = getPersonReligionLinks(people.map((person) => person.id));
+  const sectLinks = getPersonSectLinks(people.map((person) => person.id));
+  const periodLinks = getPersonPeriodLinks(people.map((person) => person.id));
   const roles = getRoleAssignmentsByPersonIds(people.map((person) => person.id));
   const polities = listPolities();
   const dynasties = listDynasties();
+  const religions = listReligions();
+  const sects = listSects();
+  const periods = listHistoricalPeriods();
   const polityById = new Map(polities.map((polity) => [polity.id, polity.name]));
   const dynastyById = new Map(dynasties.map((dynasty) => [dynasty.id, dynasty.name]));
+  const religionById = new Map(religions.map((religion) => [religion.id, religion.name]));
+  const sectById = new Map(sects.map((sect) => [sect.id, sect.name]));
+  const periodById = new Map(periods.map((period) => [period.id, period.name]));
 
   return people
     .map((person) => ({
@@ -64,6 +73,18 @@ export function getPeopleListView(query?: string) {
       regionNames: regionLinks
         .filter((link) => link.personId === person.id)
         .map((link) => regionById.get(link.regionId))
+        .filter((name): name is string => Boolean(name)),
+      religionNames: religionLinks
+        .filter((link) => link.personId === person.id)
+        .map((link) => religionById.get(link.religionId))
+        .filter((name): name is string => Boolean(name)),
+      sectNames: sectLinks
+        .filter((link) => link.personId === person.id)
+        .map((link) => sectById.get(link.sectId))
+        .filter((name): name is string => Boolean(name)),
+      periodNames: periodLinks
+        .filter((link) => link.personId === person.id)
+        .map((link) => periodById.get(link.periodId))
         .filter((name): name is string => Boolean(name)),
       roles: roles.filter((role) => role.personId === person.id).map((role) => ({
         ...role,
@@ -80,6 +101,9 @@ export function getPeopleListView(query?: string) {
           person.aliases,
           person.note,
           person.regionNames.join(", "),
+          person.religionNames.join(", "),
+          person.sectNames.join(", "),
+          person.periodNames.join(", "),
           person.roles.map((role) => `${role.title} ${role.affiliationName}`.trim()).join(", ")
         ],
         normalizedQuery

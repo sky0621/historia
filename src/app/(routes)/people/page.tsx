@@ -46,13 +46,14 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">氏名</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">生没年</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">役職</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">宗教・時代区分</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">地域</th>
             </tr>
           </thead>
           <tbody>
             {people.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={5} className="px-5 py-6 text-[var(--muted)]">
                   まだ人物はありません。
                 </td>
               </tr>
@@ -67,6 +68,9 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
                   <td className="px-5 py-4">{person.lifeLabel}</td>
                   <td className="px-5 py-4">
                     {person.roles.map((role) => `${role.title}${role.affiliationName ? ` (${role.affiliationName})` : ""}`).join(", ") || "-"}
+                  </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {[...person.religionNames, ...person.sectNames, ...person.periodNames].join(", ") || "-"}
                   </td>
                   <td className="px-5 py-4 text-[var(--muted)]">{person.regionNames.join(", ") || "-"}</td>
                 </tr>
