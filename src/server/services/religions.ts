@@ -3,6 +3,11 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { ReligionInput, SectInput } from "@/features/religions/schema";
 import { listPeople } from "@/server/repositories/people";
+import {
+  getPersonReligionLinks,
+  getPersonSectLinks,
+  listPeopleDetailed
+} from "@/server/repositories/people-detail";
 import { listRegions } from "@/server/repositories/regions";
 import {
   createReligion,
@@ -110,14 +115,20 @@ export function getReligionDetailView(id: number) {
   const sects = listSects().filter((sect) => sect.religionId === id);
   const regions = listRegions();
   const people = listPeople();
+  const detailedPeople = listPeopleDetailed();
   const regionIds = getReligionRegionIds([id]).map((link) => link.regionId);
   const founderIds = getReligionFounderIds([id]).map((link) => link.personId);
+  const religionPeople = getPersonReligionLinks(detailedPeople.map((person) => person.id))
+    .filter((link) => link.religionId === id)
+    .map((link) => detailedPeople.find((person) => person.id === link.personId))
+    .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
   return {
     religion,
     sects,
     regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: people.filter((person) => founderIds.includes(person.id)),
+    relatedPeople: dedupePeople(religionPeople),
     relatedEvents: getRelatedEvents({ religionId: id }),
     timeLabel: formatStoredTime("time", religion),
     defaultTimeExpression: extractTimeExpression("time", religion)
@@ -133,14 +144,20 @@ export function getSectDetailView(id: number) {
   const religion = getReligionById(sect.religionId);
   const regions = listRegions();
   const people = listPeople();
+  const detailedPeople = listPeopleDetailed();
   const regionIds = getSectRegionIds([id]).map((link) => link.regionId);
   const founderIds = getSectFounderIds([id]).map((link) => link.personId);
+  const sectPeople = getPersonSectLinks(detailedPeople.map((person) => person.id))
+    .filter((link) => link.sectId === id)
+    .map((link) => detailedPeople.find((person) => person.id === link.personId))
+    .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
   return {
     sect,
     religion,
     regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: people.filter((person) => founderIds.includes(person.id)),
+    relatedPeople: dedupePeople(sectPeople),
     relatedEvents: getRelatedEvents({ sectId: id }),
     timeLabel: formatStoredTime("time", sect),
     defaultTimeExpression: extractTimeExpression("time", sect)
@@ -262,4 +279,17 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
+}
+
+function dedupePeople(people: Array<{ id: number; name: string }>) {
+  const seen = new Set<number>();
+
+  return people.filter((person) => {
+    if (seen.has(person.id)) {
+      return false;
+    }
+
+    seen.add(person.id);
+    return true;
+  });
 }
