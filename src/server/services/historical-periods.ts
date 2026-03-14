@@ -2,6 +2,7 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { HistoricalPeriodInput } from "@/features/periods/schema";
+import { getPersonPeriodLinks, listPeopleDetailed } from "@/server/repositories/people-detail";
 import {
   createHistoricalPeriod,
   deleteHistoricalPeriod,
@@ -58,6 +59,11 @@ export function getHistoricalPeriodDetailView(id: number) {
 
   const options = getHistoricalPeriodFormOptions();
   const linkedRegionIds = getHistoricalPeriodRegionIds([id]).map((link) => link.regionId);
+  const people = listPeopleDetailed();
+  const relatedPeople = getPersonPeriodLinks(people.map((person) => person.id))
+    .filter((link) => link.periodId === id)
+    .map((link) => people.find((person) => person.id === link.personId))
+    .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
   return {
     period,
@@ -66,6 +72,7 @@ export function getHistoricalPeriodDetailView(id: number) {
     polity: period.polityId ? options.polities.find((item) => item.id === period.polityId) ?? null : null,
     category: options.categories.find((item) => item.id === period.categoryId) ?? null,
     regions: options.regions.filter((item) => linkedRegionIds.includes(item.id)),
+    relatedPeople: dedupePeople(relatedPeople),
     relatedEvents: getRelatedEvents({ periodId: id }),
     timeLabel: formatStoredTime("time", period),
     defaultTimeExpression: extractTimeExpression("time", period),
@@ -157,4 +164,17 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
+}
+
+function dedupePeople(people: Array<{ id: number; name: string }>) {
+  const seen = new Set<number>();
+
+  return people.filter((person) => {
+    if (seen.has(person.id)) {
+      return false;
+    }
+
+    seen.add(person.id);
+    return true;
+  });
 }
