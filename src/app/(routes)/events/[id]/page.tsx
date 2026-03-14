@@ -100,6 +100,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               </dd>
             </div>
             <div>
+              <dt className="font-medium text-[var(--muted)]">勝者側</dt>
+              <dd className="mt-1 whitespace-pre-wrap">{view.conflictOutcome?.winnerSummary ?? "-"}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">敗者側</dt>
+              <dd className="mt-1 whitespace-pre-wrap">{view.conflictOutcome?.loserSummary ?? "-"}</dd>
+            </div>
+            <div>
               <dt className="font-medium text-[var(--muted)]">結果要約</dt>
               <dd className="mt-1 whitespace-pre-wrap">
                 {view.conflictOutcome?.settlementSummary ?? "-"}

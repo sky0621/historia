@@ -222,6 +222,8 @@ export function createEventFromInput(input: EventInput) {
       input.conflictOutcome
         ? {
             eventId,
+            winnerSummary: nullable(input.conflictOutcome.winnerSummary),
+            loserSummary: nullable(input.conflictOutcome.loserSummary),
             settlementSummary: nullable(input.conflictOutcome.settlementSummary),
             note: nullable(input.conflictOutcome.note)
           }
@@ -279,6 +281,8 @@ export function updateEventFromInput(id: number, input: EventInput) {
       input.conflictOutcome
         ? {
             eventId: id,
+            winnerSummary: nullable(input.conflictOutcome.winnerSummary),
+            loserSummary: nullable(input.conflictOutcome.loserSummary),
             settlementSummary: nullable(input.conflictOutcome.settlementSummary),
             note: nullable(input.conflictOutcome.note)
           }

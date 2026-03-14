@@ -606,6 +606,8 @@ function runSeed() {
   });
   insert("conflict_outcomes", {
     event_id: eventIds.crusade,
+    winner_summary: "十字軍側",
+    loser_summary: "セルジューク朝など現地イスラーム勢力",
     settlement_summary: "1099年にエルサレムが攻略され、十字軍国家が成立した。",
     note: "その後の十字軍運動の端緒となった。"
   });
@@ -626,6 +628,8 @@ function runSeed() {
   });
   insert("conflict_outcomes", {
     event_id: eventIds.onin,
+    winner_summary: "明確な勝者なし",
+    loser_summary: "室町幕府の統治秩序",
     settlement_summary: "京都は荒廃し、室町幕府の権威は大きく低下した。",
     note: "戦国時代への移行を促した。"
   });

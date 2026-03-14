@@ -38,6 +38,8 @@ export const conflictParticipants = sqliteTable("conflict_participants", {
 export const conflictOutcomes = sqliteTable("conflict_outcomes", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   eventId: integer("event_id").notNull(),
+  winnerSummary: text("winner_summary"),
+  loserSummary: text("loser_summary"),
   settlementSummary: text("settlement_summary"),
   note: text("note")
 });

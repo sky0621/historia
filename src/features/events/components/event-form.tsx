@@ -46,6 +46,8 @@ type Props = {
     relations: RelationDefault[];
     conflictParticipants: ParticipantDefault[];
     conflictOutcome?: {
+      winnerSummary: string;
+      loserSummary: string;
       settlementSummary: string;
       note: string;
     };
@@ -282,6 +284,22 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-[var(--muted)]">結果要約</h3>
                 <div className="grid gap-4">
+                  <label className="grid gap-2 text-sm">
+                    <span>勝者側</span>
+                    <textarea
+                      name="conflictOutcome.winnerSummary"
+                      defaultValue={defaultValues?.conflictOutcome?.winnerSummary ?? ""}
+                      className="min-h-20 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm">
+                    <span>敗者側</span>
+                    <textarea
+                      name="conflictOutcome.loserSummary"
+                      defaultValue={defaultValues?.conflictOutcome?.loserSummary ?? ""}
+                      className="min-h-20 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </label>
                   <label className="grid gap-2 text-sm">
                     <span>講和・停戦要約</span>
                     <textarea

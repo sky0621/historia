@@ -34,6 +34,8 @@ export const eventSchema = z.object({
   conflictParticipants: z.array(conflictParticipantSchema).default([]),
   conflictOutcome: z
     .object({
+      winnerSummary: z.string().trim().optional(),
+      loserSummary: z.string().trim().optional(),
       settlementSummary: z.string().trim().optional(),
       note: z.string().trim().optional()
     })
@@ -117,15 +119,21 @@ function parseConflictParticipants(formData: FormData) {
 
 function parseConflictOutcome(formData: FormData) {
   const settlementSummary = formData.get("conflictOutcome.settlementSummary");
+  const winnerSummary = formData.get("conflictOutcome.winnerSummary");
+  const loserSummary = formData.get("conflictOutcome.loserSummary");
   const note = formData.get("conflictOutcome.note");
+  const normalizedWinner = typeof winnerSummary === "string" ? winnerSummary.trim() : "";
+  const normalizedLoser = typeof loserSummary === "string" ? loserSummary.trim() : "";
   const normalizedSettlement = typeof settlementSummary === "string" ? settlementSummary.trim() : "";
   const normalizedNote = typeof note === "string" ? note.trim() : "";
 
-  if (!normalizedSettlement && !normalizedNote) {
+  if (!normalizedWinner && !normalizedLoser && !normalizedSettlement && !normalizedNote) {
     return undefined;
   }
 
   return {
+    winnerSummary: normalizedWinner || undefined,
+    loserSummary: normalizedLoser || undefined,
     settlementSummary: normalizedSettlement || undefined,
     note: normalizedNote || undefined
   };
