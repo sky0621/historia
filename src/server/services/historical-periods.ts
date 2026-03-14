@@ -22,23 +22,31 @@ export function getHistoricalPeriodFormOptions() {
   };
 }
 
-export function getHistoricalPeriodsListView() {
+export function getHistoricalPeriodsListView(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
   const periods = listHistoricalPeriods();
   const categories = new Map(getPeriodCategoryOptions().map((item) => [item.id, item.name]));
   const polities = new Map(listPolities().map((item) => [item.id, item.name]));
   const regions = new Map(listRegions().map((item) => [item.id, item.name]));
   const regionLinks = getHistoricalPeriodRegionIds(periods.map((period) => period.id));
 
-  return periods.map((period) => ({
-    ...period,
-    categoryName: categories.get(period.categoryId) ?? "不明",
-    polityName: period.polityId ? polities.get(period.polityId) ?? null : null,
-    regionNames: regionLinks
-      .filter((link) => link.periodId === period.id)
-      .map((link) => regions.get(link.regionId))
-      .filter((name): name is string => Boolean(name)),
-    timeLabel: formatStoredTime("time", period)
-  }));
+  return periods
+    .map((period) => ({
+      ...period,
+      categoryName: categories.get(period.categoryId) ?? "不明",
+      polityName: period.polityId ? polities.get(period.polityId) ?? null : null,
+      regionNames: regionLinks
+        .filter((link) => link.periodId === period.id)
+        .map((link) => regions.get(link.regionId))
+        .filter((name): name is string => Boolean(name)),
+      timeLabel: formatStoredTime("time", period)
+    }))
+    .filter((period) =>
+      matchesQuery(
+        [period.name, period.aliases, period.description, period.note, period.categoryName, period.polityName, period.regionLabel, period.regionNames.join(", ")],
+        normalizedQuery
+      )
+    );
 }
 
 export function getHistoricalPeriodDetailView(id: number) {
@@ -133,4 +141,16 @@ function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }

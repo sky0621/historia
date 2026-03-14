@@ -42,7 +42,8 @@ export function getPersonFormOptions() {
   };
 }
 
-export function getPeopleListView() {
+export function getPeopleListView(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
   const people = listPeopleDetailed();
   const regions = listRegions();
   const regionById = new Map(regions.map((region) => [region.id, region.name]));
@@ -53,23 +54,36 @@ export function getPeopleListView() {
   const polityById = new Map(polities.map((polity) => [polity.id, polity.name]));
   const dynastyById = new Map(dynasties.map((dynasty) => [dynasty.id, dynasty.name]));
 
-  return people.map((person) => ({
-    ...person,
-    birthLabel: formatStoredTime("birth", person),
-    deathLabel: formatStoredTime("death", person),
-    lifeLabel: [formatStoredTime("birth", person), formatStoredTime("death", person)].join(" - "),
-    regionNames: regionLinks
-      .filter((link) => link.personId === person.id)
-      .map((link) => regionById.get(link.regionId))
-      .filter((name): name is string => Boolean(name)),
-    roles: roles.filter((role) => role.personId === person.id).map((role) => ({
-      ...role,
-      affiliationName:
-        (role.dynastyId ? dynastyById.get(role.dynastyId) : undefined) ??
-        (role.polityId ? polityById.get(role.polityId) : undefined) ??
-        ""
+  return people
+    .map((person) => ({
+      ...person,
+      birthLabel: formatStoredTime("birth", person),
+      deathLabel: formatStoredTime("death", person),
+      lifeLabel: [formatStoredTime("birth", person), formatStoredTime("death", person)].join(" - "),
+      regionNames: regionLinks
+        .filter((link) => link.personId === person.id)
+        .map((link) => regionById.get(link.regionId))
+        .filter((name): name is string => Boolean(name)),
+      roles: roles.filter((role) => role.personId === person.id).map((role) => ({
+        ...role,
+        affiliationName:
+          (role.dynastyId ? dynastyById.get(role.dynastyId) : undefined) ??
+          (role.polityId ? polityById.get(role.polityId) : undefined) ??
+          ""
+      }))
     }))
-  }));
+    .filter((person) =>
+      matchesQuery(
+        [
+          person.name,
+          person.aliases,
+          person.note,
+          person.regionNames.join(", "),
+          person.roles.map((role) => `${role.title} ${role.affiliationName}`.trim()).join(", ")
+        ],
+        normalizedQuery
+      )
+    );
 }
 
 export function getPersonDetailView(id: number) {
@@ -205,4 +219,16 @@ function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }

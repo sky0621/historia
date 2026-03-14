@@ -1,8 +1,22 @@
 import Link from "next/link";
-import { getEventsListView } from "@/server/services/events";
+import { getEventsListView, getEventFormOptions } from "@/server/services/events";
 
-export default function EventsPage() {
-  const events = getEventsListView();
+type EventsPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function EventsPage({ searchParams }: EventsPageProps) {
+  const params = searchParams ? await searchParams : {};
+  const query = getSingleParam(params.q);
+  const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
+  const personId = getNumericParam(params.personId);
+  const polityId = getNumericParam(params.polityId);
+  const regionId = getNumericParam(params.regionId);
+  const periodId = getNumericParam(params.periodId);
+  const fromYear = getNumericParam(params.fromYear);
+  const toYear = getNumericParam(params.toYear);
+  const events = getEventsListView({ query, eventType, personId, polityId, regionId, periodId, fromYear, toYear });
+  const options = getEventFormOptions();
 
   return (
     <section className="space-y-6">
@@ -17,6 +31,83 @@ export default function EventsPage() {
           新規イベント
         </Link>
       </div>
+
+      <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">キーワード</span>
+          <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="タイトル・説明・関連主体" />
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">種別</span>
+          <select name="eventType" defaultValue={eventType ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            <option value="general">general</option>
+            <option value="war">war</option>
+            <option value="rebellion">rebellion</option>
+            <option value="civil_war">civil_war</option>
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連人物</span>
+          <select name="personId" defaultValue={personId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.people.map((person) => (
+              <option key={person.id} value={person.id}>
+                {person.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連国家</span>
+          <select name="polityId" defaultValue={polityId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.polities.map((polity) => (
+              <option key={polity.id} value={polity.id}>
+                {polity.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連地域</span>
+          <select name="regionId" defaultValue={regionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.regions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連時代区分</span>
+          <select name="periodId" defaultValue={periodId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.periods.map((period) => (
+              <option key={period.id} value={period.id}>
+                {period.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">開始年</span>
+          <input name="fromYear" type="number" defaultValue={fromYear?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="-500" />
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">終了年</span>
+          <input name="toYear" type="number" defaultValue={toYear?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="1600" />
+        </label>
+        <div className="flex items-end gap-3">
+          <button type="submit" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+            検索
+          </button>
+          <Link href="/events" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
+            リセット
+          </Link>
+        </div>
+      </form>
 
       <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-white/80 shadow-sm">
         <table className="min-w-full border-collapse text-left text-sm">
@@ -54,4 +145,18 @@ export default function EventsPage() {
       </div>
     </section>
   );
+}
+
+function getSingleParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getNumericParam(value: string | string[] | undefined) {
+  const single = getSingleParam(value);
+  if (!single) {
+    return undefined;
+  }
+
+  const parsed = Number(single);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

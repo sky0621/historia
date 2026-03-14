@@ -28,20 +28,23 @@ export function getRegionOptions() {
   return listRegions().map((region) => ({ id: region.id, name: region.name }));
 }
 
-export function getPolityListView() {
+export function getPolityListView(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
   const polities = listPolities();
   const regions = listRegions();
   const links = getPolityRegionIds(polities.map((polity) => polity.id));
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
 
-  return polities.map((polity) => ({
-    ...polity,
-    timeLabel: formatStoredTime("time", polity),
-    regionNames: links
-      .filter((link) => link.polityId === polity.id)
-      .map((link) => regionNameById.get(link.regionId))
-      .filter((name): name is string => Boolean(name))
-  }));
+  return polities
+    .map((polity) => ({
+      ...polity,
+      timeLabel: formatStoredTime("time", polity),
+      regionNames: links
+        .filter((link) => link.polityId === polity.id)
+        .map((link) => regionNameById.get(link.regionId))
+        .filter((name): name is string => Boolean(name))
+    }))
+    .filter((polity) => matchesQuery([polity.name, polity.aliases, polity.note, polity.regionNames.join(", ")], normalizedQuery));
 }
 
 export function getDynastyListView() {
@@ -196,4 +199,16 @@ function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }

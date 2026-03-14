@@ -35,7 +35,8 @@ export function getFounderOptions() {
   return listPeople().map((person) => ({ id: person.id, name: person.name }));
 }
 
-export function getReligionListView() {
+export function getReligionListView(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
   const religions = listReligions();
   const regions = listRegions();
   const people = listPeople();
@@ -44,18 +45,25 @@ export function getReligionListView() {
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const personNameById = new Map(people.map((person) => [person.id, person.name]));
 
-  return religions.map((religion) => ({
-    ...religion,
-    timeLabel: formatStoredTime("time", religion),
-    regionNames: regionLinks
-      .filter((link) => link.religionId === religion.id)
-      .map((link) => regionNameById.get(link.regionId))
-      .filter((name): name is string => Boolean(name)),
-    founderNames: founderLinks
-      .filter((link) => link.religionId === religion.id)
-      .map((link) => personNameById.get(link.personId))
-      .filter((name): name is string => Boolean(name))
-  }));
+  return religions
+    .map((religion) => ({
+      ...religion,
+      timeLabel: formatStoredTime("time", religion),
+      regionNames: regionLinks
+        .filter((link) => link.religionId === religion.id)
+        .map((link) => regionNameById.get(link.regionId))
+        .filter((name): name is string => Boolean(name)),
+      founderNames: founderLinks
+        .filter((link) => link.religionId === religion.id)
+        .map((link) => personNameById.get(link.personId))
+        .filter((name): name is string => Boolean(name))
+    }))
+    .filter((religion) =>
+      matchesQuery(
+        [religion.name, religion.aliases, religion.description, religion.note, religion.regionNames.join(", "), religion.founderNames.join(", ")],
+        normalizedQuery
+      )
+    );
 }
 
 export function getSectListView() {
@@ -231,4 +239,16 @@ function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }

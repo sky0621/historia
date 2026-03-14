@@ -15,8 +15,10 @@ export function getPeriodCategoryView(id: number) {
   return getPeriodCategoryById(id);
 }
 
-export function getPeriodCategoryList() {
-  return listPeriodCategories();
+export function getPeriodCategoryList(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
+
+  return listPeriodCategories().filter((category) => matchesQuery([category.name, category.description], normalizedQuery));
 }
 
 export function createPeriodCategoryFromInput(input: PeriodCategoryInput) {
@@ -39,4 +41,16 @@ export function deletePeriodCategoryById(id: number) {
 
 function nullable(value: string | undefined) {
   return value && value.length > 0 ? value : null;
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }

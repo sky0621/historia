@@ -27,6 +27,17 @@ import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { listSects } from "@/server/repositories/sects";
 
+type EventListFilters = {
+  query?: string;
+  eventType?: "general" | "war" | "rebellion" | "civil_war";
+  personId?: number;
+  polityId?: number;
+  regionId?: number;
+  periodId?: number;
+  fromYear?: number;
+  toYear?: number;
+};
+
 export function getEventFormOptions() {
   return {
     people: listPeopleDetailed().map((item) => ({ id: item.id, name: item.name })),
@@ -40,7 +51,8 @@ export function getEventFormOptions() {
   };
 }
 
-export function getEventsListView() {
+export function getEventsListView(filters: EventListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const events = listEvents();
   const links = getEventLinks(events.map((event) => event.id));
 
@@ -48,26 +60,58 @@ export function getEventsListView() {
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
 
-  return events.map((event) => {
-    const personNames = links.personLinks
-      .filter((link) => link.eventId === event.id)
-      .map((link) => peopleById.get(link.personId))
-      .filter((name): name is string => Boolean(name));
-    const polityNames = links.polityLinks
-      .filter((link) => link.eventId === event.id)
-      .map((link) => politiesById.get(link.polityId))
-      .filter((name): name is string => Boolean(name));
-    const periodNames = links.periodLinks
-      .filter((link) => link.eventId === event.id)
-      .map((link) => periodsById.get(link.periodId))
-      .filter((name): name is string => Boolean(name));
+  return events
+    .map((event) => {
+      const personNames = links.personLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => peopleById.get(link.personId))
+        .filter((name): name is string => Boolean(name));
+      const polityNames = links.polityLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => politiesById.get(link.polityId))
+        .filter((name): name is string => Boolean(name));
+      const periodNames = links.periodLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => periodsById.get(link.periodId))
+        .filter((name): name is string => Boolean(name));
 
-    return {
-      ...event,
-      timeLabel: formatStoredTime("time", event),
-      relationSummary: [...personNames, ...polityNames, ...periodNames].slice(0, 4).join(", ")
-    };
-  });
+      return {
+        ...event,
+        timeLabel: formatStoredTime("time", event),
+        relationSummary: [...personNames, ...polityNames, ...periodNames].slice(0, 4).join(", "),
+        personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
+        polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
+        regionIds: links.regionLinks.filter((link) => link.eventId === event.id).map((link) => link.regionId),
+        periodIds: links.periodLinks.filter((link) => link.eventId === event.id).map((link) => link.periodId)
+      };
+    })
+    .filter((event) => {
+      if (filters.eventType && event.eventType !== filters.eventType) {
+        return false;
+      }
+
+      if (filters.personId && !event.personIds.includes(filters.personId)) {
+        return false;
+      }
+
+      if (filters.polityId && !event.polityIds.includes(filters.polityId)) {
+        return false;
+      }
+
+      if (filters.regionId && !event.regionIds.includes(filters.regionId)) {
+        return false;
+      }
+
+      if (filters.periodId && !event.periodIds.includes(filters.periodId)) {
+        return false;
+      }
+
+      if (!matchesYearRange(event, filters.fromYear, filters.toYear)) {
+        return false;
+      }
+
+      return matchesQuery([event.title, event.description, event.relationSummary], normalizedQuery);
+    });
 }
 
 export function getEventDetailView(id: number) {
@@ -302,4 +346,89 @@ function extractStandaloneTime(prefix: string, value: Record<string, unknown>) {
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
+}
+
+function matchesYearRange(
+  event: {
+    timeCalendarEra: string | null;
+    timeStartYear: number | null;
+    timeEndYear: number | null;
+    startCalendarEra: string | null;
+    startYear: number | null;
+    endCalendarEra: string | null;
+    endYear: number | null;
+  },
+  fromYear?: number,
+  toYear?: number
+) {
+  if (fromYear === undefined && toYear === undefined) {
+    return true;
+  }
+
+  const timeRange = getComparableRange(event.timeCalendarEra, event.timeStartYear, event.timeEndYear);
+  const conflictRange = getComparableRangeFromStandalone(
+    event.startCalendarEra,
+    event.startYear,
+    event.endCalendarEra,
+    event.endYear
+  );
+  const range = conflictRange ?? timeRange;
+  if (!range) {
+    return false;
+  }
+
+  const filterStart = fromYear ?? Number.NEGATIVE_INFINITY;
+  const filterEnd = toYear ?? Number.POSITIVE_INFINITY;
+
+  return range.start <= filterEnd && range.end >= filterStart;
+}
+
+function getComparableRange(era: string | null, startYear: number | null, endYear: number | null) {
+  if (startYear == null) {
+    return null;
+  }
+
+  const start = toComparableYear(era, startYear);
+  const end = toComparableYear(era, endYear ?? startYear);
+
+  return {
+    start: Math.min(start, end),
+    end: Math.max(start, end)
+  };
+}
+
+function getComparableRangeFromStandalone(
+  startEra: string | null,
+  startYear: number | null,
+  endEra: string | null,
+  endYear: number | null
+) {
+  if (startYear == null) {
+    return null;
+  }
+
+  const start = toComparableYear(startEra, startYear);
+  const resolvedEndYear = endYear ?? startYear;
+  const end = toComparableYear(endEra ?? startEra, resolvedEndYear);
+
+  return {
+    start: Math.min(start, end),
+    end: Math.max(start, end)
+  };
+}
+
+function toComparableYear(era: string | null, year: number) {
+  return era === "BCE" ? -year : year;
 }
