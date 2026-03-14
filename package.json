@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node src/db/seed.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
