@@ -11,6 +11,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
+  const dynastyId = getNumericParam(params.dynastyId);
   const religionId = getNumericParam(params.religionId);
   const sectId = getNumericParam(params.sectId);
   const regionId = getNumericParam(params.regionId);
@@ -22,6 +23,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     eventType,
     personId,
     polityId,
+    dynastyId,
     religionId,
     sectId,
     regionId,
@@ -89,6 +91,17 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             {options.regions.map((region) => (
               <option key={region.id} value={region.id}>
                 {region.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連王朝</span>
+          <select name="dynastyId" defaultValue={dynastyId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.dynasties.map((dynasty) => (
+              <option key={dynasty.id} value={dynasty.id}>
+                {dynasty.name}
               </option>
             ))}
           </select>

@@ -34,6 +34,7 @@ type EventListFilters = {
   eventType?: "general" | "war" | "rebellion" | "civil_war";
   personId?: number;
   polityId?: number;
+  dynastyId?: number;
   religionId?: number;
   sectId?: number;
   regionId?: number;
@@ -62,6 +63,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
 
   const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
+  const dynastiesById = new Map(listDynasties().map((item) => [item.id, item.name]));
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
   const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
   const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
@@ -75,6 +77,10 @@ export function getEventsListView(filters: EventListFilters = {}) {
       const polityNames = links.polityLinks
         .filter((link) => link.eventId === event.id)
         .map((link) => politiesById.get(link.polityId))
+        .filter((name): name is string => Boolean(name));
+      const dynastyNames = links.dynastyLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => dynastiesById.get(link.dynastyId))
         .filter((name): name is string => Boolean(name));
       const periodNames = links.periodLinks
         .filter((link) => link.eventId === event.id)
@@ -92,9 +98,10 @@ export function getEventsListView(filters: EventListFilters = {}) {
       return {
         ...event,
         timeLabel: formatStoredTime("time", event),
-        relationSummary: [...personNames, ...polityNames, ...periodNames, ...religionNames, ...sectNames].slice(0, 4).join(", "),
+        relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames].slice(0, 4).join(", "),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
+        dynastyIds: links.dynastyLinks.filter((link) => link.eventId === event.id).map((link) => link.dynastyId),
         religionIds: links.religionLinks.filter((link) => link.eventId === event.id).map((link) => link.religionId),
         sectIds: links.sectLinks.filter((link) => link.eventId === event.id).map((link) => link.sectId),
         regionIds: links.regionLinks.filter((link) => link.eventId === event.id).map((link) => link.regionId),
@@ -111,6 +118,10 @@ export function getEventsListView(filters: EventListFilters = {}) {
       }
 
       if (filters.polityId && !event.polityIds.includes(filters.polityId)) {
+        return false;
+      }
+
+      if (filters.dynastyId && !event.dynastyIds.includes(filters.dynastyId)) {
         return false;
       }
 
