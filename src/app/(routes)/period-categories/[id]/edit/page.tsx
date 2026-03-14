@@ -8,9 +8,9 @@ export default async function EditPeriodCategoryPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const category = getPeriodCategoryView(Number(id));
+  const view = getPeriodCategoryView(Number(id));
 
-  if (!category) {
+  if (!view) {
     notFound();
   }
 
@@ -20,9 +20,9 @@ export default async function EditPeriodCategoryPage({
       description="既存の分類軸を更新します。"
       submitLabel="カテゴリを更新"
       defaultValues={{
-        id: category.id,
-        name: category.name,
-        description: category.description ?? ""
+        id: view.category.id,
+        name: view.category.name,
+        description: view.category.description ?? ""
       }}
     />
   );

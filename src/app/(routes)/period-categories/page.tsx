@@ -47,13 +47,14 @@ export default async function PeriodCategoriesPage({ searchParams }: PeriodCateg
           <thead className="bg-stone-100/70">
             <tr>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">名称</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">時代区分数</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">説明</th>
             </tr>
           </thead>
           <tbody>
             {categories.length === 0 ? (
               <tr>
-                <td className="px-5 py-6 text-[var(--muted)]" colSpan={2}>
+                <td className="px-5 py-6 text-[var(--muted)]" colSpan={3}>
                   まだカテゴリはありません。
                 </td>
               </tr>
@@ -68,6 +69,7 @@ export default async function PeriodCategoriesPage({ searchParams }: PeriodCateg
                       {category.name}
                     </Link>
                   </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">{category.periodCount}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{category.description ?? "-"}</td>
                 </tr>
               ))
