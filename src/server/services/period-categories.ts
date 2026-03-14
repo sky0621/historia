@@ -7,6 +7,7 @@ import {
 } from "@/server/repositories/period-categories";
 import type { PeriodCategoryInput } from "@/features/periods/schema";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
+import { getPersonPeriodLinks, listPeopleDetailed } from "@/server/repositories/people-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
@@ -34,11 +35,19 @@ export function getPeriodCategoryView(id: number) {
   const relatedEvents = dedupeRelatedEvents(
     relatedPeriods.flatMap((period) => getRelatedEvents({ periodId: period.id }))
   );
+  const people = listPeopleDetailed();
+  const relatedPeople = dedupePeople(
+    getPersonPeriodLinks(people.map((person) => person.id))
+      .filter((link) => relatedPeriods.some((period) => period.id === link.periodId))
+      .map((link) => people.find((person) => person.id === link.personId))
+      .filter((person): person is NonNullable<typeof person> => Boolean(person))
+  );
 
   return {
     category,
     relatedPeriods,
-    relatedEvents
+    relatedEvents,
+    relatedPeople
   };
 }
 
@@ -99,6 +108,19 @@ function dedupeRelatedEvents(
     }
 
     seen.add(event.id);
+    return true;
+  });
+}
+
+function dedupePeople(people: Array<{ id: number; name: string }>) {
+  const seen = new Set<number>();
+
+  return people.filter((person) => {
+    if (seen.has(person.id)) {
+      return false;
+    }
+
+    seen.add(person.id);
     return true;
   });
 }

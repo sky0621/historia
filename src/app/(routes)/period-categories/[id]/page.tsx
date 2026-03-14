@@ -88,6 +88,23 @@ export default async function PeriodCategoryDetailPage({
           )}
         </div>
       </div>
+
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <h2 className="text-lg font-semibold">関連人物</h2>
+        <div className="mt-4 space-y-3">
+          {view.relatedPeople.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">このカテゴリに関連する人物はまだありません。</p>
+          ) : (
+            view.relatedPeople.map((person) => (
+              <div key={person.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                <Link href={`/people/${person.id}`} className="font-medium underline-offset-4 hover:underline">
+                  {person.name}
+                </Link>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </section>
   );
 }
