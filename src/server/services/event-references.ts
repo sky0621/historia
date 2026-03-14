@@ -1,5 +1,13 @@
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
+import { listDynasties } from "@/server/repositories/dynasties";
+import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
+import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { listPolities } from "@/server/repositories/polities";
+import { listRegions } from "@/server/repositories/regions";
+import { listReligions } from "@/server/repositories/religions";
+import { listSects } from "@/server/repositories/sects";
+import { listTags } from "@/server/repositories/tags";
 import { getEventLinks, listEvents } from "@/server/repositories/events";
 
 type RelatedEventsFilter = {
@@ -18,12 +26,21 @@ export type RelatedEventSummary = {
   title: string;
   eventType: string;
   timeLabel: string;
+  relationSummary: string;
 };
 
 export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSummary[] {
   const events = listEvents();
   const eventIds = events.map((event) => event.id);
   const links = getEventLinks(eventIds);
+  const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
+  const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
+  const dynastiesById = new Map(listDynasties().map((item) => [item.id, item.name]));
+  const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
+  const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
+  const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
+  const regionsById = new Map(listRegions().map((item) => [item.id, item.name]));
+  const tagsById = new Map(listTags().map((item) => [item.id, item.name]));
 
   return events
     .filter((event) => matchesEventFilter(event.id, filter, links))
@@ -31,7 +48,17 @@ export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSumma
       id: event.id,
       title: event.title,
       eventType: event.eventType,
-      timeLabel: formatEventTime(event)
+      timeLabel: formatEventTime(event),
+      relationSummary: summarizeEventLinks(event.id, links, {
+        peopleById,
+        politiesById,
+        dynastiesById,
+        periodsById,
+        religionsById,
+        sectsById,
+        regionsById,
+        tagsById
+      })
     }));
 }
 
@@ -116,4 +143,48 @@ function toStandaloneYearLabel(
   const end = `${resolvedEnd}${resolvedEndEra === "BCE" ? " BCE" : ""}`;
 
   return start === end ? start : `${start} - ${end}`;
+}
+
+function summarizeEventLinks(
+  eventId: number,
+  links: ReturnType<typeof getEventLinks>,
+  dictionaries: {
+    peopleById: Map<number, string>;
+    politiesById: Map<number, string>;
+    dynastiesById: Map<number, string>;
+    periodsById: Map<number, string>;
+    religionsById: Map<number, string>;
+    sectsById: Map<number, string>;
+    regionsById: Map<number, string>;
+    tagsById: Map<number, string>;
+  }
+) {
+  const names = [
+    ...links.personLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.peopleById.get(link.personId)),
+    ...links.polityLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.politiesById.get(link.polityId)),
+    ...links.dynastyLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.dynastiesById.get(link.dynastyId)),
+    ...links.periodLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.periodsById.get(link.periodId)),
+    ...links.religionLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.religionsById.get(link.religionId)),
+    ...links.sectLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.sectsById.get(link.sectId)),
+    ...links.regionLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.regionsById.get(link.regionId)),
+    ...links.tagLinks
+      .filter((link) => link.eventId === eventId)
+      .map((link) => dictionaries.tagsById.get(link.tagId))
+  ].filter((name): name is string => Boolean(name));
+
+  return names.slice(0, 4).join(", ");
 }
