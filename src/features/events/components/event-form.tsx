@@ -54,10 +54,28 @@ type Props = {
 
 export function EventForm({ title, description, submitLabel, options, defaultValues }: Props) {
   const action = defaultValues?.id ? updateEventAction : createEventAction;
+  const [eventType, setEventType] = useState<"general" | "war" | "rebellion" | "civil_war">(
+    defaultValues?.eventType ?? "general"
+  );
   const [relationCount, setRelationCount] = useState(Math.max(defaultValues?.relations.length ?? 0, 1));
   const [participantCount, setParticipantCount] = useState(
     Math.max(defaultValues?.conflictParticipants.length ?? 0, 1)
   );
+  const [participantTypes, setParticipantTypes] = useState<Array<ParticipantDefault["participantType"]>>(
+    Array.from({ length: Math.max(defaultValues?.conflictParticipants.length ?? 0, 1) }, (_, index) => {
+      return defaultValues?.conflictParticipants[index]?.participantType ?? "polity";
+    })
+  );
+  const isConflictEvent = eventType !== "general";
+
+  const addParticipant = () => {
+    setParticipantCount((count) => count + 1);
+    setParticipantTypes((current) => [...current, "polity"]);
+  };
+
+  const updateParticipantType = (index: number, value: ParticipantDefault["participantType"]) => {
+    setParticipantTypes((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  };
 
   return (
     <section className="space-y-6">
@@ -78,7 +96,12 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           </label>
           <label className="grid gap-2 text-sm">
             <span>種別</span>
-            <select name="eventType" defaultValue={defaultValues?.eventType ?? "general"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <select
+              name="eventType"
+              value={eventType}
+              onChange={(event) => setEventType(event.target.value as "general" | "war" | "rebellion" | "civil_war")}
+              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+            >
               <option value="general">general</option>
               <option value="war">war</option>
               <option value="rebellion">rebellion</option>
@@ -162,94 +185,123 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <section className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-[var(--muted)]">参加勢力</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">戦争・乱の参加主体と役割を登録します。</p>
+              <h2 className="text-sm font-semibold text-[var(--muted)]">戦争・乱の専用項目</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                {isConflictEvent ? "参加勢力と結果要約を登録します。" : "種別を war / rebellion / civil_war にすると入力できます。"}
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setParticipantCount((count) => count + 1)}
-              className="rounded-full border border-[var(--border)] px-4 py-2 text-sm"
-            >
-              参加者を追加
-            </button>
           </div>
-          <div className="mt-4 space-y-4">
-            {Array.from({ length: participantCount }).map((_, index) => {
-              const participant = defaultValues?.conflictParticipants[index];
-              return (
-                <div key={index} className="space-y-4 rounded-2xl border border-[var(--border)] p-4">
-                  <div className="grid gap-4 lg:grid-cols-3">
-                    <label className="grid gap-2 text-sm">
-                      <span>主体種別</span>
-                      <select
-                        name={`participants.${index}.participantType`}
-                        defaultValue={participant?.participantType ?? "polity"}
-                        className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
-                      >
-                        <option value="polity">polity</option>
-                        <option value="person">person</option>
-                        <option value="religion">religion</option>
-                        <option value="sect">sect</option>
-                      </select>
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>対象ID</span>
-                      <input
-                        name={`participants.${index}.participantId`}
-                        defaultValue={participant?.participantId ?? ""}
-                        className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
-                        inputMode="numeric"
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm">
-                      <span>役割</span>
-                      <select
-                        name={`participants.${index}.role`}
-                        defaultValue={participant?.role ?? "other"}
-                        className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
-                      >
-                        <option value="attacker">attacker</option>
-                        <option value="defender">defender</option>
-                        <option value="leader">leader</option>
-                        <option value="ally">ally</option>
-                        <option value="other">other</option>
-                      </select>
-                    </label>
+
+          {!isConflictEvent ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-[var(--border)] px-4 py-6 text-sm text-[var(--muted)]">
+              通常イベントでは戦争・乱の専用項目は使用しません。
+            </div>
+          ) : (
+            <div className="mt-4 space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--muted)]">参加勢力</h3>
+                    <p className="mt-1 text-sm text-[var(--muted)]">国家、人物、宗教、宗派から参加主体を選択します。</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={addParticipant}
+                    className="rounded-full border border-[var(--border)] px-4 py-2 text-sm"
+                  >
+                    参加者を追加
+                  </button>
+                </div>
+                {Array.from({ length: participantCount }).map((_, index) => {
+                  const participant = defaultValues?.conflictParticipants[index];
+                  const participantType = participantTypes[index] ?? "polity";
+                  const participantOptions = getParticipantOptions(participantType, options);
+
+                  return (
+                    <div key={index} className="space-y-4 rounded-2xl border border-[var(--border)] p-4">
+                      <div className="grid gap-4 lg:grid-cols-3">
+                        <label className="grid gap-2 text-sm">
+                          <span>主体種別</span>
+                          <select
+                            name={`participants.${index}.participantType`}
+                            value={participantType}
+                            onChange={(event) =>
+                              updateParticipantType(index, event.target.value as ParticipantDefault["participantType"])
+                            }
+                            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                          >
+                            <option value="polity">polity</option>
+                            <option value="person">person</option>
+                            <option value="religion">religion</option>
+                            <option value="sect">sect</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-2 text-sm">
+                          <span>対象</span>
+                          <select
+                            name={`participants.${index}.participantId`}
+                            defaultValue={participant?.participantId ?? ""}
+                            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                          >
+                            <option value="">未設定</option>
+                            {participantOptions.map((item) => (
+                              <option key={`${participantType}-${item.id}`} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="grid gap-2 text-sm">
+                          <span>役割</span>
+                          <select
+                            name={`participants.${index}.role`}
+                            defaultValue={participant?.role ?? "other"}
+                            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                          >
+                            <option value="attacker">attacker</option>
+                            <option value="defender">defender</option>
+                            <option value="leader">leader</option>
+                            <option value="ally">ally</option>
+                            <option value="other">other</option>
+                          </select>
+                        </label>
+                      </div>
+                      <label className="grid gap-2 text-sm">
+                        <span>メモ</span>
+                        <textarea
+                          name={`participants.${index}.note`}
+                          defaultValue={participant?.note ?? ""}
+                          className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-[var(--muted)]">結果要約</h3>
+                <div className="grid gap-4">
                   <label className="grid gap-2 text-sm">
-                    <span>メモ</span>
+                    <span>講和・停戦要約</span>
                     <textarea
-                      name={`participants.${index}.note`}
-                      defaultValue={participant?.note ?? ""}
+                      name="conflictOutcome.settlementSummary"
+                      defaultValue={defaultValues?.conflictOutcome?.settlementSummary ?? ""}
+                      className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm">
+                    <span>補足メモ</span>
+                    <textarea
+                      name="conflictOutcome.note"
+                      defaultValue={defaultValues?.conflictOutcome?.note ?? ""}
                       className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
                     />
                   </label>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
-          <h2 className="text-sm font-semibold text-[var(--muted)]">結果要約</h2>
-          <div className="mt-4 grid gap-4">
-            <label className="grid gap-2 text-sm">
-              <span>講和・停戦要約</span>
-              <textarea
-                name="conflictOutcome.settlementSummary"
-                defaultValue={defaultValues?.conflictOutcome?.settlementSummary ?? ""}
-                className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
-              />
-            </label>
-            <label className="grid gap-2 text-sm">
-              <span>補足メモ</span>
-              <textarea
-                name="conflictOutcome.note"
-                defaultValue={defaultValues?.conflictOutcome?.note ?? ""}
-                className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
-              />
-            </label>
-          </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <div className="flex justify-end">
@@ -260,6 +312,23 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
       </form>
     </section>
   );
+}
+
+function getParticipantOptions(
+  participantType: ParticipantDefault["participantType"],
+  options: Props["options"]
+) {
+  switch (participantType) {
+    case "person":
+      return options.people;
+    case "religion":
+      return options.religions;
+    case "sect":
+      return options.sects;
+    case "polity":
+    default:
+      return options.polities;
+  }
 }
 
 function SelectionGroup({
