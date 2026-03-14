@@ -22,6 +22,7 @@ import {
   listSects,
   updateSect
 } from "@/server/repositories/sects";
+import { getRelatedEvents } from "@/server/services/event-references";
 
 export function getReligionOptions() {
   return listReligions().map((religion) => ({ id: religion.id, name: religion.name }));
@@ -109,6 +110,7 @@ export function getReligionDetailView(id: number) {
     sects,
     regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: people.filter((person) => founderIds.includes(person.id)),
+    relatedEvents: getRelatedEvents({ religionId: id }),
     timeLabel: formatStoredTime("time", religion),
     defaultTimeExpression: extractTimeExpression("time", religion)
   };
@@ -131,6 +133,7 @@ export function getSectDetailView(id: number) {
     religion,
     regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: people.filter((person) => founderIds.includes(person.id)),
+    relatedEvents: getRelatedEvents({ sectId: id }),
     timeLabel: formatStoredTime("time", sect),
     defaultTimeExpression: extractTimeExpression("time", sect)
   };

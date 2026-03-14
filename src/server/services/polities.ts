@@ -19,6 +19,7 @@ import {
   listDynasties,
   updateDynasty
 } from "@/server/repositories/dynasties";
+import { getRelatedEvents } from "@/server/services/event-references";
 
 export function getPolityOptions() {
   return listPolities().map((polity) => ({ id: polity.id, name: polity.name }));
@@ -80,6 +81,7 @@ export function getPolityDetailView(id: number) {
     polity,
     dynasties,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
+    relatedEvents: getRelatedEvents({ polityId: id }),
     timeLabel: formatStoredTime("time", polity),
     defaultTimeExpression: extractTimeExpression("time", polity)
   };
@@ -99,6 +101,7 @@ export function getDynastyDetailView(id: number) {
     dynasty,
     polity,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
+    relatedEvents: getRelatedEvents({ dynastyId: id }),
     timeLabel: formatStoredTime("time", dynasty),
     defaultTimeExpression: extractTimeExpression("time", dynasty)
   };

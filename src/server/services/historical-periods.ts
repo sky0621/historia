@@ -12,6 +12,7 @@ import {
 } from "@/server/repositories/historical-periods";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
+import { getRelatedEvents } from "@/server/services/event-references";
 import { getPeriodCategoryOptions } from "@/server/services/period-categories";
 
 export function getHistoricalPeriodFormOptions() {
@@ -62,7 +63,10 @@ export function getHistoricalPeriodDetailView(id: number) {
     period,
     categoryName: options.categories.find((item) => item.id === period.categoryId)?.name ?? "不明",
     polityName: period.polityId ? options.polities.find((item) => item.id === period.polityId)?.name ?? null : null,
+    polity: period.polityId ? options.polities.find((item) => item.id === period.polityId) ?? null : null,
+    category: options.categories.find((item) => item.id === period.categoryId) ?? null,
     regions: options.regions.filter((item) => linkedRegionIds.includes(item.id)),
+    relatedEvents: getRelatedEvents({ periodId: id }),
     timeLabel: formatStoredTime("time", period),
     defaultTimeExpression: extractTimeExpression("time", period),
     formOptions: options

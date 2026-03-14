@@ -54,13 +54,38 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">関連地域</dt>
-              <dd className="mt-1">{view.regions.map((region) => region.name).join(", ") || "-"}</dd>
+              <dd className="mt-1">
+                {view.regions.length === 0 ? "-" : view.regions.map((region, index) => (
+                  <span key={region.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/regions/${region.id}`} className="underline-offset-4 hover:underline">
+                      {region.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">メモ</dt>
               <dd className="mt-1 whitespace-pre-wrap">{view.dynasty.note ?? "-"}</dd>
             </div>
           </dl>
+        </div>
+      </div>
+
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <h2 className="text-lg font-semibold">関連イベント</h2>
+        <div className="mt-4 space-y-3">
+          {view.relatedEvents.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">関連イベントはまだありません。</p>
+          ) : (
+            view.relatedEvents.map((event) => (
+              <Link key={event.id} href={`/events/${event.id}`} className="block rounded-2xl border border-[var(--border)] px-4 py-3 text-sm hover:bg-stone-50">
+                <div className="font-medium">{event.title}</div>
+                <div className="mt-1 text-[var(--muted)]">{event.timeLabel} / {event.eventType}</div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </section>

@@ -26,6 +26,7 @@ import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listSects } from "@/server/repositories/sects";
+import { getRelatedEvents } from "@/server/services/event-references";
 
 export function getPersonOptions() {
   return listPeopleDetailed().map((person) => ({ id: person.id, name: person.name }));
@@ -105,6 +106,7 @@ export function getPersonDetailView(id: number) {
     religions: options.religions.filter((item) => religionLinks.includes(item.id)),
     sects: options.sects.filter((item) => sectLinks.includes(item.id)),
     periods: options.periods.filter((item) => periodLinks.includes(item.id)),
+    relatedEvents: getRelatedEvents({ personId: id }),
     roles: roles.map((role) => ({
       ...role,
       polityName: options.polities.find((item) => item.id === role.polityId)?.name ?? null,

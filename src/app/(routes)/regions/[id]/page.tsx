@@ -90,6 +90,108 @@ export default async function RegionDetailPage({
           </div>
         </div>
       </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+          <h2 className="text-lg font-semibold">関連主体</h2>
+          <dl className="mt-6 grid gap-4 text-sm">
+            <div>
+              <dt className="font-medium text-[var(--muted)]">人物</dt>
+              <dd className="mt-1">
+                {view.relatedPeople.length === 0 ? "-" : view.relatedPeople.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/people/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">国家</dt>
+              <dd className="mt-1">
+                {view.relatedPolities.length === 0 ? "-" : view.relatedPolities.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/polities/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">王朝</dt>
+              <dd className="mt-1">
+                {view.relatedDynasties.length === 0 ? "-" : view.relatedDynasties.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/dynasties/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">時代区分</dt>
+              <dd className="mt-1">
+                {view.relatedPeriods.length === 0 ? "-" : view.relatedPeriods.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/periods/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">宗教</dt>
+              <dd className="mt-1">
+                {view.relatedReligions.length === 0 ? "-" : view.relatedReligions.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/religions/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">宗派</dt>
+              <dd className="mt-1">
+                {view.relatedSects.length === 0 ? "-" : view.relatedSects.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/sects/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+          <h2 className="text-lg font-semibold">関連イベント</h2>
+          <div className="mt-4 space-y-3">
+            {view.relatedEvents.length === 0 ? (
+              <p className="text-sm text-[var(--muted)]">関連イベントはまだありません。</p>
+            ) : (
+              view.relatedEvents.map((event) => (
+                <Link key={event.id} href={`/events/${event.id}`} className="block rounded-2xl border border-[var(--border)] px-4 py-3 text-sm hover:bg-stone-50">
+                  <div className="font-medium">{event.title}</div>
+                  <div className="mt-1 text-[var(--muted)]">{event.timeLabel} / {event.eventType}</div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
