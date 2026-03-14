@@ -41,8 +41,14 @@ export function getFounderOptions() {
   return listPeople().map((person) => ({ id: person.id, name: person.name }));
 }
 
-export function getReligionListView(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+type ReligionListFilters = {
+  query?: string;
+  regionId?: number;
+  hasFounders?: boolean;
+};
+
+export function getReligionListView(filters: ReligionListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const religions = listReligions();
   const regions = listRegions();
   const people = listPeople();
@@ -59,11 +65,24 @@ export function getReligionListView(query?: string) {
         .filter((link) => link.religionId === religion.id)
         .map((link) => regionNameById.get(link.regionId))
         .filter((name): name is string => Boolean(name)),
+      regionIds: regionLinks.filter((link) => link.religionId === religion.id).map((link) => link.regionId),
       founderNames: founderLinks
         .filter((link) => link.religionId === religion.id)
         .map((link) => personNameById.get(link.personId))
-        .filter((name): name is string => Boolean(name))
+        .filter((name): name is string => Boolean(name)),
+      founderIds: founderLinks.filter((link) => link.religionId === religion.id).map((link) => link.personId)
     }))
+    .filter((religion) => {
+      if (filters.regionId && !religion.regionIds.includes(filters.regionId)) {
+        return false;
+      }
+
+      if (filters.hasFounders && religion.founderIds.length === 0) {
+        return false;
+      }
+
+      return true;
+    })
     .filter((religion) =>
       matchesQuery(
         [religion.name, religion.aliases, religion.description, religion.note, religion.regionNames.join(", "), religion.founderNames.join(", ")],
