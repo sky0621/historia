@@ -32,8 +32,19 @@ export function getRegionOptions() {
   return listRegions().map((region) => ({ id: region.id, name: region.name }));
 }
 
-export function getPolityListView(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+type PolityListFilters = {
+  query?: string;
+  regionId?: number;
+};
+
+type DynastyListFilters = {
+  query?: string;
+  polityId?: number;
+  regionId?: number;
+};
+
+export function getPolityListView(filters: PolityListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const polities = listPolities();
   const regions = listRegions();
   const links = getPolityRegionIds(polities.map((polity) => polity.id));
@@ -46,13 +57,21 @@ export function getPolityListView(query?: string) {
       regionNames: links
         .filter((link) => link.polityId === polity.id)
         .map((link) => regionNameById.get(link.regionId))
-        .filter((name): name is string => Boolean(name))
+        .filter((name): name is string => Boolean(name)),
+      regionIds: links.filter((link) => link.polityId === polity.id).map((link) => link.regionId)
     }))
+    .filter((polity) => {
+      if (filters.regionId && !polity.regionIds.includes(filters.regionId)) {
+        return false;
+      }
+
+      return true;
+    })
     .filter((polity) => matchesQuery([polity.name, polity.aliases, polity.note, polity.regionNames.join(", ")], normalizedQuery));
 }
 
-export function getDynastyListView(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+export function getDynastyListView(filters: DynastyListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const dynasties = listDynasties();
   const polities = listPolities();
   const polityNameById = new Map(polities.map((polity) => [polity.id, polity.name]));
@@ -68,8 +87,20 @@ export function getDynastyListView(query?: string) {
       regionNames: links
         .filter((link) => link.dynastyId === dynasty.id)
         .map((link) => regionNameById.get(link.regionId))
-        .filter((name): name is string => Boolean(name))
+        .filter((name): name is string => Boolean(name)),
+      regionIds: links.filter((link) => link.dynastyId === dynasty.id).map((link) => link.regionId)
     }))
+    .filter((dynasty) => {
+      if (filters.polityId && dynasty.polityId !== filters.polityId) {
+        return false;
+      }
+
+      if (filters.regionId && !dynasty.regionIds.includes(filters.regionId)) {
+        return false;
+      }
+
+      return true;
+    })
     .filter((dynasty) =>
       matchesQuery([dynasty.name, dynasty.aliases, dynasty.note, dynasty.polityName, dynasty.regionNames.join(", ")], normalizedQuery)
     );
