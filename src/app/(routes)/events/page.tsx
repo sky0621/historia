@@ -11,11 +11,24 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
+  const religionId = getNumericParam(params.religionId);
+  const sectId = getNumericParam(params.sectId);
   const regionId = getNumericParam(params.regionId);
   const periodId = getNumericParam(params.periodId);
   const fromYear = getNumericParam(params.fromYear);
   const toYear = getNumericParam(params.toYear);
-  const events = getEventsListView({ query, eventType, personId, polityId, regionId, periodId, fromYear, toYear });
+  const events = getEventsListView({
+    query,
+    eventType,
+    personId,
+    polityId,
+    religionId,
+    sectId,
+    regionId,
+    periodId,
+    fromYear,
+    toYear
+  });
   const options = getEventFormOptions();
 
   return (
@@ -76,6 +89,28 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             {options.regions.map((region) => (
               <option key={region.id} value={region.id}>
                 {region.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連宗教</span>
+          <select name="religionId" defaultValue={religionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.religions.map((religion) => (
+              <option key={religion.id} value={religion.id}>
+                {religion.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連宗派</span>
+          <select name="sectId" defaultValue={sectId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.sects.map((sect) => (
+              <option key={sect.id} value={sect.id}>
+                {sect.name}
               </option>
             ))}
           </select>

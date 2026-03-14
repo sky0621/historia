@@ -34,6 +34,8 @@ type EventListFilters = {
   eventType?: "general" | "war" | "rebellion" | "civil_war";
   personId?: number;
   polityId?: number;
+  religionId?: number;
+  sectId?: number;
   regionId?: number;
   periodId?: number;
   fromYear?: number;
@@ -61,6 +63,8 @@ export function getEventsListView(filters: EventListFilters = {}) {
   const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
+  const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
+  const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
 
   return events
     .map((event) => {
@@ -76,13 +80,23 @@ export function getEventsListView(filters: EventListFilters = {}) {
         .filter((link) => link.eventId === event.id)
         .map((link) => periodsById.get(link.periodId))
         .filter((name): name is string => Boolean(name));
+      const religionNames = links.religionLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => religionsById.get(link.religionId))
+        .filter((name): name is string => Boolean(name));
+      const sectNames = links.sectLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => sectsById.get(link.sectId))
+        .filter((name): name is string => Boolean(name));
 
       return {
         ...event,
         timeLabel: formatStoredTime("time", event),
-        relationSummary: [...personNames, ...polityNames, ...periodNames].slice(0, 4).join(", "),
+        relationSummary: [...personNames, ...polityNames, ...periodNames, ...religionNames, ...sectNames].slice(0, 4).join(", "),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
+        religionIds: links.religionLinks.filter((link) => link.eventId === event.id).map((link) => link.religionId),
+        sectIds: links.sectLinks.filter((link) => link.eventId === event.id).map((link) => link.sectId),
         regionIds: links.regionLinks.filter((link) => link.eventId === event.id).map((link) => link.regionId),
         periodIds: links.periodLinks.filter((link) => link.eventId === event.id).map((link) => link.periodId)
       };
@@ -97,6 +111,14 @@ export function getEventsListView(filters: EventListFilters = {}) {
       }
 
       if (filters.polityId && !event.polityIds.includes(filters.polityId)) {
+        return false;
+      }
+
+      if (filters.religionId && !event.religionIds.includes(filters.religionId)) {
+        return false;
+      }
+
+      if (filters.sectId && !event.sectIds.includes(filters.sectId)) {
         return false;
       }
 
