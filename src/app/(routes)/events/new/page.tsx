@@ -1,5 +1,13 @@
-import { EventDraftForm } from "@/features/events/components/event-draft-form";
+import { EventForm } from "@/features/events/components/event-form";
+import { getEventFormOptions } from "@/server/services/events";
 
 export default function NewEventPage() {
-  return <EventDraftForm />;
+  return (
+    <EventForm
+      title="イベント作成"
+      description="イベント本体、関連主体、イベント間関係を登録します。"
+      submitLabel="イベントを作成"
+      options={getEventFormOptions()}
+    />
+  );
 }
