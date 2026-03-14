@@ -68,6 +68,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <dt className="font-medium text-[var(--muted)]">地域</dt>
               <dd className="mt-1">{view.linkedRegions.map((item) => item.name).join(", ") || "-"}</dd>
             </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">参加勢力</dt>
+              <dd className="mt-1">
+                {view.conflictParticipants.map((item) => `${item.participantName} (${item.role})`).join(", ") || "-"}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-[var(--muted)]">結果要約</dt>
+              <dd className="mt-1 whitespace-pre-wrap">{view.conflictOutcome?.settlementSummary ?? "-"}</dd>
+            </div>
           </dl>
         </div>
 

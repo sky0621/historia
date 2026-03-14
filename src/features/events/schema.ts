@@ -4,6 +4,13 @@ import { timeExpressionSchema } from "@/lib/time-expression/schema";
 
 const idsSchema = z.array(z.number().int().positive()).default([]);
 
+export const conflictParticipantSchema = z.object({
+  participantType: z.enum(["polity", "person", "religion", "sect"]),
+  participantId: z.number().int().positive(),
+  role: z.enum(["attacker", "defender", "leader", "ally", "other"]),
+  note: z.string().trim().optional()
+});
+
 export const eventRelationSchema = z.object({
   toEventId: z.number().int().positive(),
   relationType: z.enum(["before", "after", "cause", "related"])
@@ -23,7 +30,14 @@ export const eventSchema = z.object({
   religionIds: idsSchema,
   sectIds: idsSchema,
   regionIds: idsSchema,
-  relations: z.array(eventRelationSchema).default([])
+  relations: z.array(eventRelationSchema).default([]),
+  conflictParticipants: z.array(conflictParticipantSchema).default([]),
+  conflictOutcome: z
+    .object({
+      settlementSummary: z.string().trim().optional(),
+      note: z.string().trim().optional()
+    })
+    .optional()
 });
 
 export type EventInput = z.infer<typeof eventSchema>;
@@ -43,7 +57,9 @@ export function parseEventFormData(formData: FormData): EventInput {
     religionIds: normalizeIds(formData.getAll("religionIds")),
     sectIds: normalizeIds(formData.getAll("sectIds")),
     regionIds: normalizeIds(formData.getAll("regionIds")),
-    relations: parseRelations(formData)
+    relations: parseRelations(formData),
+    conflictParticipants: parseConflictParticipants(formData),
+    conflictOutcome: parseConflictOutcome(formData)
   });
 }
 
@@ -67,4 +83,50 @@ function parseRelations(formData: FormData) {
 
 function normalizeIds(values: FormDataEntryValue[]) {
   return values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+}
+
+function parseConflictParticipants(formData: FormData) {
+  const count = Number(formData.get("participantCount") ?? 0);
+  const participants = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const participantType = formData.get(`participants.${index}.participantType`);
+    const participantId = Number(formData.get(`participants.${index}.participantId`) ?? 0);
+    const role = formData.get(`participants.${index}.role`);
+    const note = formData.get(`participants.${index}.note`) ?? undefined;
+
+    if (
+      typeof participantType !== "string" ||
+      typeof role !== "string" ||
+      !Number.isFinite(participantId) ||
+      participantId <= 0
+    ) {
+      continue;
+    }
+
+    participants.push({
+      participantType,
+      participantId,
+      role,
+      note: typeof note === "string" ? note : undefined
+    });
+  }
+
+  return participants;
+}
+
+function parseConflictOutcome(formData: FormData) {
+  const settlementSummary = formData.get("conflictOutcome.settlementSummary");
+  const note = formData.get("conflictOutcome.note");
+  const normalizedSettlement = typeof settlementSummary === "string" ? settlementSummary.trim() : "";
+  const normalizedNote = typeof note === "string" ? note.trim() : "";
+
+  if (!normalizedSettlement && !normalizedNote) {
+    return undefined;
+  }
+
+  return {
+    settlementSummary: normalizedSettlement || undefined,
+    note: normalizedNote || undefined
+  };
 }

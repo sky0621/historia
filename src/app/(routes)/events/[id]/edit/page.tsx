@@ -34,7 +34,19 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         relations: view.outgoingRelations.map((relation) => ({
           toEventId: relation.toEventId,
           relationType: relation.relationType as "before" | "after" | "cause" | "related"
-        }))
+        })),
+        conflictParticipants: view.conflictParticipants.map((participant) => ({
+          participantType: participant.participantType as "polity" | "person" | "religion" | "sect",
+          participantId: participant.participantId,
+          role: participant.role as "attacker" | "defender" | "leader" | "ally" | "other",
+          note: participant.note ?? ""
+        })),
+        conflictOutcome: view.conflictOutcome
+          ? {
+              settlementSummary: view.conflictOutcome.settlementSummary ?? "",
+              note: view.conflictOutcome.note ?? ""
+            }
+          : undefined
       }}
     />
   );

@@ -1,6 +1,8 @@
 import { asc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  conflictOutcomes,
+  conflictParticipants,
   eventDynastyLinks,
   eventPeriodLinks,
   eventPersonLinks,
@@ -14,6 +16,8 @@ import {
 
 export type EventInsert = typeof events.$inferInsert;
 export type EventRelationInsert = typeof eventRelations.$inferInsert;
+export type ConflictParticipantInsert = typeof conflictParticipants.$inferInsert;
+export type ConflictOutcomeInsert = typeof conflictOutcomes.$inferInsert;
 
 export function listEvents() {
   return db.select().from(events).orderBy(asc(events.title)).all();
@@ -87,6 +91,22 @@ export function replaceEventRelations(eventId: number, relations: EventRelationI
   }
 }
 
+export function replaceConflictParticipants(eventId: number, participants: ConflictParticipantInsert[]) {
+  db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
+
+  if (participants.length > 0) {
+    db.insert(conflictParticipants).values(participants).run();
+  }
+}
+
+export function replaceConflictOutcome(eventId: number, outcome: ConflictOutcomeInsert | null) {
+  db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
+
+  if (outcome) {
+    db.insert(conflictOutcomes).values(outcome).run();
+  }
+}
+
 export function getEventLinks(eventIds: number[]) {
   if (eventIds.length === 0) {
     return {
@@ -128,6 +148,30 @@ export function getEventRelationsByEventIds(eventIds: number[]) {
     .all();
 }
 
+export function getConflictParticipantsByEventIds(eventIds: number[]) {
+  if (eventIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(conflictParticipants)
+    .where(inArray(conflictParticipants.eventId, eventIds))
+    .all();
+}
+
+export function getConflictOutcomesByEventIds(eventIds: number[]) {
+  if (eventIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(conflictOutcomes)
+    .where(inArray(conflictOutcomes.eventId, eventIds))
+    .all();
+}
+
 export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventPersonLinks).where(eq(eventPersonLinks.eventId, eventId)).run();
   db.delete(eventPolityLinks).where(eq(eventPolityLinks.eventId, eventId)).run();
@@ -137,4 +181,6 @@ export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventSectLinks).where(eq(eventSectLinks.eventId, eventId)).run();
   db.delete(eventRegionLinks).where(eq(eventRegionLinks.eventId, eventId)).run();
   db.delete(eventRelations).where(or(eq(eventRelations.fromEventId, eventId), eq(eventRelations.toEventId, eventId))).run();
+  db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
+  db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
 }

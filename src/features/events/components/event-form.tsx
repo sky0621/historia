@@ -7,6 +7,12 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Option = { id: number; name: string };
 type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" };
+type ParticipantDefault = {
+  participantType: "polity" | "person" | "religion" | "sect";
+  participantId: number;
+  role: "attacker" | "defender" | "leader" | "ally" | "other";
+  note: string;
+};
 
 type Props = {
   title: string;
@@ -38,12 +44,20 @@ type Props = {
     sectIds: number[];
     regionIds: number[];
     relations: RelationDefault[];
+    conflictParticipants: ParticipantDefault[];
+    conflictOutcome?: {
+      settlementSummary: string;
+      note: string;
+    };
   };
 };
 
 export function EventForm({ title, description, submitLabel, options, defaultValues }: Props) {
   const action = defaultValues?.id ? updateEventAction : createEventAction;
   const [relationCount, setRelationCount] = useState(Math.max(defaultValues?.relations.length ?? 0, 1));
+  const [participantCount, setParticipantCount] = useState(
+    Math.max(defaultValues?.conflictParticipants.length ?? 0, 1)
+  );
 
   return (
     <section className="space-y-6">
@@ -55,6 +69,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
       <form action={action} className="space-y-6 rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
         <input type="hidden" name="relationCount" value={relationCount} />
+        <input type="hidden" name="participantCount" value={participantCount} />
 
         <div className="grid gap-5">
           <label className="grid gap-2 text-sm">
@@ -141,6 +156,99 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        <section className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--muted)]">参加勢力</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">戦争・乱の参加主体と役割を登録します。</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setParticipantCount((count) => count + 1)}
+              className="rounded-full border border-[var(--border)] px-4 py-2 text-sm"
+            >
+              参加者を追加
+            </button>
+          </div>
+          <div className="mt-4 space-y-4">
+            {Array.from({ length: participantCount }).map((_, index) => {
+              const participant = defaultValues?.conflictParticipants[index];
+              return (
+                <div key={index} className="space-y-4 rounded-2xl border border-[var(--border)] p-4">
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    <label className="grid gap-2 text-sm">
+                      <span>主体種別</span>
+                      <select
+                        name={`participants.${index}.participantType`}
+                        defaultValue={participant?.participantType ?? "polity"}
+                        className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      >
+                        <option value="polity">polity</option>
+                        <option value="person">person</option>
+                        <option value="religion">religion</option>
+                        <option value="sect">sect</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-2 text-sm">
+                      <span>対象ID</span>
+                      <input
+                        name={`participants.${index}.participantId`}
+                        defaultValue={participant?.participantId ?? ""}
+                        className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                        inputMode="numeric"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm">
+                      <span>役割</span>
+                      <select
+                        name={`participants.${index}.role`}
+                        defaultValue={participant?.role ?? "other"}
+                        className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      >
+                        <option value="attacker">attacker</option>
+                        <option value="defender">defender</option>
+                        <option value="leader">leader</option>
+                        <option value="ally">ally</option>
+                        <option value="other">other</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label className="grid gap-2 text-sm">
+                    <span>メモ</span>
+                    <textarea
+                      name={`participants.${index}.note`}
+                      defaultValue={participant?.note ?? ""}
+                      className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                    />
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
+          <h2 className="text-sm font-semibold text-[var(--muted)]">結果要約</h2>
+          <div className="mt-4 grid gap-4">
+            <label className="grid gap-2 text-sm">
+              <span>講和・停戦要約</span>
+              <textarea
+                name="conflictOutcome.settlementSummary"
+                defaultValue={defaultValues?.conflictOutcome?.settlementSummary ?? ""}
+                className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              />
+            </label>
+            <label className="grid gap-2 text-sm">
+              <span>補足メモ</span>
+              <textarea
+                name="conflictOutcome.note"
+                defaultValue={defaultValues?.conflictOutcome?.note ?? ""}
+                className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              />
+            </label>
           </div>
         </section>
 

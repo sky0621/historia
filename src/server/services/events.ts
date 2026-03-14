@@ -8,9 +8,13 @@ import {
   deleteEvent,
   deleteEventLinksAndRelations,
   getEventById,
+  getConflictOutcomesByEventIds,
+  getConflictParticipantsByEventIds,
   getEventLinks,
   getEventRelationsByEventIds,
   listEvents,
+  replaceConflictOutcome,
+  replaceConflictParticipants,
   replaceEventLinks,
   replaceEventRelations,
   updateEvent
@@ -74,8 +78,16 @@ export function getEventDetailView(id: number) {
 
   const links = getEventLinks([id]);
   const relations = getEventRelationsByEventIds([id]);
+  const participants = getConflictParticipantsByEventIds([id]);
+  const outcomes = getConflictOutcomesByEventIds([id]);
   const options = getEventFormOptions();
   const eventNameById = new Map(options.events.map((item) => [item.id, item.name]));
+  const participantNameByType = {
+    person: new Map(options.people.map((item) => [item.id, item.name])),
+    polity: new Map(options.polities.map((item) => [item.id, item.name])),
+    religion: new Map(options.religions.map((item) => [item.id, item.name])),
+    sect: new Map(options.sects.map((item) => [item.id, item.name]))
+  };
 
   return {
     event,
@@ -98,6 +110,14 @@ export function getEventDetailView(id: number) {
         ...relation,
         eventName: eventNameById.get(relation.fromEventId) ?? `#${relation.fromEventId}`
       })),
+    conflictParticipants: participants.map((participant) => ({
+      ...participant,
+      participantName:
+        participantNameByType[participant.participantType as "person" | "polity" | "religion" | "sect"]?.get(
+          participant.participantId
+        ) ?? `#${participant.participantId}`
+    })),
+    conflictOutcome: outcomes[0] ?? null,
     defaultTimeExpression: extractTimeExpression("time", event),
     defaultStartTimeExpression: extractStandaloneTime("start", event),
     defaultEndTimeExpression: extractStandaloneTime("end", event),
@@ -141,6 +161,28 @@ export function createEventFromInput(input: EventInput) {
       }))
     );
 
+    replaceConflictParticipants(
+      eventId,
+      input.conflictParticipants.map((participant) => ({
+        eventId,
+        participantType: participant.participantType,
+        participantId: participant.participantId,
+        role: participant.role,
+        note: nullable(participant.note)
+      }))
+    );
+
+    replaceConflictOutcome(
+      eventId,
+      input.conflictOutcome
+        ? {
+            eventId,
+            settlementSummary: nullable(input.conflictOutcome.settlementSummary),
+            note: nullable(input.conflictOutcome.note)
+          }
+        : null
+    );
+
     return eventId;
   });
 }
@@ -174,6 +216,28 @@ export function updateEventFromInput(id: number, input: EventInput) {
         toEventId: relation.toEventId,
         relationType: relation.relationType
       }))
+    );
+
+    replaceConflictParticipants(
+      id,
+      input.conflictParticipants.map((participant) => ({
+        eventId: id,
+        participantType: participant.participantType,
+        participantId: participant.participantId,
+        role: participant.role,
+        note: nullable(participant.note)
+      }))
+    );
+
+    replaceConflictOutcome(
+      id,
+      input.conflictOutcome
+        ? {
+            eventId: id,
+            settlementSummary: nullable(input.conflictOutcome.settlementSummary),
+            note: nullable(input.conflictOutcome.note)
+          }
+        : null
     );
   });
 }
