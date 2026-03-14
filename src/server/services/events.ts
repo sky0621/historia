@@ -110,7 +110,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
 
       return {
         ...event,
-        timeLabel: formatStoredTime("time", event),
+        timeLabel: formatEventTime(event),
         relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames, ...regionNames, ...tagNames].slice(0, 4).join(", "),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
@@ -460,6 +460,21 @@ function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   return extracted ? formatTimeExpression(extracted) : "年未詳";
 }
 
+function formatEventTime(value: Record<string, unknown>) {
+  const conflictRange = toStandaloneYearLabel(
+    (value.startCalendarEra as "BCE" | "CE" | null) ?? null,
+    (value.startYear as number | null) ?? null,
+    (value.endCalendarEra as "BCE" | "CE" | null) ?? null,
+    (value.endYear as number | null) ?? null
+  );
+
+  if (conflictRange) {
+    return conflictRange;
+  }
+
+  return formatStoredTime("time", value);
+}
+
 function normalizeQuery(value?: string) {
   return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
 }
@@ -539,6 +554,24 @@ function getComparableRangeFromStandalone(
     start: Math.min(start, end),
     end: Math.max(start, end)
   };
+}
+
+function toStandaloneYearLabel(
+  startEra: "BCE" | "CE" | null,
+  startYear: number | null,
+  endEra: "BCE" | "CE" | null,
+  endYear: number | null
+) {
+  if (startYear == null) {
+    return null;
+  }
+
+  const start = `${startYear}${startEra === "BCE" ? " BCE" : ""}`;
+  const resolvedEndYear = endYear ?? startYear;
+  const resolvedEndEra = endEra ?? startEra;
+  const end = `${resolvedEndYear}${resolvedEndEra === "BCE" ? " BCE" : ""}`;
+
+  return start === end ? start : `${start} - ${end}`;
 }
 
 function toComparableYear(era: string | null, year: number) {
