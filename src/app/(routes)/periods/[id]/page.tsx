@@ -105,6 +105,7 @@ export default async function HistoricalPeriodDetailPage({
               <Link key={event.id} href={`/events/${event.id}`} className="block rounded-2xl border border-[var(--border)] px-4 py-3 text-sm hover:bg-stone-50">
                 <div className="font-medium">{event.title}</div>
                 <div className="mt-1 text-[var(--muted)]">{event.timeLabel} / {event.eventType}</div>
+                {event.relationSummary ? <div className="mt-1 text-[var(--muted)]">{event.relationSummary}</div> : null}
               </Link>
             ))
           )}

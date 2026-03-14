@@ -83,6 +83,7 @@ export default async function PeriodCategoryDetailPage({
                 <div className="mt-1 text-[var(--muted)]">
                   {event.eventType} / {event.timeLabel}
                 </div>
+                {event.relationSummary ? <div className="mt-1 text-[var(--muted)]">{event.relationSummary}</div> : null}
               </div>
             ))
           )}

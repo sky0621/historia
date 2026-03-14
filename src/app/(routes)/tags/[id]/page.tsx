@@ -48,6 +48,7 @@ export default async function TagDetailPage({ params }: { params: Promise<{ id: 
                 <div className="mt-1 text-[var(--muted)]">
                   {event.eventType} / {event.timeLabel}
                 </div>
+                {event.relationSummary ? <div className="mt-1 text-[var(--muted)]">{event.relationSummary}</div> : null}
               </div>
             ))
           )}
