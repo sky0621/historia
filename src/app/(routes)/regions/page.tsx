@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { listRegions } from "@/server/repositories/regions";
-import { getRegionById } from "@/server/repositories/regions";
+import { getRegionListView, getRegionOptions } from "@/server/services/regions";
 
 type RegionsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -8,12 +7,11 @@ type RegionsPageProps = {
 
 export default async function RegionsPage({ searchParams }: RegionsPageProps) {
   const params = searchParams ? await searchParams : {};
-  const query = getSingleParam(params.q)?.trim().toLocaleLowerCase("ja-JP") ?? "";
-  const regions = listRegions().filter((region) =>
-    query.length === 0
-      ? true
-      : [region.name, region.aliases, region.description, region.note].some((value) => value?.toLocaleLowerCase("ja-JP").includes(query))
-  );
+  const query = getSingleParam(params.q);
+  const parentRegionId = getParentRegionParam(params.parentRegionId);
+  const hasChildren = getSingleParam(params.hasChildren) === "1";
+  const regions = getRegionListView({ query, parentRegionId, hasChildren });
+  const parentRegions = getRegionOptions();
 
   return (
     <section className="space-y-6">
@@ -32,12 +30,35 @@ export default async function RegionsPage({ searchParams }: RegionsPageProps) {
         </Link>
       </div>
 
-      <form className="flex flex-col gap-3 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:flex-row md:items-end">
-        <label className="flex-1 space-y-2 text-sm">
+      <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+        <label className="space-y-2 text-sm md:col-span-2 xl:col-span-4">
           <span className="font-medium text-[var(--muted)]">名称検索</span>
           <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="地域名・別名・説明" />
         </label>
-        <div className="flex gap-3">
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">親地域</span>
+          <select
+            name="parentRegionId"
+            defaultValue={parentRegionId === undefined ? "" : String(parentRegionId)}
+            className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+          >
+            <option value="">すべて</option>
+            <option value="0">親地域なし</option>
+            {parentRegions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">子地域</span>
+          <select name="hasChildren" defaultValue={hasChildren ? "1" : ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            <option value="1">子地域あり</option>
+          </select>
+        </label>
+        <div className="flex items-end gap-3">
           <button type="submit" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
             検索
           </button>
@@ -64,20 +85,17 @@ export default async function RegionsPage({ searchParams }: RegionsPageProps) {
                 </td>
               </tr>
             ) : (
-              regions.map((region) => {
-                const parent = region.parentRegionId ? getRegionById(region.parentRegionId) : null;
-                return (
-                  <tr key={region.id} className="border-t border-[var(--border)]">
-                    <td className="px-5 py-4">
-                      <Link href={`/regions/${region.id}`} className="font-medium underline-offset-4 hover:underline">
-                        {region.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-4">{parent?.name ?? "-"}</td>
-                    <td className="px-5 py-4 text-[var(--muted)]">{region.description ?? "-"}</td>
-                  </tr>
-                );
-              })
+              regions.map((region) => (
+                <tr key={region.id} className="border-t border-[var(--border)]">
+                  <td className="px-5 py-4">
+                    <Link href={`/regions/${region.id}`} className="font-medium underline-offset-4 hover:underline">
+                      {region.name}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-4">{region.parentName ?? "-"}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">{region.description ?? "-"}</td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -88,4 +106,18 @@ export default async function RegionsPage({ searchParams }: RegionsPageProps) {
 
 function getSingleParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getParentRegionParam(value: string | string[] | undefined) {
+  const single = getSingleParam(value);
+  if (!single) {
+    return undefined;
+  }
+
+  if (single === "0") {
+    return 0;
+  }
+
+  const parsed = Number(single);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

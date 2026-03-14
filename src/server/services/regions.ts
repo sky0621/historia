@@ -20,6 +20,49 @@ export function getRegionOptions(excludeId?: number) {
     .map((region) => ({ id: region.id, name: region.name }));
 }
 
+type RegionListFilters = {
+  query?: string;
+  parentRegionId?: number;
+  hasChildren?: boolean;
+};
+
+export function getRegionListView(filters: RegionListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
+  const regions = listRegions();
+  const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
+
+  return regions
+    .map((region) => {
+      const childCount = regions.filter((candidate) => candidate.parentRegionId === region.id).length;
+
+      return {
+        ...region,
+        parentName: region.parentRegionId ? regionNameById.get(region.parentRegionId) ?? null : null,
+        childCount
+      };
+    })
+    .filter((region) => {
+      if (filters.parentRegionId !== undefined) {
+        if (filters.parentRegionId === 0) {
+          if (region.parentRegionId !== null) {
+            return false;
+          }
+        } else if (region.parentRegionId !== filters.parentRegionId) {
+          return false;
+        }
+      }
+
+      if (filters.hasChildren && region.childCount === 0) {
+        return false;
+      }
+
+      return true;
+    })
+    .filter((region) =>
+      matchesQuery([region.name, region.aliases, region.description, region.note, region.parentName ?? ""], normalizedQuery)
+    );
+}
+
 export function getRegionView(id: number) {
   const region = getRegionById(id);
   if (!region) {
@@ -86,4 +129,16 @@ function joinAliases(value: string[]) {
 
 function nullable(value: string | undefined) {
   return value && value.length > 0 ? value : null;
+}
+
+function normalizeQuery(value?: string) {
+  return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
+}
+
+function matchesQuery(values: Array<string | null | undefined>, query: string) {
+  if (query.length === 0) {
+    return true;
+  }
+
+  return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }
