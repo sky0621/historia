@@ -10,17 +10,29 @@ import {
   updateTag
 } from "@/server/repositories/tags";
 
-export function getTagList(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+type TagListFilters = {
+  query?: string;
+  hasEvents?: boolean;
+};
+
+export function getTagList(filters: TagListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const tags = listTags();
   const eventLinks = getEventTagLinks(listEvents().map((event) => event.id));
 
   return tags
-    .filter((tag) => matchesQuery(tag.name, normalizedQuery))
     .map((tag) => ({
       ...tag,
       eventCount: eventLinks.filter((link) => link.tagId === tag.id).length
-    }));
+    }))
+    .filter((tag) => {
+      if (filters.hasEvents && tag.eventCount === 0) {
+        return false;
+      }
+
+      return true;
+    })
+    .filter((tag) => matchesQuery(tag.name, normalizedQuery));
 }
 
 export function getTagView(id: number) {
