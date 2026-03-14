@@ -48,7 +48,8 @@ export function getPolityListView(query?: string) {
     .filter((polity) => matchesQuery([polity.name, polity.aliases, polity.note, polity.regionNames.join(", ")], normalizedQuery));
 }
 
-export function getDynastyListView() {
+export function getDynastyListView(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
   const dynasties = listDynasties();
   const polities = listPolities();
   const polityNameById = new Map(polities.map((polity) => [polity.id, polity.name]));
@@ -56,15 +57,19 @@ export function getDynastyListView() {
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const links = getDynastyRegionIds(dynasties.map((dynasty) => dynasty.id));
 
-  return dynasties.map((dynasty) => ({
-    ...dynasty,
-    polityName: polityNameById.get(dynasty.polityId) ?? "不明",
-    timeLabel: formatStoredTime("time", dynasty),
-    regionNames: links
-      .filter((link) => link.dynastyId === dynasty.id)
-      .map((link) => regionNameById.get(link.regionId))
-      .filter((name): name is string => Boolean(name))
-  }));
+  return dynasties
+    .map((dynasty) => ({
+      ...dynasty,
+      polityName: polityNameById.get(dynasty.polityId) ?? "不明",
+      timeLabel: formatStoredTime("time", dynasty),
+      regionNames: links
+        .filter((link) => link.dynastyId === dynasty.id)
+        .map((link) => regionNameById.get(link.regionId))
+        .filter((name): name is string => Boolean(name))
+    }))
+    .filter((dynasty) =>
+      matchesQuery([dynasty.name, dynasty.aliases, dynasty.note, dynasty.polityName, dynasty.regionNames.join(", ")], normalizedQuery)
+    );
 }
 
 export function getPolityDetailView(id: number) {

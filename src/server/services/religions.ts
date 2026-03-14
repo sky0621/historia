@@ -67,7 +67,8 @@ export function getReligionListView(query?: string) {
     );
 }
 
-export function getSectListView() {
+export function getSectListView(query?: string) {
+  const normalizedQuery = normalizeQuery(query);
   const sects = listSects();
   const religions = listReligions();
   const regions = listRegions();
@@ -78,19 +79,26 @@ export function getSectListView() {
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const personNameById = new Map(people.map((person) => [person.id, person.name]));
 
-  return sects.map((sect) => ({
-    ...sect,
-    religionName: religionNameById.get(sect.religionId) ?? "不明",
-    timeLabel: formatStoredTime("time", sect),
-    regionNames: regionLinks
-      .filter((link) => link.sectId === sect.id)
-      .map((link) => regionNameById.get(link.regionId))
-      .filter((name): name is string => Boolean(name)),
-    founderNames: founderLinks
-      .filter((link) => link.sectId === sect.id)
-      .map((link) => personNameById.get(link.personId))
-      .filter((name): name is string => Boolean(name))
-  }));
+  return sects
+    .map((sect) => ({
+      ...sect,
+      religionName: religionNameById.get(sect.religionId) ?? "不明",
+      timeLabel: formatStoredTime("time", sect),
+      regionNames: regionLinks
+        .filter((link) => link.sectId === sect.id)
+        .map((link) => regionNameById.get(link.regionId))
+        .filter((name): name is string => Boolean(name)),
+      founderNames: founderLinks
+        .filter((link) => link.sectId === sect.id)
+        .map((link) => personNameById.get(link.personId))
+        .filter((name): name is string => Boolean(name))
+    }))
+    .filter((sect) =>
+      matchesQuery(
+        [sect.name, sect.aliases, sect.description, sect.note, sect.religionName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
+        normalizedQuery
+      )
+    );
 }
 
 export function getReligionDetailView(id: number) {
