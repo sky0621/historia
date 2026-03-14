@@ -1,10 +1,14 @@
-import { PlaceholderEditor } from "@/components/forms/placeholder-editor";
+import { ReligionForm } from "@/features/religions/components/religion-form";
+import { getFounderOptions, getRegionOptions } from "@/server/services/religions";
 
 export default function NewReligionPage() {
   return (
-    <PlaceholderEditor
+    <ReligionForm
       title="宗教作成"
-      description="宗教フォームは Sprint 2 で実装します。"
+      description="名称、開始終了年、開祖、関連地域を登録します。"
+      submitLabel="宗教を作成"
+      regionOptions={getRegionOptions()}
+      founderOptions={getFounderOptions()}
     />
   );
 }
