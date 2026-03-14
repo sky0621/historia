@@ -2,6 +2,7 @@ import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-exp
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { DynastyInput, PolityInput } from "@/features/polities/schema";
+import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPeopleDetailed } from "@/server/repositories/people-detail";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listRegions } from "@/server/repositories/regions";
@@ -81,6 +82,12 @@ export function getPolityDetailView(id: number) {
   }
 
   const dynasties = listDynasties().filter((dynasty) => dynasty.polityId === polity.id);
+  const relatedPeriods = listHistoricalPeriods()
+    .filter((period) => period.polityId === polity.id)
+    .map((period) => ({
+      ...period,
+      timeLabel: formatStoredTime("time", period)
+    }));
   const regions = listRegions();
   const linkedRegionIds = getPolityRegionIds([polity.id]).map((link) => link.regionId);
   const people = listPeopleDetailed();
@@ -89,6 +96,7 @@ export function getPolityDetailView(id: number) {
   return {
     polity,
     dynasties,
+    relatedPeriods,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
     relatedPeople: buildRelatedPeople(
       people,

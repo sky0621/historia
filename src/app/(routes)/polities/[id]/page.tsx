@@ -81,6 +81,24 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <h2 className="text-lg font-semibold">関連時代区分</h2>
+        <div className="mt-4 space-y-3">
+          {view.relatedPeriods.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">この国家を対象にした時代区分はまだありません。</p>
+          ) : (
+            view.relatedPeriods.map((period) => (
+              <div key={period.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                <Link href={`/periods/${period.id}`} className="font-medium underline-offset-4 hover:underline">
+                  {period.name}
+                </Link>
+                <div className="mt-1 text-[var(--muted)]">{period.timeLabel}</div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
         <h2 className="text-lg font-semibold">関連人物</h2>
         <div className="mt-4 space-y-3">
           {view.relatedPeople.length === 0 ? (
