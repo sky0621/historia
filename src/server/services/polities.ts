@@ -2,6 +2,8 @@ import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-exp
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { DynastyInput, PolityInput } from "@/features/polities/schema";
+import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listRegions } from "@/server/repositories/regions";
 import {
   createPolity,
@@ -81,11 +83,18 @@ export function getPolityDetailView(id: number) {
   const dynasties = listDynasties().filter((dynasty) => dynasty.polityId === polity.id);
   const regions = listRegions();
   const linkedRegionIds = getPolityRegionIds([polity.id]).map((link) => link.regionId);
+  const people = listPeopleDetailed();
+  const roles = getRoleAssignmentsByPersonIds(people.map((person) => person.id));
 
   return {
     polity,
     dynasties,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
+    relatedPeople: buildRelatedPeople(
+      people,
+      roles.filter((role) => role.polityId === id),
+      "polity"
+    ),
     relatedEvents: getRelatedEvents({ polityId: id }),
     timeLabel: formatStoredTime("time", polity),
     defaultTimeExpression: extractTimeExpression("time", polity)
@@ -101,11 +110,18 @@ export function getDynastyDetailView(id: number) {
   const polity = getPolityById(dynasty.polityId);
   const regions = listRegions();
   const linkedRegionIds = getDynastyRegionIds([dynasty.id]).map((link) => link.regionId);
+  const people = listPeopleDetailed();
+  const roles = getRoleAssignmentsByPersonIds(people.map((person) => person.id));
 
   return {
     dynasty,
     polity,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
+    relatedPeople: buildRelatedPeople(
+      people,
+      roles.filter((role) => role.dynastyId === id),
+      "dynasty"
+    ),
     relatedEvents: getRelatedEvents({ dynastyId: id }),
     timeLabel: formatStoredTime("time", dynasty),
     defaultTimeExpression: extractTimeExpression("time", dynasty)
@@ -219,4 +235,39 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
+}
+
+function buildRelatedPeople(
+  people: ReturnType<typeof listPeopleDetailed>,
+  roles: ReturnType<typeof getRoleAssignmentsByPersonIds>,
+  scope: "polity" | "dynasty"
+) {
+  const peopleById = new Map(people.map((person) => [person.id, person]));
+  const grouped = new Map<number, Array<typeof roles[number]>>();
+
+  for (const role of roles) {
+    const current = grouped.get(role.personId) ?? [];
+    current.push(role);
+    grouped.set(role.personId, current);
+  }
+
+  return [...grouped.entries()]
+    .map(([personId, personRoles]) => {
+      const person = peopleById.get(personId);
+      if (!person) {
+        return null;
+      }
+
+      return {
+        id: person.id,
+        name: person.name,
+        roleLabels: personRoles.map((role) => `${role.title} (${formatStoredTime("time", role)})`),
+        primaryScopeCount:
+          scope === "polity"
+            ? personRoles.filter((role) => role.polityId != null).length
+            : personRoles.filter((role) => role.dynastyId != null).length
+      };
+    })
+    .filter((person): person is NonNullable<typeof person> => Boolean(person))
+    .sort((left, right) => right.primaryScopeCount - left.primaryScopeCount || left.name.localeCompare(right.name, "ja-JP"));
 }
