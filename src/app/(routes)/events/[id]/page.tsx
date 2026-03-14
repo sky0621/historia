@@ -20,6 +20,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
             種別: {view.event.eventType} / 時点: {view.defaultTimeExpression ? formatDisplay(view.defaultTimeExpression) : "年未詳"}
           </p>
+          {view.defaultStartTimeExpression || view.defaultEndTimeExpression ? (
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              期間: {view.defaultStartTimeExpression ? formatDisplay(view.defaultStartTimeExpression) : "未設定"} -{" "}
+              {view.defaultEndTimeExpression ? formatDisplay(view.defaultEndTimeExpression) : "未設定"}
+            </p>
+          ) : null}
         </div>
         <div className="flex gap-3">
           <Link href={`/events/${view.event.id}/edit`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
@@ -44,39 +50,63 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">人物</dt>
-              <dd className="mt-1">{view.linkedPeople.map((item) => item.name).join(", ") || "-"}</dd>
+              <dd className="mt-1">{renderLinkedItems(view.linkedPeople, "people")}</dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">国家</dt>
-              <dd className="mt-1">{view.linkedPolities.map((item) => item.name).join(", ") || "-"}</dd>
+              <dd className="mt-1">{renderLinkedItems(view.linkedPolities, "polities")}</dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">王朝</dt>
-              <dd className="mt-1">{view.linkedDynasties.map((item) => item.name).join(", ") || "-"}</dd>
+              <dd className="mt-1">{renderLinkedItems(view.linkedDynasties, "dynasties")}</dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">時代区分</dt>
-              <dd className="mt-1">{view.linkedPeriods.map((item) => item.name).join(", ") || "-"}</dd>
+              <dd className="mt-1">{renderLinkedItems(view.linkedPeriods, "periods")}</dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">宗教 / 宗派</dt>
               <dd className="mt-1">
-                {[...view.linkedReligions.map((item) => item.name), ...view.linkedSects.map((item) => item.name)].join(", ") || "-"}
+                {view.linkedReligions.length === 0 && view.linkedSects.length === 0 ? (
+                  "-"
+                ) : (
+                  <>
+                    {renderLinkedItems(view.linkedReligions, "religions")}
+                    {view.linkedReligions.length > 0 && view.linkedSects.length > 0 ? ", " : null}
+                    {renderLinkedItems(view.linkedSects, "sects")}
+                  </>
+                )}
               </dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">地域</dt>
-              <dd className="mt-1">{view.linkedRegions.map((item) => item.name).join(", ") || "-"}</dd>
+              <dd className="mt-1">{renderLinkedItems(view.linkedRegions, "regions")}</dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">参加勢力</dt>
               <dd className="mt-1">
-                {view.conflictParticipants.map((item) => `${item.participantName} (${item.role})`).join(", ") || "-"}
+                {view.conflictParticipants.length === 0 ? (
+                  "-"
+                ) : (
+                  <div className="space-y-2">
+                    {view.conflictParticipants.map((item) => (
+                      <div key={item.id} className="rounded-2xl border border-[var(--border)] px-3 py-2">
+                        {renderParticipantLink(item)} <span className="text-[var(--muted)]">/ {item.role}</span>
+                        {item.note ? <div className="mt-1 whitespace-pre-wrap text-[var(--muted)]">{item.note}</div> : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">結果要約</dt>
-              <dd className="mt-1 whitespace-pre-wrap">{view.conflictOutcome?.settlementSummary ?? "-"}</dd>
+              <dd className="mt-1 whitespace-pre-wrap">
+                {view.conflictOutcome?.settlementSummary ?? "-"}
+                {view.conflictOutcome?.note ? (
+                  <div className="mt-2 text-[var(--muted)]">{view.conflictOutcome.note}</div>
+                ) : null}
+              </dd>
             </div>
           </dl>
         </div>
@@ -92,13 +122,21 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   {view.outgoingRelations.map((relation) => (
                     <div key={`out-${relation.id}`} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                       <div className="font-medium">{relation.relationType}</div>
-                      <div className="mt-1 text-[var(--muted)]">{relation.eventName}</div>
+                      <div className="mt-1 text-[var(--muted)]">
+                        <Link href={`/events/${relation.toEventId}`} className="underline-offset-4 hover:underline">
+                          {relation.eventName}
+                        </Link>
+                      </div>
                     </div>
                   ))}
                   {view.incomingRelations.map((relation) => (
                     <div key={`in-${relation.id}`} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                       <div className="font-medium">incoming: {relation.relationType}</div>
-                      <div className="mt-1 text-[var(--muted)]">{relation.eventName}</div>
+                      <div className="mt-1 text-[var(--muted)]">
+                        <Link href={`/events/${relation.fromEventId}`} className="underline-offset-4 hover:underline">
+                          {relation.eventName}
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </>
@@ -119,4 +157,43 @@ function formatDisplay(value: { displayLabel?: string; calendarEra: string; star
     return `${value.calendarEra === "BCE" ? "BCE " : ""}${value.startYear}`;
   }
   return "年未詳";
+}
+
+function renderLinkedItems(
+  items: Array<{ id: number; name: string }>,
+  route: "people" | "polities" | "dynasties" | "periods" | "religions" | "sects" | "regions"
+) {
+  if (items.length === 0) {
+    return "-";
+  }
+
+  return items.map((item, index) => (
+    <span key={`${route}-${item.id}`}>
+      {index > 0 ? ", " : null}
+      <Link href={`/${route}/${item.id}`} className="underline-offset-4 hover:underline">
+        {item.name}
+      </Link>
+    </span>
+  ));
+}
+
+function renderParticipantLink(
+  participant: {
+    participantType: "person" | "polity" | "religion" | "sect";
+    participantId: number;
+    participantName: string;
+  }
+) {
+  const routeByType = {
+    person: "people",
+    polity: "polities",
+    religion: "religions",
+    sect: "sects"
+  } as const;
+
+  return (
+    <Link href={`/${routeByType[participant.participantType]}/${participant.participantId}`} className="underline-offset-4 hover:underline">
+      {participant.participantName}
+    </Link>
+  );
 }

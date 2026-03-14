@@ -156,6 +156,7 @@ export function getEventDetailView(id: number) {
       })),
     conflictParticipants: participants.map((participant) => ({
       ...participant,
+      participantType: participant.participantType as "person" | "polity" | "religion" | "sect",
       participantName:
         participantNameByType[participant.participantType as "person" | "polity" | "religion" | "sect"]?.get(
           participant.participantId
