@@ -24,8 +24,14 @@ export function getHistoricalPeriodFormOptions() {
   };
 }
 
-export function getHistoricalPeriodsListView(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+type HistoricalPeriodsListFilters = {
+  query?: string;
+  categoryId?: number;
+  polityId?: number;
+};
+
+export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const periods = listHistoricalPeriods();
   const categories = new Map(getPeriodCategoryOptions().map((item) => [item.id, item.name]));
   const polities = new Map(listPolities().map((item) => [item.id, item.name]));
@@ -43,6 +49,17 @@ export function getHistoricalPeriodsListView(query?: string) {
         .filter((name): name is string => Boolean(name)),
       timeLabel: formatStoredTime("time", period)
     }))
+    .filter((period) => {
+      if (filters.categoryId && period.categoryId !== filters.categoryId) {
+        return false;
+      }
+
+      if (filters.polityId && period.polityId !== filters.polityId) {
+        return false;
+      }
+
+      return true;
+    })
     .filter((period) =>
       matchesQuery(
         [period.name, period.aliases, period.description, period.note, period.categoryName, period.polityName, period.regionLabel, period.regionNames.join(", ")],

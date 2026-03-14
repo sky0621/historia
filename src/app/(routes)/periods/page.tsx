@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getHistoricalPeriodsListView } from "@/server/services/historical-periods";
+import { getHistoricalPeriodFormOptions, getHistoricalPeriodsListView } from "@/server/services/historical-periods";
 
 type PeriodsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -8,7 +8,10 @@ type PeriodsPageProps = {
 export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
-  const periods = getHistoricalPeriodsListView(query);
+  const categoryId = getNumericParam(params.categoryId);
+  const polityId = getNumericParam(params.polityId);
+  const periods = getHistoricalPeriodsListView({ query, categoryId, polityId });
+  const options = getHistoricalPeriodFormOptions();
 
   return (
     <section className="space-y-6">
@@ -24,12 +27,34 @@ export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
         </Link>
       </div>
 
-      <form className="flex flex-col gap-3 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:flex-row md:items-end">
-        <label className="flex-1 space-y-2 text-sm">
+      <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+        <label className="space-y-2 text-sm md:col-span-2 xl:col-span-4">
           <span className="font-medium text-[var(--muted)]">名称検索</span>
           <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="時代名・カテゴリ・対象国家・地域" />
         </label>
-        <div className="flex gap-3">
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">カテゴリ</span>
+          <select name="categoryId" defaultValue={categoryId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">対象国家</span>
+          <select name="polityId" defaultValue={polityId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.polities.map((polity) => (
+              <option key={polity.id} value={polity.id}>
+                {polity.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex items-end gap-3">
           <button type="submit" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
             検索
           </button>
@@ -79,4 +104,14 @@ export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
 
 function getSingleParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getNumericParam(value: string | string[] | undefined) {
+  const single = getSingleParam(value);
+  if (!single) {
+    return undefined;
+  }
+
+  const parsed = Number(single);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
