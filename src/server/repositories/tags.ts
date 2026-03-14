@@ -6,6 +6,10 @@ export function listTags() {
   return db.select().from(tags).orderBy(asc(tags.name)).all();
 }
 
+export function getTagById(id: number) {
+  return db.select().from(tags).where(eq(tags.id, id)).get();
+}
+
 export function getTagsByIds(tagIds: number[]) {
   if (tagIds.length === 0) {
     return [];
@@ -25,6 +29,15 @@ export function getTagsByNames(names: string[]) {
 export function createTag(name: string) {
   const result = db.insert(tags).values({ name }).run();
   return Number(result.lastInsertRowid);
+}
+
+export function updateTag(id: number, name: string) {
+  db.update(tags).set({ name }).where(eq(tags.id, id)).run();
+}
+
+export function deleteTag(id: number) {
+  db.delete(eventTagLinks).where(eq(eventTagLinks.tagId, id)).run();
+  db.delete(tags).where(eq(tags.id, id)).run();
 }
 
 export function getEventTagLinks(eventIds: number[]) {

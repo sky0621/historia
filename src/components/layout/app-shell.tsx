@@ -9,6 +9,7 @@ const navigation = [
   { href: "/period-categories", label: "カテゴリ" },
   { href: "/religions", label: "宗教" },
   { href: "/sects", label: "宗派" },
+  { href: "/tags", label: "タグ" },
   { href: "/regions", label: "地域" }
 ] as const;
 

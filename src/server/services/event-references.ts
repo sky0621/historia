@@ -3,6 +3,7 @@ import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import { getEventLinks, listEvents } from "@/server/repositories/events";
 
 type RelatedEventsFilter = {
+  tagId?: number;
   personId?: number;
   polityId?: number;
   dynastyId?: number;
@@ -39,6 +40,10 @@ function matchesEventFilter(
   filter: RelatedEventsFilter,
   links: ReturnType<typeof getEventLinks>
 ) {
+  if (filter.tagId && !links.tagLinks.some((link) => link.eventId === eventId && link.tagId === filter.tagId)) {
+    return false;
+  }
+
   if (filter.personId && !links.personLinks.some((link) => link.eventId === eventId && link.personId === filter.personId)) {
     return false;
   }

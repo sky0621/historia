@@ -54,7 +54,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 {view.linkedTags.length === 0 ? "-" : view.linkedTags.map((tag, index) => (
                   <span key={tag.id}>
                     {index > 0 ? ", " : null}
-                    {tag.name}
+                    <Link href={`/tags/${tag.id}`} className="underline-offset-4 hover:underline">
+                      {tag.name}
+                    </Link>
                   </span>
                 ))}
               </dd>
