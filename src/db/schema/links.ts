@@ -35,6 +35,11 @@ export const eventRegionLinks = sqliteTable("event_region_links", {
   regionId: integer("region_id").notNull()
 });
 
+export const eventTagLinks = sqliteTable("event_tag_links", {
+  eventId: integer("event_id").notNull(),
+  tagId: integer("tag_id").notNull()
+});
+
 export const personRegionLinks = sqliteTable("person_region_links", {
   personId: integer("person_id").notNull(),
   regionId: integer("region_id").notNull()

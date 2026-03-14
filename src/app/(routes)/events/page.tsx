@@ -8,6 +8,7 @@ type EventsPageProps = {
 export default async function EventsPage({ searchParams }: EventsPageProps) {
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
+  const tagId = getNumericParam(params.tagId);
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
@@ -20,6 +21,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const toYear = getNumericParam(params.toYear);
   const events = getEventsListView({
     query,
+    tagId,
     eventType,
     personId,
     polityId,
@@ -51,6 +53,17 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">キーワード</span>
           <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="タイトル・説明・関連主体" />
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">タグ</span>
+          <select name="tagId" defaultValue={tagId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.tags.map((tag) => (
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">種別</span>

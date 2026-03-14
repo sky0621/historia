@@ -8,6 +8,21 @@ export default function NewEventPage() {
       description="イベント本体、関連主体、イベント間関係を登録します。"
       submitLabel="イベントを作成"
       options={getEventFormOptions()}
+      defaultValues={{
+        title: "",
+        description: "",
+        tags: [],
+        eventType: "general",
+        personIds: [],
+        polityIds: [],
+        dynastyIds: [],
+        periodIds: [],
+        religionIds: [],
+        sectIds: [],
+        regionIds: [],
+        relations: [],
+        conflictParticipants: []
+      }}
     />
   );
 }

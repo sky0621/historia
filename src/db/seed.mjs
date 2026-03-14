@@ -28,6 +28,7 @@ function clearTables() {
     "conflict_participants",
     "event_relations",
     "event_region_links",
+    "event_tag_links",
     "event_sect_links",
     "event_religion_links",
     "event_period_links",
@@ -54,6 +55,7 @@ function clearTables() {
     "dynasties",
     "polities",
     "period_categories",
+    "tags",
     "regions"
   ];
 
@@ -511,6 +513,11 @@ function runSeed() {
   insert("person_period_links", { person_id: personIds.leonardo, period_id: periodIds.renaissance });
 
   const eventIds = {};
+  const tagIds = {};
+  tagIds.capital = insert("tags", { name: "遷都" });
+  tagIds.religion = insert("tags", { name: "宗教" });
+  tagIds.war = insert("tags", { name: "戦争" });
+  tagIds.culture = insert("tags", { name: "文化" });
   eventIds.heianCapital = insert("events", addEventBase({
     title: "平安京遷都",
     eventType: "general",
@@ -572,11 +579,16 @@ function runSeed() {
   insert("event_sect_links", { event_id: eventIds.crusade, sect_id: sectIds.catholic });
 
   insert("event_region_links", { event_id: eventIds.heianCapital, region_id: regionIds.kyoto });
+  insert("event_tag_links", { event_id: eventIds.heianCapital, tag_id: tagIds.capital });
   insert("event_region_links", { event_id: eventIds.tendai, region_id: regionIds.kyoto });
+  insert("event_tag_links", { event_id: eventIds.tendai, tag_id: tagIds.religion });
   insert("event_region_links", { event_id: eventIds.crusade, region_id: regionIds.europe });
   insert("event_region_links", { event_id: eventIds.crusade, region_id: regionIds.jerusalem });
+  insert("event_tag_links", { event_id: eventIds.crusade, tag_id: tagIds.war });
   insert("event_region_links", { event_id: eventIds.onin, region_id: regionIds.kyoto });
+  insert("event_tag_links", { event_id: eventIds.onin, tag_id: tagIds.war });
   insert("event_region_links", { event_id: eventIds.monalisa, region_id: regionIds.florence });
+  insert("event_tag_links", { event_id: eventIds.monalisa, tag_id: tagIds.culture });
 
   insert("event_relations", { from_event_id: eventIds.heianCapital, to_event_id: eventIds.tendai, relation_type: "before" });
   insert("event_relations", { from_event_id: eventIds.crusade, to_event_id: eventIds.onin, relation_type: "before" });

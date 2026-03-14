@@ -20,6 +20,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         id: view.event.id,
         title: view.event.title,
         description: view.event.description ?? "",
+        tags: view.linkedTags.map((tag) => tag.name),
         eventType: view.event.eventType as "general" | "war" | "rebellion" | "civil_war",
         timeExpression: view.defaultTimeExpression,
         startTimeExpression: view.defaultStartTimeExpression,

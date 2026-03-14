@@ -49,6 +49,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <dd className="mt-1 whitespace-pre-wrap">{view.event.description ?? "-"}</dd>
             </div>
             <div>
+              <dt className="font-medium text-[var(--muted)]">タグ</dt>
+              <dd className="mt-1">
+                {view.linkedTags.length === 0 ? "-" : view.linkedTags.map((tag, index) => (
+                  <span key={tag.id}>
+                    {index > 0 ? ", " : null}
+                    {tag.name}
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
               <dt className="font-medium text-[var(--muted)]">人物</dt>
               <dd className="mt-1">{renderLinkedItems(view.linkedPeople, "people")}</dd>
             </div>

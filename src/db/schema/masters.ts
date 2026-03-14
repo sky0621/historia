@@ -26,6 +26,11 @@ export const periodCategories = sqliteTable("period_categories", {
   description: text("description")
 });
 
+export const tags = sqliteTable("tags", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull()
+});
+
 export const polities = sqliteTable("polities", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),

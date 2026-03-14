@@ -30,6 +30,7 @@ type Props = {
     periods: Option[];
     religions: Option[];
     sects: Option[];
+    tags: Option[];
     regions: Option[];
     events: Option[];
   };
@@ -37,6 +38,7 @@ type Props = {
     id?: number;
     title: string;
     description: string;
+    tags: string[];
     eventType: "general" | "war" | "rebellion" | "civil_war";
     timeExpression?: TimeExpressionInput;
     startTimeExpression?: TimeExpressionInput;
@@ -131,6 +133,15 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           <label className="grid gap-2 text-sm">
             <span>説明</span>
             <textarea name="description" defaultValue={defaultValues?.description ?? ""} className="min-h-36 rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          </label>
+          <label className="grid gap-2 text-sm">
+            <span>タグ</span>
+            <input
+              name="tags"
+              defaultValue={defaultValues?.tags.join(", ") ?? ""}
+              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              placeholder="戦争, 宗教, 文化"
+            />
           </label>
         </div>
 

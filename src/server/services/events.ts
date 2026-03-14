@@ -28,9 +28,11 @@ import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { listSects } from "@/server/repositories/sects";
+import { createTag, getEventTagLinks, getTagsByIds, getTagsByNames, listTags } from "@/server/repositories/tags";
 
 type EventListFilters = {
   query?: string;
+  tagId?: number;
   eventType?: "general" | "war" | "rebellion" | "civil_war";
   personId?: number;
   polityId?: number;
@@ -51,6 +53,7 @@ export function getEventFormOptions() {
     periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name })),
+    tags: listTags().map((item) => ({ id: item.id, name: item.name })),
     regions: listRegions().map((item) => ({ id: item.id, name: item.name })),
     events: listEvents().map((item) => ({ id: item.id, name: item.title }))
   };
@@ -67,6 +70,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
   const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
   const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
+  const tagsById = new Map(listTags().map((item) => [item.id, item.name]));
 
   return events
     .map((event) => {
@@ -94,21 +98,30 @@ export function getEventsListView(filters: EventListFilters = {}) {
         .filter((link) => link.eventId === event.id)
         .map((link) => sectsById.get(link.sectId))
         .filter((name): name is string => Boolean(name));
+      const tagNames = links.tagLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => tagsById.get(link.tagId))
+        .filter((name): name is string => Boolean(name));
 
       return {
         ...event,
         timeLabel: formatStoredTime("time", event),
-        relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames].slice(0, 4).join(", "),
+        relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames, ...tagNames].slice(0, 4).join(", "),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
         dynastyIds: links.dynastyLinks.filter((link) => link.eventId === event.id).map((link) => link.dynastyId),
         religionIds: links.religionLinks.filter((link) => link.eventId === event.id).map((link) => link.religionId),
         sectIds: links.sectLinks.filter((link) => link.eventId === event.id).map((link) => link.sectId),
         regionIds: links.regionLinks.filter((link) => link.eventId === event.id).map((link) => link.regionId),
-        periodIds: links.periodLinks.filter((link) => link.eventId === event.id).map((link) => link.periodId)
+        periodIds: links.periodLinks.filter((link) => link.eventId === event.id).map((link) => link.periodId),
+        tagIds: links.tagLinks.filter((link) => link.eventId === event.id).map((link) => link.tagId)
       };
     })
     .filter((event) => {
+      if (filters.tagId && !event.tagIds.includes(filters.tagId)) {
+        return false;
+      }
+
       if (filters.eventType && event.eventType !== filters.eventType) {
         return false;
       }
@@ -161,6 +174,8 @@ export function getEventDetailView(id: number) {
   const outcomes = getConflictOutcomesByEventIds([id]);
   const outcomeParticipants = getConflictOutcomeParticipantsByEventIds([id]);
   const options = getEventFormOptions();
+  const tagLinks = getEventTagLinks([id]);
+  const linkedTags = getTagsByIds(tagLinks.map((link) => link.tagId));
   const eventNameById = new Map(options.events.map((item) => [item.id, item.name]));
   const participantNameByType = {
     person: new Map(options.people.map((item) => [item.id, item.name])),
@@ -178,6 +193,7 @@ export function getEventDetailView(id: number) {
     linkedReligions: options.religions.filter((item) => links.religionLinks.some((link) => link.eventId === id && link.religionId === item.id)),
     linkedSects: options.sects.filter((item) => links.sectLinks.some((link) => link.eventId === id && link.sectId === item.id)),
     linkedRegions: options.regions.filter((item) => links.regionLinks.some((link) => link.eventId === id && link.regionId === item.id)),
+    linkedTags,
     outgoingRelations: relations
       .filter((relation) => relation.fromEventId === id)
       .map((relation) => ({
@@ -254,7 +270,8 @@ export function createEventFromInput(input: EventInput) {
       periodIds: input.periodIds,
       religionIds: input.religionIds,
       sectIds: input.sectIds,
-      regionIds: input.regionIds
+      regionIds: input.regionIds,
+      tagIds: ensureTagIds(input.tags)
     });
 
     replaceEventRelations(
@@ -325,7 +342,8 @@ export function updateEventFromInput(id: number, input: EventInput) {
       periodIds: input.periodIds,
       religionIds: input.religionIds,
       sectIds: input.sectIds,
-      regionIds: input.regionIds
+      regionIds: input.regionIds,
+      tagIds: ensureTagIds(input.tags)
     });
 
     replaceEventRelations(
@@ -520,4 +538,26 @@ function getComparableRangeFromStandalone(
 
 function toComparableYear(era: string | null, year: number) {
   return era === "BCE" ? -year : year;
+}
+
+function ensureTagIds(tagNames: string[]) {
+  if (tagNames.length === 0) {
+    return [];
+  }
+
+  const existingTags = getTagsByNames(tagNames);
+  const existingNameById = new Map(existingTags.map((tag) => [tag.name, tag.id]));
+  const ensuredIds = [...existingTags.map((tag) => tag.id)];
+
+  for (const tagName of tagNames) {
+    if (existingNameById.has(tagName)) {
+      continue;
+    }
+
+    const tagId = createTag(tagName);
+    existingNameById.set(tagName, tagId);
+    ensuredIds.push(tagId);
+  }
+
+  return ensuredIds;
 }

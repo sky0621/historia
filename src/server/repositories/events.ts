@@ -12,6 +12,7 @@ import {
   eventReligionLinks,
   eventRelations,
   eventSectLinks,
+  eventTagLinks,
   events
 } from "@/db/schema";
 
@@ -52,6 +53,7 @@ export function replaceEventLinks(
     religionIds: number[];
     sectIds: number[];
     regionIds: number[];
+    tagIds: number[];
   }
 ) {
   db.delete(eventPersonLinks).where(eq(eventPersonLinks.eventId, eventId)).run();
@@ -61,6 +63,7 @@ export function replaceEventLinks(
   db.delete(eventReligionLinks).where(eq(eventReligionLinks.eventId, eventId)).run();
   db.delete(eventSectLinks).where(eq(eventSectLinks.eventId, eventId)).run();
   db.delete(eventRegionLinks).where(eq(eventRegionLinks.eventId, eventId)).run();
+  db.delete(eventTagLinks).where(eq(eventTagLinks.eventId, eventId)).run();
 
   if (links.personIds.length > 0) {
     db.insert(eventPersonLinks).values(links.personIds.map((personId) => ({ eventId, personId }))).run();
@@ -82,6 +85,9 @@ export function replaceEventLinks(
   }
   if (links.regionIds.length > 0) {
     db.insert(eventRegionLinks).values(links.regionIds.map((regionId) => ({ eventId, regionId }))).run();
+  }
+  if (links.tagIds.length > 0) {
+    db.insert(eventTagLinks).values(links.tagIds.map((tagId) => ({ eventId, tagId }))).run();
   }
 }
 
@@ -126,7 +132,8 @@ export function getEventLinks(eventIds: number[]) {
       periodLinks: [],
       religionLinks: [],
       sectLinks: [],
-      regionLinks: []
+      regionLinks: [],
+      tagLinks: []
     };
   }
 
@@ -137,7 +144,8 @@ export function getEventLinks(eventIds: number[]) {
     periodLinks: db.select().from(eventPeriodLinks).where(inArray(eventPeriodLinks.eventId, eventIds)).all(),
     religionLinks: db.select().from(eventReligionLinks).where(inArray(eventReligionLinks.eventId, eventIds)).all(),
     sectLinks: db.select().from(eventSectLinks).where(inArray(eventSectLinks.eventId, eventIds)).all(),
-    regionLinks: db.select().from(eventRegionLinks).where(inArray(eventRegionLinks.eventId, eventIds)).all()
+    regionLinks: db.select().from(eventRegionLinks).where(inArray(eventRegionLinks.eventId, eventIds)).all(),
+    tagLinks: db.select().from(eventTagLinks).where(inArray(eventTagLinks.eventId, eventIds)).all()
   };
 }
 
@@ -202,6 +210,7 @@ export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventReligionLinks).where(eq(eventReligionLinks.eventId, eventId)).run();
   db.delete(eventSectLinks).where(eq(eventSectLinks.eventId, eventId)).run();
   db.delete(eventRegionLinks).where(eq(eventRegionLinks.eventId, eventId)).run();
+  db.delete(eventTagLinks).where(eq(eventTagLinks.eventId, eventId)).run();
   db.delete(eventRelations).where(or(eq(eventRelations.fromEventId, eventId), eq(eventRelations.toEventId, eventId))).run();
   db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
   db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
