@@ -51,16 +51,49 @@ export function getPeriodCategoryView(id: number) {
   };
 }
 
-export function getPeriodCategoryList(query?: string) {
-  const normalizedQuery = normalizeQuery(query);
+type PeriodCategoryListFilters = {
+  query?: string;
+  hasPeriods?: boolean;
+  hasEvents?: boolean;
+  hasPeople?: boolean;
+};
+
+export function getPeriodCategoryList(filters: PeriodCategoryListFilters = {}) {
+  const normalizedQuery = normalizeQuery(filters.query);
   const periods = listHistoricalPeriods();
+  const people = listPeopleDetailed();
+  const personPeriodLinks = getPersonPeriodLinks(people.map((person) => person.id));
 
   return listPeriodCategories()
-    .filter((category) => matchesQuery([category.name, category.description], normalizedQuery))
     .map((category) => ({
       ...category,
-      periodCount: periods.filter((period) => period.categoryId === category.id).length
-    }));
+      periodCount: periods.filter((period) => period.categoryId === category.id).length,
+      eventCount: dedupeRelatedEvents(
+        periods.filter((period) => period.categoryId === category.id).flatMap((period) => getRelatedEvents({ periodId: period.id }))
+      ).length,
+      peopleCount: dedupePeople(
+        personPeriodLinks
+          .filter((link) => periods.some((period) => period.categoryId === category.id && period.id === link.periodId))
+          .map((link) => people.find((person) => person.id === link.personId))
+          .filter((person): person is NonNullable<typeof person> => Boolean(person))
+      ).length
+    }))
+    .filter((category) => {
+      if (filters.hasPeriods && category.periodCount === 0) {
+        return false;
+      }
+
+      if (filters.hasEvents && category.eventCount === 0) {
+        return false;
+      }
+
+      if (filters.hasPeople && category.peopleCount === 0) {
+        return false;
+      }
+
+      return true;
+    })
+    .filter((category) => matchesQuery([category.name, category.description], normalizedQuery));
 }
 
 export function createPeriodCategoryFromInput(input: PeriodCategoryInput) {
