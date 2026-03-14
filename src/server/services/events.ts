@@ -70,6 +70,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
   const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
   const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
+  const regionsById = new Map(listRegions().map((item) => [item.id, item.name]));
   const tagsById = new Map(listTags().map((item) => [item.id, item.name]));
 
   return events
@@ -98,6 +99,10 @@ export function getEventsListView(filters: EventListFilters = {}) {
         .filter((link) => link.eventId === event.id)
         .map((link) => sectsById.get(link.sectId))
         .filter((name): name is string => Boolean(name));
+      const regionNames = links.regionLinks
+        .filter((link) => link.eventId === event.id)
+        .map((link) => regionsById.get(link.regionId))
+        .filter((name): name is string => Boolean(name));
       const tagNames = links.tagLinks
         .filter((link) => link.eventId === event.id)
         .map((link) => tagsById.get(link.tagId))
@@ -106,7 +111,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
       return {
         ...event,
         timeLabel: formatStoredTime("time", event),
-        relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames, ...tagNames].slice(0, 4).join(", "),
+        relationSummary: [...personNames, ...polityNames, ...dynastyNames, ...periodNames, ...religionNames, ...sectNames, ...regionNames, ...tagNames].slice(0, 4).join(", "),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
         dynastyIds: links.dynastyLinks.filter((link) => link.eventId === event.id).map((link) => link.dynastyId),
