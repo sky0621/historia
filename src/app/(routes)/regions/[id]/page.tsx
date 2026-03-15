@@ -24,6 +24,23 @@ export default async function RegionDetailPage({
           <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
             {view.region.description ?? "説明はまだありません。"}
           </p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            {view.children.length > 0 ? (
+              <Link href={`/regions?parentRegionId=${view.region.id}`} className="underline-offset-4 hover:underline">
+                子地域 {view.children.length} 件
+              </Link>
+            ) : (
+              "子地域 0 件"
+            )}{" "}
+            /{" "}
+            {view.relatedEvents.length > 0 ? (
+              <Link href={`/events?regionId=${view.region.id}`} className="underline-offset-4 hover:underline">
+                関連イベント {view.relatedEvents.length} 件
+              </Link>
+            ) : (
+              "関連イベント 0 件"
+            )}
+          </p>
         </div>
         <div className="flex gap-3">
           <Link
