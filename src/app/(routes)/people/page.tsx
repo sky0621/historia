@@ -124,12 +124,46 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
                   </td>
                   <td className="px-5 py-4">{person.lifeLabel}</td>
                   <td className="px-5 py-4">
-                    {person.roles.map((role) => `${role.title}${role.affiliationName ? ` (${role.affiliationName})` : ""}`).join(", ") || "-"}
+                    {person.roles.length === 0 ? (
+                      "-"
+                    ) : (
+                      person.roles.map((role, index) => (
+                        <span key={`${person.id}-role-${role.id}`}>
+                          {index > 0 ? ", " : null}
+                          {role.title}
+                          {role.dynastyId && role.affiliationName ? (
+                            <>
+                              {" "}(
+                              <Link href={`/dynasties/${role.dynastyId}`} className="underline-offset-4 hover:underline">
+                                {role.affiliationName}
+                              </Link>
+                              )
+                            </>
+                          ) : role.polityId && role.affiliationName ? (
+                            <>
+                              {" "}(
+                              <Link href={`/polities/${role.polityId}`} className="underline-offset-4 hover:underline">
+                                {role.affiliationName}
+                              </Link>
+                              )
+                            </>
+                          ) : null}
+                        </span>
+                      ))
+                    )}
                   </td>
                   <td className="px-5 py-4 text-[var(--muted)]">
-                    {[...person.religionNames, ...person.sectNames, ...person.periodNames].join(", ") || "-"}
+                    {renderLinkedNames([
+                      ...person.religionIds.map((id, index) => ({ id, name: person.religionNames[index], route: "religions" as const })),
+                      ...person.sectIds.map((id, index) => ({ id, name: person.sectNames[index], route: "sects" as const })),
+                      ...person.periodIds.map((id, index) => ({ id, name: person.periodNames[index], route: "periods" as const }))
+                    ])}
                   </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{person.regionNames.join(", ") || "-"}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {renderLinkedNames(
+                      person.regionIds.map((id, index) => ({ id, name: person.regionNames[index], route: "regions" as const }))
+                    )}
+                  </td>
                 </tr>
               ))
             )}
@@ -152,4 +186,27 @@ function getNumericParam(value: string | string[] | undefined) {
 
   const parsed = Number(single);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function renderLinkedNames(
+  items: Array<{
+    id: number;
+    name: string | undefined;
+    route: "religions" | "sects" | "periods" | "regions";
+  }>
+) {
+  const filtered = items.filter((item): item is { id: number; name: string; route: "religions" | "sects" | "periods" | "regions" } => Boolean(item.name));
+
+  if (filtered.length === 0) {
+    return "-";
+  }
+
+  return filtered.map((item, index) => (
+    <span key={`${item.route}-${item.id}`}>
+      {index > 0 ? ", " : null}
+      <Link href={`/${item.route}/${item.id}`} className="underline-offset-4 hover:underline">
+        {item.name}
+      </Link>
+    </span>
+  ));
 }
