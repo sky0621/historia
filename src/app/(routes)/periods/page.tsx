@@ -10,7 +10,8 @@ export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
   const query = getSingleParam(params.q);
   const categoryId = getNumericParam(params.categoryId);
   const polityId = getNumericParam(params.polityId);
-  const periods = getHistoricalPeriodsListView({ query, categoryId, polityId });
+  const regionId = getNumericParam(params.regionId);
+  const periods = getHistoricalPeriodsListView({ query, categoryId, polityId, regionId });
   const options = getHistoricalPeriodFormOptions();
 
   return (
@@ -50,6 +51,17 @@ export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
             {options.polities.map((polity) => (
               <option key={polity.id} value={polity.id}>
                 {polity.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関連地域</span>
+          <select name="regionId" defaultValue={regionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.regions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
               </option>
             ))}
           </select>

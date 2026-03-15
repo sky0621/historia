@@ -28,6 +28,7 @@ type HistoricalPeriodsListFilters = {
   query?: string;
   categoryId?: number;
   polityId?: number;
+  regionId?: number;
 };
 
 export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilters = {}) {
@@ -47,6 +48,7 @@ export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilte
         .filter((link) => link.periodId === period.id)
         .map((link) => regions.get(link.regionId))
         .filter((name): name is string => Boolean(name)),
+      regionIds: regionLinks.filter((link) => link.periodId === period.id).map((link) => link.regionId),
       timeLabel: formatStoredTime("time", period)
     }))
     .filter((period) => {
@@ -55,6 +57,10 @@ export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilte
       }
 
       if (filters.polityId && period.polityId !== filters.polityId) {
+        return false;
+      }
+
+      if (filters.regionId && !period.regionIds.includes(filters.regionId)) {
         return false;
       }
 
