@@ -22,7 +22,13 @@ export default async function PeriodCategoryDetailPage({
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Period Category</p>
           <h1 className="mt-2 text-3xl font-semibold">{view.category.name}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            {view.category.description ?? "説明はまだありません。"}
+            {view.relatedPeriods.length > 0 ? (
+              <Link href={`/periods?categoryId=${view.category.id}`} className="underline-offset-4 hover:underline">
+                時代区分 {view.relatedPeriods.length} 件
+              </Link>
+            ) : (
+              "時代区分 0 件"
+            )}
           </p>
         </div>
         <div className="flex gap-3">

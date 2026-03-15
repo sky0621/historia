@@ -18,7 +18,13 @@ export default async function TagDetailPage({ params }: { params: Promise<{ id: 
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Tag</p>
           <h1 className="mt-2 text-3xl font-semibold">{view.tag.name}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            関連イベント {view.relatedEvents.length} 件
+            {view.relatedEvents.length > 0 ? (
+              <Link href={`/events?tagId=${view.tag.id}`} className="underline-offset-4 hover:underline">
+                関連イベント {view.relatedEvents.length} 件
+              </Link>
+            ) : (
+              "関連イベント 0 件"
+            )}
           </p>
         </div>
         <div className="flex gap-3">
