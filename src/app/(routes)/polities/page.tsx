@@ -77,7 +77,9 @@ export default async function PolitiesPage({ searchParams }: PolitiesPageProps) 
                     </Link>
                   </td>
                   <td className="px-5 py-4">{polity.timeLabel}</td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{polity.regionNames.join(", ") || "-"}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {renderLinkedRegions(polity.regionIds, polity.regionNames)}
+                  </td>
                 </tr>
               ))
             )}
@@ -100,4 +102,19 @@ function getNumericParam(value: string | string[] | undefined) {
 
   const parsed = Number(single);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function renderLinkedRegions(regionIds: number[], regionNames: string[]) {
+  if (regionIds.length === 0) {
+    return "-";
+  }
+
+  return regionIds.map((regionId, index) => (
+    <span key={regionId}>
+      {index > 0 ? ", " : null}
+      <Link href={`/regions/${regionId}`} className="underline-offset-4 hover:underline">
+        {regionNames[index] ?? `#${regionId}`}
+      </Link>
+    </span>
+  ));
 }
