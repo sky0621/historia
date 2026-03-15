@@ -86,8 +86,16 @@ export default async function ReligionsPage({ searchParams }: ReligionsPageProps
                     </Link>
                   </td>
                   <td className="px-5 py-4">{religion.timeLabel}</td>
-                  <td className="px-5 py-4">{religion.founderNames.join(", ") || "-"}</td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{religion.regionNames.join(", ") || "-"}</td>
+                  <td className="px-5 py-4">
+                    {renderLinkedNames(
+                      religion.founderIds.map((id, index) => ({ id, name: religion.founderNames[index], route: "people" as const }))
+                    )}
+                  </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {renderLinkedNames(
+                      religion.regionIds.map((id, index) => ({ id, name: religion.regionNames[index], route: "regions" as const }))
+                    )}
+                  </td>
                 </tr>
               ))
             )}
@@ -110,4 +118,27 @@ function getNumericParam(value: string | string[] | undefined) {
 
   const parsed = Number(single);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function renderLinkedNames(
+  items: Array<{
+    id: number;
+    name: string | undefined;
+    route: "people" | "regions";
+  }>
+) {
+  const filtered = items.filter((item): item is { id: number; name: string; route: "people" | "regions" } => Boolean(item.name));
+
+  if (filtered.length === 0) {
+    return "-";
+  }
+
+  return filtered.map((item, index) => (
+    <span key={`${item.route}-${item.id}`}>
+      {index > 0 ? ", " : null}
+      <Link href={`/${item.route}/${item.id}`} className="underline-offset-4 hover:underline">
+        {item.name}
+      </Link>
+    </span>
+  ));
 }

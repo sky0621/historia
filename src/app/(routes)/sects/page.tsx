@@ -105,8 +105,16 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
                     </Link>
                   </td>
                   <td className="px-5 py-4">{sect.timeLabel}</td>
-                  <td className="px-5 py-4">{sect.founderNames.join(", ") || "-"}</td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{sect.regionNames.join(", ") || "-"}</td>
+                  <td className="px-5 py-4">
+                    {renderLinkedNames(
+                      sect.founderIds.map((id, index) => ({ id, name: sect.founderNames[index], route: "people" as const }))
+                    )}
+                  </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {renderLinkedNames(
+                      sect.regionIds.map((id, index) => ({ id, name: sect.regionNames[index], route: "regions" as const }))
+                    )}
+                  </td>
                 </tr>
               ))
             )}
@@ -129,4 +137,27 @@ function getNumericParam(value: string | string[] | undefined) {
 
   const parsed = Number(single);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function renderLinkedNames(
+  items: Array<{
+    id: number;
+    name: string | undefined;
+    route: "people" | "regions";
+  }>
+) {
+  const filtered = items.filter((item): item is { id: number; name: string; route: "people" | "regions" } => Boolean(item.name));
+
+  if (filtered.length === 0) {
+    return "-";
+  }
+
+  return filtered.map((item, index) => (
+    <span key={`${item.route}-${item.id}`}>
+      {index > 0 ? ", " : null}
+      <Link href={`/${item.route}/${item.id}`} className="underline-offset-4 hover:underline">
+        {item.name}
+      </Link>
+    </span>
+  ));
 }
