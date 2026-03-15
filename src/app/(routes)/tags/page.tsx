@@ -70,7 +70,15 @@ export default async function TagsPage({ searchParams }: TagsPageProps) {
                       {tag.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{tag.eventCount}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {tag.eventCount > 0 ? (
+                      <Link href={`/events?tagId=${tag.id}`} className="underline-offset-4 hover:underline">
+                        {tag.eventCount}
+                      </Link>
+                    ) : (
+                      "0"
+                    )}
+                  </td>
                 </tr>
               ))
             )}

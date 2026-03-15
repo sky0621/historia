@@ -93,7 +93,15 @@ export default async function PeriodCategoriesPage({ searchParams }: PeriodCateg
                       {category.name}
                     </Link>
                   </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{category.periodCount}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {category.periodCount > 0 ? (
+                      <Link href={`/periods?categoryId=${category.id}`} className="underline-offset-4 hover:underline">
+                        {category.periodCount}
+                      </Link>
+                    ) : (
+                      "0"
+                    )}
+                  </td>
                   <td className="px-5 py-4 text-[var(--muted)]">{category.description ?? "-"}</td>
                 </tr>
               ))
