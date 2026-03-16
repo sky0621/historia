@@ -18,6 +18,16 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Person</p>
           <h1 className="mt-2 text-3xl font-semibold">{view.person.name}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">生没年: {view.lifeLabel}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            {view.roles.length > 0 ? `役職 ${view.roles.length} 件 / ` : "役職 0 件 / "}
+            {view.relatedEvents.length > 0 ? (
+              <Link href={`/events?personId=${view.person.id}`} className="underline-offset-4 hover:underline">
+                関連イベント {view.relatedEvents.length} 件
+              </Link>
+            ) : (
+              "関連イベント 0 件"
+            )}
+          </p>
         </div>
         <div className="flex gap-3">
           <Link href={`/people/${view.person.id}/edit`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
