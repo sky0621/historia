@@ -11,6 +11,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
+  const relatedSubjectCount =
+    view.linkedTags.length +
+    view.linkedPeople.length +
+    view.linkedPolities.length +
+    view.linkedDynasties.length +
+    view.linkedPeriods.length +
+    view.linkedReligions.length +
+    view.linkedSects.length +
+    view.linkedRegions.length;
+  const relatedEventCount = view.outgoingRelations.length + view.incomingRelations.length;
+  const conflictParticipantCount = view.conflictParticipants.length;
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col gap-4 rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm md:flex-row md:items-start md:justify-between">
@@ -26,6 +38,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               {view.defaultEndTimeExpression ? formatDisplay(view.defaultEndTimeExpression) : "未設定"}
             </p>
           ) : null}
+          <div className="mt-4 flex flex-wrap gap-3 text-sm">
+            <Link href="#basic-info" className="rounded-full border border-[var(--border)] px-4 py-2 text-[var(--muted)] transition hover:text-[var(--foreground)]">
+              関連主体 {relatedSubjectCount} 件
+            </Link>
+            <Link href="#related-events" className="rounded-full border border-[var(--border)] px-4 py-2 text-[var(--muted)] transition hover:text-[var(--foreground)]">
+              関連イベント {relatedEventCount} 件
+            </Link>
+            {(view.event.eventType !== "general" || conflictParticipantCount > 0) && (
+              <Link href="#conflict-summary" className="rounded-full border border-[var(--border)] px-4 py-2 text-[var(--muted)] transition hover:text-[var(--foreground)]">
+                参加勢力 {conflictParticipantCount} 件
+              </Link>
+            )}
+          </div>
         </div>
         <div className="flex gap-3">
           <Link href={`/events/${view.event.id}/edit`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
@@ -41,7 +66,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
-        <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <div id="basic-info" className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
           <h2 className="text-lg font-semibold">基本情報</h2>
           <dl className="mt-6 grid gap-4 text-sm">
             <div>
@@ -97,7 +122,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">参加勢力</dt>
-              <dd className="mt-1">
+              <dd id="conflict-summary" className="mt-1">
                 {view.conflictParticipants.length === 0 ? (
                   "-"
                 ) : (
@@ -159,7 +184,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+          <div id="related-events" className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
             <h2 className="text-lg font-semibold">関連イベント</h2>
             <div className="mt-4 space-y-3">
               {view.outgoingRelations.length === 0 && view.incomingRelations.length === 0 ? (
