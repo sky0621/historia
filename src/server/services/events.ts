@@ -34,6 +34,7 @@ type EventListFilters = {
   query?: string;
   tagId?: number;
   eventType?: "general" | "war" | "rebellion" | "civil_war";
+  relationType?: "before" | "after" | "cause" | "related";
   personId?: number;
   polityId?: number;
   dynastyId?: number;
@@ -63,6 +64,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const events = listEvents();
   const links = getEventLinks(events.map((event) => event.id));
+  const relations = getEventRelationsByEventIds(events.map((event) => event.id));
 
   const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
@@ -115,6 +117,9 @@ export function getEventsListView(filters: EventListFilters = {}) {
         timeLabel: formatEventTime(event),
         relationSummaryItems,
         relationSummary: relationSummaryItems.map((item) => item.name).join(", "),
+        relationTypes: relations
+          .filter((relation) => relation.fromEventId === event.id || relation.toEventId === event.id)
+          .map((relation) => relation.relationType),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
         dynastyIds: links.dynastyLinks.filter((link) => link.eventId === event.id).map((link) => link.dynastyId),
@@ -131,6 +136,10 @@ export function getEventsListView(filters: EventListFilters = {}) {
       }
 
       if (filters.eventType && event.eventType !== filters.eventType) {
+        return false;
+      }
+
+      if (filters.relationType && !event.relationTypes.includes(filters.relationType)) {
         return false;
       }
 

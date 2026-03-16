@@ -10,6 +10,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const query = getSingleParam(params.q);
   const tagId = getNumericParam(params.tagId);
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
+  const relationType = getSingleParam(params.relationType) as "before" | "after" | "cause" | "related" | undefined;
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
   const dynastyId = getNumericParam(params.dynastyId);
@@ -23,6 +24,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     query,
     tagId,
     eventType,
+    relationType,
     personId,
     polityId,
     dynastyId,
@@ -73,6 +75,16 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             <option value="war">war</option>
             <option value="rebellion">rebellion</option>
             <option value="civil_war">civil_war</option>
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">関係種別</span>
+          <select name="relationType" defaultValue={relationType ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            <option value="before">before</option>
+            <option value="after">after</option>
+            <option value="cause">cause</option>
+            <option value="related">related</option>
           </select>
         </label>
         <label className="space-y-2 text-sm">
