@@ -20,7 +20,7 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">期間: {view.timeLabel}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             {view.relatedPeople.length > 0 ? (
-              <Link href={`/people?q=${encodeURIComponent(view.dynasty.name)}`} className="underline-offset-4 hover:underline">
+              <Link href={`/people?dynastyId=${view.dynasty.id}`} className="underline-offset-4 hover:underline">
                 関連人物 {view.relatedPeople.length} 件
               </Link>
             ) : (

@@ -12,8 +12,10 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
   const religionId = getNumericParam(params.religionId);
   const sectId = getNumericParam(params.sectId);
   const periodId = getNumericParam(params.periodId);
+  const polityId = getNumericParam(params.polityId);
+  const dynastyId = getNumericParam(params.dynastyId);
   const hasRoles = getSingleParam(params.hasRoles) === "1";
-  const people = getPeopleListView({ query, regionId, religionId, sectId, periodId, hasRoles });
+  const people = getPeopleListView({ query, regionId, religionId, sectId, periodId, polityId, dynastyId, hasRoles });
   const options = getPersonFormOptions();
 
   return (
@@ -75,6 +77,28 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
             {options.periods.map((period) => (
               <option key={period.id} value={period.id}>
                 {period.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">国家</span>
+          <select name="polityId" defaultValue={polityId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.polities.map((polity) => (
+              <option key={polity.id} value={polity.id}>
+                {polity.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">王朝</span>
+          <select name="dynastyId" defaultValue={dynastyId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="">すべて</option>
+            {options.dynasties.map((dynasty) => (
+              <option key={dynasty.id} value={dynasty.id}>
+                {dynasty.name}
               </option>
             ))}
           </select>

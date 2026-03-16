@@ -49,6 +49,8 @@ type PeopleListFilters = {
   religionId?: number;
   sectId?: number;
   periodId?: number;
+  polityId?: number;
+  dynastyId?: number;
   hasRoles?: boolean;
 };
 
@@ -273,7 +275,7 @@ function matchesPeopleFilters(
     religionIds: number[];
     sectIds: number[];
     periodIds: number[];
-    roles: Array<{ title: string; affiliationName: string }>;
+    roles: Array<{ title: string; affiliationName: string; polityId: number | null; dynastyId: number | null }>;
     id: number;
   },
   query: string,
@@ -314,6 +316,14 @@ function matchesPeopleFilters(
   }
 
   if (filters.periodId && !person.periodIds.includes(filters.periodId)) {
+    return false;
+  }
+
+  if (filters.polityId && !person.roles.some((role) => role.polityId === filters.polityId)) {
+    return false;
+  }
+
+  if (filters.dynastyId && !person.roles.some((role) => role.dynastyId === filters.dynastyId)) {
     return false;
   }
 
