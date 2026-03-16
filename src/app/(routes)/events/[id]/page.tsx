@@ -191,32 +191,46 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 <p className="text-sm text-[var(--muted)]">関連イベントはまだありません。</p>
               ) : (
                 <>
-                  {view.outgoingRelations.map((relation) => (
-                    <div key={`out-${relation.id}`} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                      <div className="font-medium">{relation.relationType}</div>
-                      <div className="mt-1">
-                        <Link href={`/events/${relation.toEventId}`} className="underline-offset-4 hover:underline">
-                          {relation.eventName}
-                        </Link>
-                      </div>
-                      <div className="mt-1 text-[var(--muted)]">
-                        {relation.relatedEventType} / {relation.relatedEventTimeLabel}
-                      </div>
+                  <div className="space-y-3 rounded-3xl border border-[var(--border)] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-sm font-semibold">このイベントから</h3>
+                      <span className="text-xs text-[var(--muted)]">{view.outgoingRelations.length} 件</span>
                     </div>
-                  ))}
-                  {view.incomingRelations.map((relation) => (
-                    <div key={`in-${relation.id}`} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                      <div className="font-medium">incoming: {relation.relationType}</div>
-                      <div className="mt-1">
-                        <Link href={`/events/${relation.fromEventId}`} className="underline-offset-4 hover:underline">
-                          {relation.eventName}
-                        </Link>
-                      </div>
-                      <div className="mt-1 text-[var(--muted)]">
-                        {relation.relatedEventType} / {relation.relatedEventTimeLabel}
-                      </div>
+                    {view.outgoingRelations.length === 0 ? (
+                      <p className="text-sm text-[var(--muted)]">このイベントから参照する関連イベントはありません。</p>
+                    ) : (
+                      view.outgoingRelations.map((relation) => (
+                        <RelationCard
+                          key={`out-${relation.id}`}
+                          relationType={relation.relationType}
+                          href={`/events/${relation.toEventId}`}
+                          eventName={relation.eventName}
+                          relatedEventType={relation.relatedEventType}
+                          relatedEventTimeLabel={relation.relatedEventTimeLabel}
+                        />
+                      ))
+                    )}
+                  </div>
+                  <div className="space-y-3 rounded-3xl border border-[var(--border)] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-sm font-semibold">このイベントへ</h3>
+                      <span className="text-xs text-[var(--muted)]">{view.incomingRelations.length} 件</span>
                     </div>
-                  ))}
+                    {view.incomingRelations.length === 0 ? (
+                      <p className="text-sm text-[var(--muted)]">このイベントを参照する関連イベントはありません。</p>
+                    ) : (
+                      view.incomingRelations.map((relation) => (
+                        <RelationCard
+                          key={`in-${relation.id}`}
+                          relationType={relation.relationType}
+                          href={`/events/${relation.fromEventId}`}
+                          eventName={relation.eventName}
+                          relatedEventType={relation.relatedEventType}
+                          relatedEventTimeLabel={relation.relatedEventTimeLabel}
+                        />
+                      ))
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -253,6 +267,34 @@ function renderLinkedItems(
       </Link>
     </span>
   ));
+}
+
+function RelationCard({
+  relationType,
+  href,
+  eventName,
+  relatedEventType,
+  relatedEventTimeLabel
+}: {
+  relationType: string;
+  href: string;
+  eventName: string;
+  relatedEventType: string;
+  relatedEventTimeLabel: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+      <div className="font-medium">{relationType}</div>
+      <div className="mt-1">
+        <Link href={href} className="underline-offset-4 hover:underline">
+          {eventName}
+        </Link>
+      </div>
+      <div className="mt-1 text-[var(--muted)]">
+        {relatedEventType} / {relatedEventTimeLabel}
+      </div>
+    </div>
+  );
 }
 
 function renderParticipantLink(
