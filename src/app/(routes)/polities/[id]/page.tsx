@@ -27,6 +27,14 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
               "関連時代区分 0 件"
             )}{" "}
             /{" "}
+            {view.relatedPeople.length > 0 ? (
+              <Link href={`/people?polityId=${view.polity.id}`} className="underline-offset-4 hover:underline">
+                関連人物 {view.relatedPeople.length} 件
+              </Link>
+            ) : (
+              "関連人物 0 件"
+            )}{" "}
+            /{" "}
             {view.relatedEvents.length > 0 ? (
               <Link href={`/events?polityId=${view.polity.id}`} className="underline-offset-4 hover:underline">
                 関連イベント {view.relatedEvents.length} 件
