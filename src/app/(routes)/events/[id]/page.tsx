@@ -194,20 +194,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   {view.outgoingRelations.map((relation) => (
                     <div key={`out-${relation.id}`} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                       <div className="font-medium">{relation.relationType}</div>
-                      <div className="mt-1 text-[var(--muted)]">
+                      <div className="mt-1">
                         <Link href={`/events/${relation.toEventId}`} className="underline-offset-4 hover:underline">
                           {relation.eventName}
                         </Link>
+                      </div>
+                      <div className="mt-1 text-[var(--muted)]">
+                        {relation.relatedEventType} / {relation.relatedEventTimeLabel}
                       </div>
                     </div>
                   ))}
                   {view.incomingRelations.map((relation) => (
                     <div key={`in-${relation.id}`} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                       <div className="font-medium">incoming: {relation.relationType}</div>
-                      <div className="mt-1 text-[var(--muted)]">
+                      <div className="mt-1">
                         <Link href={`/events/${relation.fromEventId}`} className="underline-offset-4 hover:underline">
                           {relation.eventName}
                         </Link>
+                      </div>
+                      <div className="mt-1 text-[var(--muted)]">
+                        {relation.relatedEventType} / {relation.relatedEventTimeLabel}
                       </div>
                     </div>
                   ))}

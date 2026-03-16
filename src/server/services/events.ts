@@ -176,6 +176,7 @@ export function getEventDetailView(id: number) {
     return null;
   }
 
+  const allEvents = listEvents();
   const links = getEventLinks([id]);
   const relations = getEventRelationsByEventIds([id]);
   const participants = getConflictParticipantsByEventIds([id]);
@@ -184,7 +185,7 @@ export function getEventDetailView(id: number) {
   const options = getEventFormOptions();
   const tagLinks = getEventTagLinks([id]);
   const linkedTags = getTagsByIds(tagLinks.map((link) => link.tagId));
-  const eventNameById = new Map(options.events.map((item) => [item.id, item.name]));
+  const eventById = new Map(allEvents.map((item) => [item.id, item]));
   const participantNameByType = {
     person: new Map(options.people.map((item) => [item.id, item.name])),
     polity: new Map(options.polities.map((item) => [item.id, item.name])),
@@ -206,13 +207,17 @@ export function getEventDetailView(id: number) {
       .filter((relation) => relation.fromEventId === id)
       .map((relation) => ({
         ...relation,
-        eventName: eventNameById.get(relation.toEventId) ?? `#${relation.toEventId}`
+        eventName: eventById.get(relation.toEventId)?.title ?? `#${relation.toEventId}`,
+        relatedEventType: eventById.get(relation.toEventId)?.eventType ?? "general",
+        relatedEventTimeLabel: eventById.get(relation.toEventId) ? formatEventTime(eventById.get(relation.toEventId)!) : "年未詳"
       })),
     incomingRelations: relations
       .filter((relation) => relation.toEventId === id)
       .map((relation) => ({
         ...relation,
-        eventName: eventNameById.get(relation.fromEventId) ?? `#${relation.fromEventId}`
+        eventName: eventById.get(relation.fromEventId)?.title ?? `#${relation.fromEventId}`,
+        relatedEventType: eventById.get(relation.fromEventId)?.eventType ?? "general",
+        relatedEventTimeLabel: eventById.get(relation.fromEventId) ? formatEventTime(eventById.get(relation.fromEventId)!) : "年未詳"
       })),
     conflictParticipants: participants.map((participant) => ({
       ...participant,
