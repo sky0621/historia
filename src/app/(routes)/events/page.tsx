@@ -207,6 +207,11 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         </div>
       ) : null}
 
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 px-5 py-4 text-sm text-[var(--muted)] shadow-sm">
+        {events.length} 件のイベント
+        {activeFilters.length > 0 ? " が現在の条件に一致しています。" : " を表示しています。"}
+      </div>
+
       <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-white/80 shadow-sm">
         <table className="min-w-full border-collapse text-left text-sm">
           <thead className="bg-stone-100/70">
