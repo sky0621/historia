@@ -36,6 +36,21 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     toYear
   });
   const options = getEventFormOptions();
+  const activeFilters = [
+    query ? { label: "キーワード", value: query } : null,
+    tagId ? { label: "タグ", value: findOptionLabel(options.tags, tagId) } : null,
+    eventType ? { label: "種別", value: eventType } : null,
+    relationType ? { label: "関係種別", value: relationType } : null,
+    personId ? { label: "関連人物", value: findOptionLabel(options.people, personId) } : null,
+    polityId ? { label: "関連国家", value: findOptionLabel(options.polities, polityId) } : null,
+    dynastyId ? { label: "関連王朝", value: findOptionLabel(options.dynasties, dynastyId) } : null,
+    religionId ? { label: "関連宗教", value: findOptionLabel(options.religions, religionId) } : null,
+    sectId ? { label: "関連宗派", value: findOptionLabel(options.sects, sectId) } : null,
+    regionId ? { label: "関連地域", value: findOptionLabel(options.regions, regionId) } : null,
+    periodId ? { label: "関連時代区分", value: findOptionLabel(options.periods, periodId) } : null,
+    fromYear !== undefined ? { label: "開始年", value: String(fromYear) } : null,
+    toYear !== undefined ? { label: "終了年", value: String(toYear) } : null
+  ].filter((item): item is { label: string; value: string } => Boolean(item?.value));
 
   return (
     <section className="space-y-6">
@@ -182,6 +197,16 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         </div>
       </form>
 
+      {activeFilters.length > 0 ? (
+        <div className="flex flex-wrap gap-2 rounded-[32px] border border-[var(--border)] bg-white/80 p-4 shadow-sm">
+          {activeFilters.map((filter) => (
+            <span key={`${filter.label}-${filter.value}`} className="rounded-full border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)]">
+              {filter.label}: {filter.value}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-white/80 shadow-sm">
         <table className="min-w-full border-collapse text-left text-sm">
           <thead className="bg-stone-100/70">
@@ -245,4 +270,8 @@ function getNumericParam(value: string | string[] | undefined) {
 
   const parsed = Number(single);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function findOptionLabel(options: Array<{ id: number; name: string }>, id: number) {
+  return options.find((option) => option.id === id)?.name ?? `#${id}`;
 }
