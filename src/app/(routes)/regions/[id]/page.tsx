@@ -33,6 +33,14 @@ export default async function RegionDetailPage({
               "子地域 0 件"
             )}{" "}
             /{" "}
+            {view.relatedPeople.length > 0 ? (
+              <Link href={`/people?regionId=${view.region.id}`} className="underline-offset-4 hover:underline">
+                関連人物 {view.relatedPeople.length} 件
+              </Link>
+            ) : (
+              "関連人物 0 件"
+            )}{" "}
+            /{" "}
             {view.relatedEvents.length > 0 ? (
               <Link href={`/events?regionId=${view.region.id}`} className="underline-offset-4 hover:underline">
                 関連イベント {view.relatedEvents.length} 件
