@@ -284,7 +284,11 @@ function RelationCard({
 }) {
   return (
     <div className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-      <div className="font-medium">{relationType}</div>
+      <div>
+        <Link href={`/events?relationType=${encodeURIComponent(relationType)}`} className="font-medium underline-offset-4 hover:underline">
+          {relationType}
+        </Link>
+      </div>
       <div className="mt-1">
         <Link href={href} className="underline-offset-4 hover:underline">
           {eventName}
