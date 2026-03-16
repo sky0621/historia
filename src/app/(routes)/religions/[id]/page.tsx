@@ -18,6 +18,23 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Religion</p>
           <h1 className="mt-2 text-3xl font-semibold">{view.religion.name}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">期間: {view.timeLabel}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            {view.relatedPeople.length > 0 ? (
+              <Link href={`/people?religionId=${view.religion.id}`} className="underline-offset-4 hover:underline">
+                関連人物 {view.relatedPeople.length} 件
+              </Link>
+            ) : (
+              "関連人物 0 件"
+            )}{" "}
+            /{" "}
+            {view.relatedEvents.length > 0 ? (
+              <Link href={`/events?religionId=${view.religion.id}`} className="underline-offset-4 hover:underline">
+                関連イベント {view.relatedEvents.length} 件
+              </Link>
+            ) : (
+              "関連イベント 0 件"
+            )}
+          </p>
         </div>
         <div className="flex gap-3">
           <Link href={`/religions/${view.religion.id}/edit`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
