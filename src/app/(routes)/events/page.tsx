@@ -223,6 +223,12 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               {filter.label}: {filter.value} ×
             </Link>
           ))}
+          <Link
+            href="/events"
+            className="rounded-full border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] transition hover:text-[var(--foreground)]"
+          >
+            すべて解除
+          </Link>
         </div>
       ) : null}
 
