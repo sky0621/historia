@@ -10,6 +10,10 @@ import type {
   ConflictOutcomeCsvInput,
   ConflictParticipantCsvInput,
   EventRelationCsvInput,
+  PeriodCategoryCsvInput,
+  PolityCsvInput,
+  RegionCsvInput,
+  ReligionCsvInput,
   RoleAssignmentCsvInput
 } from "@/server/services/csv-import";
 
@@ -25,9 +29,8 @@ export function CsvImportPanel() {
     <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
       <h2 className="text-lg font-semibold">CSV import</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-        `Sprint 7` では `Event / Person / RoleAssignment / EventRelation / ConflictParticipant / ConflictOutcome CSV`
-        を preview/import できます。まず preview し、`error` と `duplicate-candidate` がないことを確認してから
-        import します。
+        `Sprint 8` では `Region / PeriodCategory / Polity / Religion CSV` も preview/import できます。まず
+        preview し、`error` と `duplicate-candidate` がないことを確認してから import します。
       </p>
 
       <form action={action} className="mt-6 space-y-4">
@@ -78,6 +81,27 @@ export function CsvImportPanel() {
               />
               <span>ConflictOutcome</span>
             </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="region" defaultChecked={targetType === "region"} />
+              <span>Region</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="period-category"
+                defaultChecked={targetType === "period-category"}
+              />
+              <span>PeriodCategory</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="polity" defaultChecked={targetType === "polity"} />
+              <span>Polity</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="religion" defaultChecked={targetType === "religion"} />
+              <span>Religion</span>
+            </label>
           </div>
         </fieldset>
 
@@ -97,7 +121,15 @@ export function CsvImportPanel() {
                     : targetType === "conflict-participant"
                       ? "event,participant_type,participant_name,role,note\n第1回十字軍,person,教皇ウルバヌス2世,leader,呼びかけ"
                       : targetType === "conflict-outcome"
-                        ? "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世|polity:ローマ教皇庁,polity:セルジューク朝,エルサレム占領"
+                      ? "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世|polity:ローマ教皇庁,polity:セルジューク朝,エルサレム占領"
+                      : targetType === "region"
+                        ? "name,parent_region,aliases,description\n近畿,日本,畿内,古代からの中核地域"
+                        : targetType === "period-category"
+                          ? "name,description\n日本史区分,日本史の区分法"
+                          : targetType === "polity"
+                            ? "name,aliases,time_start_year,regions\n日本,日本国,660,日本|東アジア"
+                            : targetType === "religion"
+                              ? "name,aliases,time_start_year,regions,founders\n仏教,佛教,-566,インド|東アジア,釈迦"
                 : "title,event_type,time_start_year,people,polities\n平安京遷都,general,794,桓武天皇,日本"
             }
             required
@@ -171,10 +203,30 @@ export function CsvImportPanel() {
                 const preview = state.preview as CsvPreviewResult<ConflictParticipantCsvInput>;
                 return preview.rows.map((row) => renderConflictParticipantRow(row));
               })()
-            ) : (
+            ) : state.preview.kind === "conflict-outcome" ? (
               (() => {
                 const preview = state.preview as CsvPreviewResult<ConflictOutcomeCsvInput>;
                 return preview.rows.map((row) => renderConflictOutcomeRow(row));
+              })()
+            ) : state.preview.kind === "region" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<RegionCsvInput>;
+                return preview.rows.map((row) => renderRegionRow(row));
+              })()
+            ) : state.preview.kind === "period-category" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<PeriodCategoryCsvInput>;
+                return preview.rows.map((row) => renderPeriodCategoryRow(row));
+              })()
+            ) : state.preview.kind === "polity" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<PolityCsvInput>;
+                return preview.rows.map((row) => renderPolityRow(row));
+              })()
+            ) : (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<ReligionCsvInput>;
+                return preview.rows.map((row) => renderReligionRow(row));
               })()
             )}
           </div>
@@ -197,6 +249,14 @@ export function CsvImportPanel() {
                     ? "ConflictParticipant"
                     : state.result.kind === "conflict-outcome"
                       ? "ConflictOutcome"
+                      : state.result.kind === "region"
+                        ? "Region"
+                        : state.result.kind === "period-category"
+                          ? "PeriodCategory"
+                          : state.result.kind === "polity"
+                            ? "Polity"
+                            : state.result.kind === "religion"
+                              ? "Religion"
                   : "Event"}
             {" "}
             件数: {state.result.importedCount}
@@ -336,6 +396,49 @@ function renderConflictOutcomeRow(row: CsvPreviewRow<ConflictOutcomeCsvInput>) {
             {" / "}
             losers: {row.input.outcome.loserParticipants.length}
           </p>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderRegionRow(row: CsvPreviewRow<RegionCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">parentRegionId: {row.input.parentRegionId ?? "-"}</div> : null}
+    </article>
+  );
+}
+
+function renderPeriodCategoryRow(row: CsvPreviewRow<PeriodCategoryCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+    </article>
+  );
+}
+
+function renderPolityRow(row: CsvPreviewRow<PolityCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">regions: {row.input.regionIds.length}</div> : null}
+    </article>
+  );
+}
+
+function renderReligionRow(row: CsvPreviewRow<ReligionCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          regions: {row.input.regionIds.length} / founders: {row.input.founderIds.length}
         </div>
       ) : null}
     </article>

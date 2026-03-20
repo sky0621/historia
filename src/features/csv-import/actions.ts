@@ -5,18 +5,30 @@ import {
   applyConflictOutcomeCsvImport,
   applyConflictParticipantCsvImport,
   applyEventRelationCsvImport,
+  applyPeriodCategoryCsvImport,
+  applyPolityCsvImport,
+  applyRegionCsvImport,
+  applyReligionCsvImport,
   applyRoleAssignmentCsvImport,
   applyEventCsvImport,
   applyPersonCsvImport,
   previewConflictOutcomeCsvImport,
   previewConflictParticipantCsvImport,
   previewEventRelationCsvImport,
+  previewPeriodCategoryCsvImport,
+  previewPolityCsvImport,
+  previewRegionCsvImport,
+  previewReligionCsvImport,
   previewRoleAssignmentCsvImport,
   previewEventCsvImport,
   previewPersonCsvImport,
   type ConflictOutcomeCsvInput,
   type ConflictParticipantCsvInput,
   type EventRelationCsvInput,
+  type PeriodCategoryCsvInput,
+  type PolityCsvInput,
+  type RegionCsvInput,
+  type ReligionCsvInput,
   type RoleAssignmentCsvInput,
   type CsvImportResult,
   type CsvPreviewResult
@@ -26,14 +38,28 @@ import type { PersonInput } from "@/features/people/schema";
 
 export type CsvImportState = {
   error?: string;
-  targetType?: "event" | "person" | "role-assignment" | "event-relation" | "conflict-participant" | "conflict-outcome";
+  targetType?:
+    | "event"
+    | "person"
+    | "role-assignment"
+    | "event-relation"
+    | "conflict-participant"
+    | "conflict-outcome"
+    | "region"
+    | "period-category"
+    | "polity"
+    | "religion";
   preview?:
     | CsvPreviewResult<EventInput>
     | CsvPreviewResult<PersonInput>
     | CsvPreviewResult<RoleAssignmentCsvInput>
     | CsvPreviewResult<EventRelationCsvInput>
     | CsvPreviewResult<ConflictParticipantCsvInput>
-    | CsvPreviewResult<ConflictOutcomeCsvInput>;
+    | CsvPreviewResult<ConflictOutcomeCsvInput>
+    | CsvPreviewResult<RegionCsvInput>
+    | CsvPreviewResult<PeriodCategoryCsvInput>
+    | CsvPreviewResult<PolityCsvInput>
+    | CsvPreviewResult<ReligionCsvInput>;
   result?: CsvImportResult;
 };
 
@@ -46,7 +72,11 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
     targetTypeValue === "role-assignment" ||
     targetTypeValue === "event-relation" ||
     targetTypeValue === "conflict-participant" ||
-    targetTypeValue === "conflict-outcome"
+    targetTypeValue === "conflict-outcome" ||
+    targetTypeValue === "region" ||
+    targetTypeValue === "period-category" ||
+    targetTypeValue === "polity" ||
+    targetTypeValue === "religion"
       ? targetTypeValue
       : "event";
 
@@ -62,6 +92,14 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                 ? previewConflictParticipantCsvImport(rawCsv)
                 : targetType === "conflict-outcome"
                   ? previewConflictOutcomeCsvImport(rawCsv)
+                  : targetType === "region"
+                    ? previewRegionCsvImport(rawCsv)
+                    : targetType === "period-category"
+                      ? previewPeriodCategoryCsvImport(rawCsv)
+                      : targetType === "polity"
+                        ? previewPolityCsvImport(rawCsv)
+                        : targetType === "religion"
+                          ? previewReligionCsvImport(rawCsv)
           : previewEventCsvImport(rawCsv);
 
     if (intent === "import") {
@@ -76,11 +114,22 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                 ? applyConflictParticipantCsvImport(rawCsv)
                 : targetType === "conflict-outcome"
                   ? applyConflictOutcomeCsvImport(rawCsv)
+                  : targetType === "region"
+                    ? applyRegionCsvImport(rawCsv)
+                    : targetType === "period-category"
+                      ? applyPeriodCategoryCsvImport(rawCsv)
+                      : targetType === "polity"
+                        ? applyPolityCsvImport(rawCsv)
+                        : targetType === "religion"
+                          ? applyReligionCsvImport(rawCsv)
             : applyEventCsvImport(rawCsv);
       revalidatePath("/events");
       revalidatePath("/people");
       revalidatePath("/polities");
       revalidatePath("/dynasties");
+      revalidatePath("/regions");
+      revalidatePath("/period-categories");
+      revalidatePath("/religions");
       revalidatePath("/manage/data");
       revalidatePath("/graph/events");
       revalidatePath("/timeline");
