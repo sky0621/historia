@@ -1,37 +1,51 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { applyEventCsvImport, previewEventCsvImport } from "@/server/services/csv-import";
+import {
+  applyEventCsvImport,
+  applyPersonCsvImport,
+  previewEventCsvImport,
+  previewPersonCsvImport,
+  type CsvImportResult,
+  type CsvPreviewResult
+} from "@/server/services/csv-import";
+import type { EventInput } from "@/features/events/schema";
+import type { PersonInput } from "@/features/people/schema";
 
 export type CsvImportState = {
   error?: string;
-  preview?: ReturnType<typeof previewEventCsvImport>;
-  result?: ReturnType<typeof applyEventCsvImport>;
+  targetType?: "event" | "person";
+  preview?: CsvPreviewResult<EventInput> | CsvPreviewResult<PersonInput>;
+  result?: CsvImportResult;
 };
 
-export async function importEventCsvAction(previousState: CsvImportState, formData: FormData): Promise<CsvImportState> {
+export async function importCsvAction(previousState: CsvImportState, formData: FormData): Promise<CsvImportState> {
   const rawCsv = String(formData.get("payload") ?? "");
   const intent = String(formData.get("intent") ?? "preview");
+  const targetType = String(formData.get("targetType") ?? "event") === "person" ? "person" : "event";
 
   try {
-    const preview = previewEventCsvImport(rawCsv);
+    const preview = targetType === "person" ? previewPersonCsvImport(rawCsv) : previewEventCsvImport(rawCsv);
 
     if (intent === "import") {
-      const result = applyEventCsvImport(rawCsv);
+      const result = targetType === "person" ? applyPersonCsvImport(rawCsv) : applyEventCsvImport(rawCsv);
       revalidatePath("/events");
+      revalidatePath("/people");
       revalidatePath("/manage/data");
       revalidatePath("/graph/events");
       revalidatePath("/timeline");
 
       return {
+        targetType,
         preview,
         result
       };
     }
 
-    return { preview };
+    return { targetType, preview };
   } catch (error) {
     return {
+      targetType,
       error: error instanceof Error ? error.message : "CSV import に失敗しました"
     };
   }

@@ -1,4 +1,5 @@
 import { eventSchema, type EventInput } from "@/features/events/schema";
+import { personSchema, type PersonInput } from "@/features/people/schema";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import { sqlite } from "@/db/client";
 import { listDynasties } from "@/server/repositories/dynasties";
@@ -10,6 +11,7 @@ import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { listSects } from "@/server/repositories/sects";
 import { createEventFromInput } from "@/server/services/events";
+import { createPersonFromInput } from "@/server/services/people";
 
 const EVENT_HEADERS = [
   "title",
@@ -31,6 +33,26 @@ const EVENT_HEADERS = [
 ] as const;
 
 const REQUIRED_EVENT_HEADERS = ["title", "event_type"] as const;
+const PERSON_HEADERS = [
+  "name",
+  "aliases",
+  "note",
+  "birth_label",
+  "birth_calendar_era",
+  "birth_start_year",
+  "birth_end_year",
+  "birth_is_approximate",
+  "death_label",
+  "death_calendar_era",
+  "death_start_year",
+  "death_end_year",
+  "death_is_approximate",
+  "regions",
+  "religions",
+  "sects",
+  "periods"
+] as const;
+const REQUIRED_PERSON_HEADERS = ["name"] as const;
 const MULTI_VALUE_SEPARATOR = "|";
 
 type CsvPreviewStatus = "ok" | "duplicate-candidate" | "error";
@@ -179,6 +201,87 @@ export function previewEventCsvImport(rawCsv: string): CsvPreviewResult<EventInp
   };
 }
 
+export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_PERSON_HEADERS);
+
+  const unknownHeaders = parsed.headers.filter((header) => !PERSON_HEADERS.includes(header as (typeof PERSON_HEADERS)[number]));
+  const references = buildReferenceMaps();
+  const existingPeople = listPeopleDetailed();
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+
+    if (row.values.length > parsed.headers.length) {
+      issues.push({
+        field: "_row",
+        message: `列数がヘッダー数を超えています (${row.values.length} > ${parsed.headers.length})`
+      });
+    }
+
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const name = cells.name.trim();
+    const birthTimeExpression = parseTimeExpressionFromCsv(cells, "birth", issues);
+    const deathTimeExpression = parseTimeExpressionFromCsv(cells, "death", issues);
+    const inputCandidate = {
+      name,
+      aliases: parseCommaSeparatedNames(cells.aliases),
+      note: normalizeOptionalString(cells.note),
+      birthTimeExpression,
+      deathTimeExpression,
+      regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
+      religionIds: resolveReferences("religions", cells.religions, references.religions, issues),
+      sectIds: resolveReferences("sects", cells.sects, references.sects, issues),
+      periodIds: resolveReferences("periods", cells.periods, references.periods, issues),
+      roles: []
+    };
+
+    const parsedInput = personSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({
+          field: issue.path.join(".") || "_row",
+          message: issue.message
+        });
+      }
+    }
+
+    if (unknownHeaders.length > 0) {
+      warnings.push({
+        field: "_header",
+        message: `未対応列は無視されます: ${unknownHeaders.join(", ")}`
+      });
+    }
+
+    const duplicateCandidates =
+      issues.length === 0 && parsedInput.success
+        ? findPersonDuplicateCandidates(existingPeople, parsedInput.data)
+        : [];
+
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+
+    return {
+      rowNumber: row.rowNumber,
+      label: name || `row-${row.rowNumber}`,
+      status,
+      issues,
+      warnings,
+      duplicateCandidates,
+      input: previewInput
+    } satisfies CsvPreviewRow<PersonInput>;
+  });
+
+  return {
+    kind: "person",
+    headers: parsed.headers,
+    unknownHeaders,
+    summary: summarizeRows(rows),
+    rows
+  };
+}
+
 export function applyEventCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewEventCsvImport(rawCsv);
   const blockingRows = preview.rows.filter((row) => row.status !== "ok");
@@ -204,6 +307,35 @@ export function applyEventCsvImport(rawCsv: string): CsvImportResult {
 
   return {
     kind: "event",
+    importedCount
+  };
+}
+
+export function applyPersonCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewPersonCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+
+  if (blockingRows.length > 0) {
+    throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  }
+
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+
+    for (const row of preview.rows) {
+      if (!row.input) {
+        continue;
+      }
+
+      createPersonFromInput(row.input);
+      count += 1;
+    }
+
+    return count;
+  })();
+
+  return {
+    kind: "person",
     importedCount
   };
 }
@@ -351,6 +483,21 @@ function parseDelimitedNames(rawValue: string | undefined) {
   );
 }
 
+function parseCommaSeparatedNames(rawValue: string | undefined) {
+  if (!rawValue) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      rawValue
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 function parseOptionalInteger(rawValue: string | undefined, field: string, issues: CsvPreviewIssue[]) {
   const normalized = normalizeOptionalString(rawValue);
   if (!normalized) {
@@ -419,6 +566,40 @@ function findEventDuplicateCandidates(existingEvents: ReturnType<typeof listEven
         importedYear !== undefined && (event.timeStartYear ?? event.startYear ?? null) !== null
           ? "タイトルと年代が近接しています"
           : "タイトルが一致しています"
+    }));
+}
+
+function findPersonDuplicateCandidates(existingPeople: ReturnType<typeof listPeopleDetailed>, input: PersonInput): CsvDuplicateCandidate[] {
+  const birthYear = input.birthTimeExpression?.startYear;
+  const deathYear = input.deathTimeExpression?.startYear;
+
+  return existingPeople
+    .filter((person) => {
+      const personRecord = person as Record<string, unknown>;
+      const aliases = String(person.aliases ?? "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const nameMatched = person.name === input.name || aliases.includes(input.name) || input.aliases.includes(person.name);
+
+      if (!nameMatched) {
+        return false;
+      }
+
+      const existingBirthYear = typeof personRecord.birthStartYear === "number" ? personRecord.birthStartYear : null;
+      const existingDeathYear = typeof personRecord.deathStartYear === "number" ? personRecord.deathStartYear : null;
+      const birthMatches = birthYear === undefined || existingBirthYear === null ? true : existingBirthYear === birthYear;
+      const deathMatches = deathYear === undefined || existingDeathYear === null ? true : existingDeathYear === deathYear;
+      return birthMatches && deathMatches;
+    })
+    .slice(0, 5)
+    .map((person) => ({
+      id: person.id,
+      label: person.name,
+      reason:
+        birthYear !== undefined || deathYear !== undefined
+          ? "氏名または別名と生没年が一致しています"
+          : "氏名または別名が一致しています"
     }));
 }
 

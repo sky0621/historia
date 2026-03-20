@@ -9,7 +9,8 @@ const repositoryMocks = vi.hoisted(() => ({
   listReligions: vi.fn(),
   listSects: vi.fn(),
   listRegions: vi.fn(),
-  createEventFromInput: vi.fn()
+  createEventFromInput: vi.fn(),
+  createPersonFromInput: vi.fn()
 }));
 
 vi.mock("@/server/repositories/events", () => ({
@@ -48,7 +49,11 @@ vi.mock("@/server/services/events", () => ({
   createEventFromInput: repositoryMocks.createEventFromInput
 }));
 
-import { applyEventCsvImport, parseCsv, previewEventCsvImport } from "@/server/services/csv-import";
+vi.mock("@/server/services/people", () => ({
+  createPersonFromInput: repositoryMocks.createPersonFromInput
+}));
+
+import { applyEventCsvImport, applyPersonCsvImport, parseCsv, previewEventCsvImport, previewPersonCsvImport } from "@/server/services/csv-import";
 
 describe("csv import service", () => {
   beforeEach(() => {
@@ -71,6 +76,8 @@ describe("csv import service", () => {
     repositoryMocks.listRegions.mockReturnValue([]);
     repositoryMocks.createEventFromInput.mockReset();
     repositoryMocks.createEventFromInput.mockReturnValue(1);
+    repositoryMocks.createPersonFromInput.mockReset();
+    repositoryMocks.createPersonFromInput.mockReturnValue(1);
   });
 
   it("parses quoted csv cells with commas and newlines", () => {
@@ -222,5 +229,77 @@ describe("csv import service", () => {
       applyEventCsvImport("title,event_type,time_start_year\n平安京遷都,general,794")
     ).toThrow("error または duplicate-candidate を含むため import を実行できません");
     expect(repositoryMocks.createEventFromInput).not.toHaveBeenCalled();
+  });
+
+  it("builds person preview rows with resolved references and duplicate candidates", () => {
+    repositoryMocks.listRegions.mockReturnValue([{ id: 10, name: "近江" }]);
+    repositoryMocks.listReligions.mockReturnValue([{ id: 11, name: "仏教" }]);
+    repositoryMocks.listSects.mockReturnValue([{ id: 12, name: "天台宗" }]);
+    repositoryMocks.listHistoricalPeriods.mockReturnValue([{ id: 13, name: "平安時代" }]);
+    repositoryMocks.listPeopleDetailed.mockReturnValue([
+      {
+        id: 50,
+        name: "最澄",
+        aliases: "伝教大師",
+        note: null,
+        birthCalendarEra: "CE",
+        birthStartYear: 767,
+        birthEndYear: null,
+        birthIsApproximate: false,
+        birthPrecision: "year",
+        birthDisplayLabel: "767年",
+        deathCalendarEra: "CE",
+        deathStartYear: 822,
+        deathEndYear: null,
+        deathIsApproximate: false,
+        deathPrecision: "year",
+        deathDisplayLabel: "822年"
+      }
+    ]);
+
+    const preview = previewPersonCsvImport(
+      "name,aliases,birth_start_year,death_start_year,regions,religions,sects,periods\n最澄,伝教大師,767,822,近江,仏教,天台宗,平安時代"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 1,
+      errorCount: 0,
+      warningCount: 0
+    });
+    expect(preview.rows[0]).toMatchObject({
+      label: "最澄",
+      status: "duplicate-candidate",
+      input: {
+        name: "最澄",
+        aliases: ["伝教大師"],
+        regionIds: [10],
+        religionIds: [11],
+        sectIds: [12],
+        periodIds: [13]
+      }
+    });
+  });
+
+  it("imports only clean person rows", () => {
+    repositoryMocks.listRegions.mockReturnValue([{ id: 10, name: "近江" }]);
+
+    const result = applyPersonCsvImport(
+      "name,birth_start_year,regions\n最澄,767,近江\n空海,774,近江"
+    );
+
+    expect(result).toEqual({
+      kind: "person",
+      importedCount: 2
+    });
+    expect(repositoryMocks.createPersonFromInput).toHaveBeenCalledTimes(2);
+    expect(repositoryMocks.createPersonFromInput).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        name: "最澄",
+        regionIds: [10]
+      })
+    );
   });
 });
