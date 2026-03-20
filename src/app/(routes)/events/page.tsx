@@ -36,21 +36,36 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     toYear
   });
   const options = getEventFormOptions();
+  const currentParams = buildSearchParams({
+    q: query,
+    tagId,
+    eventType,
+    relationType,
+    personId,
+    polityId,
+    dynastyId,
+    religionId,
+    sectId,
+    regionId,
+    periodId,
+    fromYear,
+    toYear
+  });
   const activeFilters = [
-    query ? { label: "キーワード", value: query } : null,
-    tagId ? { label: "タグ", value: findOptionLabel(options.tags, tagId) } : null,
-    eventType ? { label: "種別", value: eventType } : null,
-    relationType ? { label: "関係種別", value: relationType } : null,
-    personId ? { label: "関連人物", value: findOptionLabel(options.people, personId) } : null,
-    polityId ? { label: "関連国家", value: findOptionLabel(options.polities, polityId) } : null,
-    dynastyId ? { label: "関連王朝", value: findOptionLabel(options.dynasties, dynastyId) } : null,
-    religionId ? { label: "関連宗教", value: findOptionLabel(options.religions, religionId) } : null,
-    sectId ? { label: "関連宗派", value: findOptionLabel(options.sects, sectId) } : null,
-    regionId ? { label: "関連地域", value: findOptionLabel(options.regions, regionId) } : null,
-    periodId ? { label: "関連時代区分", value: findOptionLabel(options.periods, periodId) } : null,
-    fromYear !== undefined ? { label: "開始年", value: String(fromYear) } : null,
-    toYear !== undefined ? { label: "終了年", value: String(toYear) } : null
-  ].filter((item): item is { label: string; value: string } => Boolean(item?.value));
+    query ? { label: "キーワード", value: query, href: buildFilterRemovalHref(currentParams, "q") } : null,
+    tagId ? { label: "タグ", value: findOptionLabel(options.tags, tagId), href: buildFilterRemovalHref(currentParams, "tagId") } : null,
+    eventType ? { label: "種別", value: eventType, href: buildFilterRemovalHref(currentParams, "eventType") } : null,
+    relationType ? { label: "関係種別", value: relationType, href: buildFilterRemovalHref(currentParams, "relationType") } : null,
+    personId ? { label: "関連人物", value: findOptionLabel(options.people, personId), href: buildFilterRemovalHref(currentParams, "personId") } : null,
+    polityId ? { label: "関連国家", value: findOptionLabel(options.polities, polityId), href: buildFilterRemovalHref(currentParams, "polityId") } : null,
+    dynastyId ? { label: "関連王朝", value: findOptionLabel(options.dynasties, dynastyId), href: buildFilterRemovalHref(currentParams, "dynastyId") } : null,
+    religionId ? { label: "関連宗教", value: findOptionLabel(options.religions, religionId), href: buildFilterRemovalHref(currentParams, "religionId") } : null,
+    sectId ? { label: "関連宗派", value: findOptionLabel(options.sects, sectId), href: buildFilterRemovalHref(currentParams, "sectId") } : null,
+    regionId ? { label: "関連地域", value: findOptionLabel(options.regions, regionId), href: buildFilterRemovalHref(currentParams, "regionId") } : null,
+    periodId ? { label: "関連時代区分", value: findOptionLabel(options.periods, periodId), href: buildFilterRemovalHref(currentParams, "periodId") } : null,
+    fromYear !== undefined ? { label: "開始年", value: String(fromYear), href: buildFilterRemovalHref(currentParams, "fromYear") } : null,
+    toYear !== undefined ? { label: "終了年", value: String(toYear), href: buildFilterRemovalHref(currentParams, "toYear") } : null
+  ].filter((item): item is { label: string; value: string; href: string } => Boolean(item?.value));
 
   return (
     <section className="space-y-6">
@@ -200,9 +215,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       {activeFilters.length > 0 ? (
         <div className="flex flex-wrap gap-2 rounded-[32px] border border-[var(--border)] bg-white/80 p-4 shadow-sm">
           {activeFilters.map((filter) => (
-            <span key={`${filter.label}-${filter.value}`} className="rounded-full border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)]">
-              {filter.label}: {filter.value}
-            </span>
+            <Link
+              key={`${filter.label}-${filter.value}`}
+              href={filter.href}
+              className="rounded-full border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] transition hover:text-[var(--foreground)]"
+            >
+              {filter.label}: {filter.value} ×
+            </Link>
           ))}
         </div>
       ) : null}
@@ -279,4 +298,23 @@ function getNumericParam(value: string | string[] | undefined) {
 
 function findOptionLabel(options: Array<{ id: number; name: string }>, id: number) {
   return options.find((option) => option.id === id)?.name ?? `#${id}`;
+}
+
+function buildSearchParams(input: Record<string, string | number | undefined>) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined && value !== "") {
+      params.set(key, String(value));
+    }
+  }
+
+  return params;
+}
+
+function buildFilterRemovalHref(currentParams: URLSearchParams, key: string) {
+  const nextParams = new URLSearchParams(currentParams);
+  nextParams.delete(key);
+  const search = nextParams.toString();
+  return search.length > 0 ? `/events?${search}` : "/events";
 }
