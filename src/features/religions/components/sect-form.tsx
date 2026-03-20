@@ -9,11 +9,13 @@ type Props = {
   description: string;
   submitLabel: string;
   religionOptions: Option[];
+  parentSectOptions: Option[];
   regionOptions: Option[];
   founderOptions: Option[];
   defaultValues?: {
     id?: number;
     religionId: number;
+    parentSectId?: number | null;
     name: string;
     aliases: string;
     description: string;
@@ -29,6 +31,7 @@ export function SectForm({
   description,
   submitLabel,
   religionOptions,
+  parentSectOptions,
   regionOptions,
   founderOptions,
   defaultValues
@@ -62,6 +65,17 @@ export function SectForm({
           <label className="grid gap-2 text-sm">
             <span>名称</span>
             <input name="name" defaultValue={defaultValues?.name ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required />
+          </label>
+          <label className="grid gap-2 text-sm">
+            <span>親宗派</span>
+            <select name="parentSectId" defaultValue={defaultValues?.parentSectId ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+              <option value="">親宗派なし</option>
+              {parentSectOptions.map((sect) => (
+                <option key={sect.id} value={sect.id}>
+                  {sect.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="grid gap-2 text-sm">
             <span>別名</span>

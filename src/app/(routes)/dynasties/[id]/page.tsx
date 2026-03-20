@@ -130,6 +130,43 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
           )}
         </div>
       </div>
+
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">王朝継承</h2>
+          {view.polity ? (
+            <Link href={`/dynasty-successions/new?polityId=${view.polity.id}&predecessorDynastyId=${view.dynasty.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+              継承を追加
+            </Link>
+          ) : null}
+        </div>
+        <div className="mt-4 space-y-3">
+          {view.dynastySuccessions.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">この王朝に関連する継承はまだありません。</p>
+          ) : (
+            view.dynastySuccessions.map((succession) => (
+              <div key={succession.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-medium">
+                    <Link href={`/dynasties/${succession.predecessorDynastyId}`} className="underline-offset-4 hover:underline">
+                      {succession.predecessorName}
+                    </Link>{" "}
+                    →{" "}
+                    <Link href={`/dynasties/${succession.successorDynastyId}`} className="underline-offset-4 hover:underline">
+                      {succession.successorName}
+                    </Link>
+                  </div>
+                  <Link href={`/dynasty-successions/${succession.id}/edit`} className="text-xs underline-offset-4 hover:underline">
+                    編集
+                  </Link>
+                </div>
+                <div className="mt-1 text-[var(--muted)]">{succession.timeLabel}</div>
+                {succession.note ? <div className="mt-1 text-[var(--muted)]">{succession.note}</div> : null}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </section>
   );
 }

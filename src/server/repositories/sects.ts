@@ -52,6 +52,7 @@ export function updateSect(
 
 export function deleteSect(id: number) {
   db.transaction((tx) => {
+    tx.update(sects).set({ parentSectId: null }).where(eq(sects.parentSectId, id)).run();
     tx.delete(sectRegionLinks).where(eq(sectRegionLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
     tx.delete(sects).where(eq(sects.id, id)).run();

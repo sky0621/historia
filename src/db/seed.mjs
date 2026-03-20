@@ -27,6 +27,10 @@ function clearTables() {
     "change_histories",
     "citations",
     "sources",
+    "historical_period_relations",
+    "region_relations",
+    "dynasty_successions",
+    "polity_transitions",
     "conflict_outcome_participants",
     "conflict_outcomes",
     "conflict_participants",
@@ -222,6 +226,21 @@ function runSeed() {
   });
   insert("polity_region_links", { polity_id: polityIds.florence, region_id: regionIds.florence });
 
+  polityIds.tuscany = insert("polities", {
+    name: "トスカーナ大公国",
+    aliases: null,
+    note: "フィレンツェ共和国を継承した国家。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 1569,
+      endYear: 1859,
+      precision: "year",
+      displayLabel: "1569年 - 1859年"
+    })
+  });
+  insert("polity_region_links", { polity_id: polityIds.tuscany, region_id: regionIds.italy });
+  insert("polity_region_links", { polity_id: polityIds.tuscany, region_id: regionIds.florence });
+
   polityIds.france = insert("polities", {
     name: "フランス王国",
     aliases: null,
@@ -266,6 +285,35 @@ function runSeed() {
     })
   });
   insert("dynasty_region_links", { dynasty_id: dynastyIds.medici, region_id: regionIds.florence });
+
+  dynastyIds.valois = insert("dynasties", {
+    polity_id: polityIds.france,
+    name: "ヴァロワ朝",
+    aliases: null,
+    note: "中世末期から近世初頭のフランス王朝。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 1328,
+      endYear: 1589,
+      precision: "year",
+      displayLabel: "1328年 - 1589年"
+    })
+  });
+  dynastyIds.bourbon = insert("dynasties", {
+    polity_id: polityIds.france,
+    name: "ブルボン朝",
+    aliases: null,
+    note: "ヴァロワ朝を継承したフランス王朝。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 1589,
+      endYear: 1792,
+      precision: "year",
+      displayLabel: "1589年 - 1792年"
+    })
+  });
+  insert("dynasty_region_links", { dynasty_id: dynastyIds.valois, region_id: regionIds.europe });
+  insert("dynasty_region_links", { dynasty_id: dynastyIds.bourbon, region_id: regionIds.europe });
 
   const personIds = {};
   personIds.shaka = insert("people", {
@@ -437,6 +485,7 @@ function runSeed() {
   const sectIds = {};
   sectIds.tendai = insert("sects", {
     religion_id: religionIds.buddhism,
+    parent_sect_id: null,
     name: "天台宗",
     aliases: null,
     description: "最澄が日本で体系化した仏教宗派。",
@@ -445,6 +494,7 @@ function runSeed() {
   });
   sectIds.catholic = insert("sects", {
     religion_id: religionIds.christianity,
+    parent_sect_id: null,
     name: "カトリック教会",
     aliases: "ローマ・カトリック教会",
     description: "西方キリスト教の主要教派。",
@@ -461,9 +511,27 @@ function runSeed() {
   insert("sect_region_links", { sect_id: sectIds.catholic, region_id: regionIds.europe });
   insert("sect_founder_links", { sect_id: sectIds.tendai, person_id: personIds.saicho });
 
+  sectIds.sanmon = insert("sects", {
+    religion_id: religionIds.buddhism,
+    parent_sect_id: sectIds.tendai,
+    name: "山門派",
+    aliases: null,
+    description: "天台宗系統の一分派として扱うサンプル。",
+    note: "Sprint 7 の宗派分派デモ用。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 10,
+      isApproximate: true,
+      precision: "year",
+      displayLabel: "10世紀頃"
+    })
+  });
+  insert("sect_region_links", { sect_id: sectIds.sanmon, region_id: regionIds.kyoto });
+
   insert("person_religion_links", { person_id: personIds.saicho, religion_id: religionIds.buddhism });
   insert("person_religion_links", { person_id: personIds.urban, religion_id: religionIds.christianity });
   insert("person_sect_links", { person_id: personIds.saicho, sect_id: sectIds.tendai });
+  insert("person_sect_links", { person_id: personIds.saicho, sect_id: sectIds.sanmon });
   insert("person_sect_links", { person_id: personIds.urban, sect_id: sectIds.catholic });
 
   const periodIds = {};
@@ -509,6 +577,25 @@ function runSeed() {
   insert("period_region_links", { period_id: periodIds.muromachi, region_id: regionIds.japan });
   insert("period_region_links", { period_id: periodIds.renaissance, region_id: regionIds.italy });
   insert("period_region_links", { period_id: periodIds.renaissance, region_id: regionIds.florence });
+
+  periodIds.middleAges = insert("historical_periods", {
+    category_id: categoryIds.western,
+    polity_id: null,
+    name: "中世",
+    region_label: "ヨーロッパ",
+    aliases: null,
+    description: "西洋史における中世。",
+    note: "ルネサンスと一部重複して扱うサンプル。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 500,
+      endYear: 1500,
+      isApproximate: true,
+      precision: "year",
+      displayLabel: "500年頃 - 1500年頃"
+    })
+  });
+  insert("period_region_links", { period_id: periodIds.middleAges, region_id: regionIds.europe });
 
   insert("person_period_links", { person_id: personIds.kanmu, period_id: periodIds.heian });
   insert("person_period_links", { person_id: personIds.saicho, period_id: periodIds.heian });
@@ -768,6 +855,49 @@ function runSeed() {
     action: "create",
     snapshot_json: JSON.stringify({ id: periodIds.heian, name: "平安時代" }),
     changed_at: now
+  });
+
+  insert("polity_transitions", {
+    predecessor_polity_id: polityIds.florence,
+    successor_polity_id: polityIds.tuscany,
+    transition_type: "succession",
+    note: "メディチ家支配の固定化を背景とするデモ用遷移。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 1569,
+      precision: "year",
+      displayLabel: "1569年"
+    })
+  });
+  insert("dynasty_successions", {
+    polity_id: polityIds.france,
+    predecessor_dynasty_id: dynastyIds.valois,
+    successor_dynasty_id: dynastyIds.bourbon,
+    note: "フランス王朝交代のデモ用継承。",
+    ...timeColumns("time", {
+      calendarEra: "CE",
+      startYear: 1589,
+      precision: "year",
+      displayLabel: "1589年"
+    })
+  });
+  insert("region_relations", {
+    from_region_id: regionIds.europe,
+    to_region_id: regionIds.asia,
+    relation_type: "adjacent",
+    note: "ユーラシア大陸の接続を示すサンプル。"
+  });
+  insert("region_relations", {
+    from_region_id: regionIds.japan,
+    to_region_id: regionIds.eastAsia,
+    relation_type: "cultural_sphere",
+    note: "東アジア文化圏との関係を示すサンプル。"
+  });
+  insert("historical_period_relations", {
+    from_period_id: periodIds.middleAges,
+    to_period_id: periodIds.renaissance,
+    relation_type: "overlaps",
+    note: "西洋中世末期とルネサンスの重なり。"
   });
 
   console.log(`Seeded historia database: ${resolvedDatabasePath}`);

@@ -29,6 +29,7 @@ import {
 } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getCitationListForTarget } from "@/server/services/sources";
+import { getSectHierarchyView } from "@/server/services/relations";
 
 export function getReligionOptions() {
   return listReligions().map((religion) => ({ id: religion.id, name: religion.name }));
@@ -40,6 +41,10 @@ export function getRegionOptions() {
 
 export function getFounderOptions() {
   return listPeople().map((person) => ({ id: person.id, name: person.name }));
+}
+
+export function getParentSectOptions(excludeId?: number) {
+  return listSects().filter((sect) => sect.id !== excludeId).map((sect) => ({ id: sect.id, name: sect.name }));
 }
 
 type ReligionListFilters = {
@@ -110,6 +115,7 @@ export function getSectListView(filters: SectListFilters = {}) {
   const religionNameById = new Map(religions.map((religion) => [religion.id, religion.name]));
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const personNameById = new Map(people.map((person) => [person.id, person.name]));
+  const parentSectNameById = new Map(sects.map((sect) => [sect.id, sect.name]));
 
   return sects
     .map((sect) => ({
@@ -117,6 +123,8 @@ export function getSectListView(filters: SectListFilters = {}) {
       religionName: religionNameById.get(sect.religionId) ?? "不明",
       timeLabel: formatStoredTime("time", sect),
       religionId: sect.religionId,
+      parentSectId: sect.parentSectId,
+      parentSectName: sect.parentSectId ? parentSectNameById.get(sect.parentSectId) ?? null : null,
       regionNames: regionLinks
         .filter((link) => link.sectId === sect.id)
         .map((link) => regionNameById.get(link.regionId))
@@ -145,7 +153,7 @@ export function getSectListView(filters: SectListFilters = {}) {
     })
     .filter((sect) =>
       matchesQuery(
-        [sect.name, sect.aliases, sect.description, sect.note, sect.religionName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
+        [sect.name, sect.aliases, sect.description, sect.note, sect.religionName, sect.parentSectName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
         normalizedQuery
       )
     );
@@ -198,9 +206,13 @@ export function getSectDetailView(id: number) {
     .map((link) => detailedPeople.find((person) => person.id === link.personId))
     .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
+  const hierarchy = getSectHierarchyView(id);
+
   return {
     sect,
     religion,
+    parentSect: hierarchy.parent,
+    childSects: hierarchy.children,
     regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: people.filter((person) => founderIds.includes(person.id)),
     relatedPeople: dedupePeople(sectPeople),
@@ -247,6 +259,7 @@ export function createSectFromInput(input: SectInput) {
   return createSect(
     {
       religionId: input.religionId,
+      parentSectId: input.parentSectId ?? null,
       name: input.name,
       aliases: joinAliases(input.aliases),
       description: nullable(input.description),
@@ -263,6 +276,7 @@ export function updateSectFromInput(id: number, input: SectInput) {
     id,
     {
       religionId: input.religionId,
+      parentSectId: input.parentSectId ?? null,
       name: input.name,
       aliases: joinAliases(input.aliases),
       description: nullable(input.description),

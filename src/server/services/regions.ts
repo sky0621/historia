@@ -13,6 +13,7 @@ import { listHistoricalPeriods, getHistoricalPeriodRegionIds } from "@/server/re
 import { listReligions, getReligionRegionIds } from "@/server/repositories/religions";
 import { listSects, getSectRegionIds } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
+import { getRegionRelationView } from "@/server/services/relations";
 
 export function getRegionOptions(excludeId?: number) {
   return listRegions()
@@ -95,7 +96,8 @@ export function getRegionView(id: number) {
     relatedDynasties: dynasties.filter((item) => dynastyLinks.some((link) => link.dynastyId === item.id && link.regionId === id)),
     relatedPeriods: periods.filter((item) => periodLinks.some((link) => link.periodId === item.id && link.regionId === id)),
     relatedReligions: religions.filter((item) => religionLinks.some((link) => link.religionId === item.id && link.regionId === id)),
-    relatedSects: sects.filter((item) => sectLinks.some((link) => link.sectId === item.id && link.regionId === id))
+    relatedSects: sects.filter((item) => sectLinks.some((link) => link.sectId === item.id && link.regionId === id)),
+    regionRelations: getRegionRelationView(id)
   };
 }
 

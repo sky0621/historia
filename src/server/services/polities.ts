@@ -24,6 +24,7 @@ import {
 } from "@/server/repositories/dynasties";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { getDynastySuccessionViewForDynasty, getDynastySuccessionViewForPolity, getPolityTransitionView } from "@/server/services/relations";
 import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPolityOptions() {
@@ -137,6 +138,8 @@ export function getPolityDetailView(id: number) {
       "polity"
     ),
     relatedEvents: getRelatedEvents({ polityId: id }),
+    polityTransitions: getPolityTransitionView(id),
+    dynastySuccessions: getDynastySuccessionViewForPolity(id),
     timeLabel: formatStoredTime("time", polity),
     defaultTimeExpression: extractTimeExpression("time", polity),
     citations: getCitationListForTarget("polity", id),
@@ -166,6 +169,7 @@ export function getDynastyDetailView(id: number) {
       "dynasty"
     ),
     relatedEvents: getRelatedEvents({ dynastyId: id }),
+    dynastySuccessions: getDynastySuccessionViewForDynasty(id),
     timeLabel: formatStoredTime("time", dynasty),
     defaultTimeExpression: extractTimeExpression("time", dynasty)
   };

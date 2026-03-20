@@ -16,6 +16,7 @@ import { listRegions } from "@/server/repositories/regions";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getPeriodCategoryOptions } from "@/server/services/period-categories";
+import { getHistoricalPeriodRelationView } from "@/server/services/relations";
 import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getHistoricalPeriodFormOptions() {
@@ -99,6 +100,7 @@ export function getHistoricalPeriodDetailView(id: number) {
     regions: options.regions.filter((item) => linkedRegionIds.includes(item.id)),
     relatedPeople: dedupePeople(relatedPeople),
     relatedEvents: getRelatedEvents({ periodId: id }),
+    periodRelations: getHistoricalPeriodRelationView(id),
     timeLabel: formatStoredTime("time", period),
     defaultTimeExpression: extractTimeExpression("time", period),
     formOptions: options,

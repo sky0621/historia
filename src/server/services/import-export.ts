@@ -20,6 +20,10 @@ const ID_TABLES = [
   "historical_periods",
   "religions",
   "sects",
+  "polity_transitions",
+  "dynasty_successions",
+  "region_relations",
+  "historical_period_relations",
   "events",
   "event_relations",
   "conflict_participants",
@@ -265,6 +269,50 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
 
   if (table === "sects" && typeof row.religion_id === "number") {
     prepared.religion_id = idMaps.get("religions")?.get(row.religion_id) ?? row.religion_id;
+    if (typeof row.parent_sect_id === "number") {
+      prepared.parent_sect_id = idMaps.get("sects")?.get(row.parent_sect_id) ?? row.parent_sect_id;
+    }
+  }
+
+  if (table === "polity_transitions") {
+    if (typeof row.predecessor_polity_id === "number") {
+      prepared.predecessor_polity_id = idMaps.get("polities")?.get(row.predecessor_polity_id) ?? row.predecessor_polity_id;
+    }
+    if (typeof row.successor_polity_id === "number") {
+      prepared.successor_polity_id = idMaps.get("polities")?.get(row.successor_polity_id) ?? row.successor_polity_id;
+    }
+  }
+
+  if (table === "dynasty_successions") {
+    if (typeof row.polity_id === "number") {
+      prepared.polity_id = idMaps.get("polities")?.get(row.polity_id) ?? row.polity_id;
+    }
+    if (typeof row.predecessor_dynasty_id === "number") {
+      prepared.predecessor_dynasty_id =
+        idMaps.get("dynasties")?.get(row.predecessor_dynasty_id) ?? row.predecessor_dynasty_id;
+    }
+    if (typeof row.successor_dynasty_id === "number") {
+      prepared.successor_dynasty_id =
+        idMaps.get("dynasties")?.get(row.successor_dynasty_id) ?? row.successor_dynasty_id;
+    }
+  }
+
+  if (table === "region_relations") {
+    if (typeof row.from_region_id === "number") {
+      prepared.from_region_id = idMaps.get("regions")?.get(row.from_region_id) ?? row.from_region_id;
+    }
+    if (typeof row.to_region_id === "number") {
+      prepared.to_region_id = idMaps.get("regions")?.get(row.to_region_id) ?? row.to_region_id;
+    }
+  }
+
+  if (table === "historical_period_relations") {
+    if (typeof row.from_period_id === "number") {
+      prepared.from_period_id = idMaps.get("historical_periods")?.get(row.from_period_id) ?? row.from_period_id;
+    }
+    if (typeof row.to_period_id === "number") {
+      prepared.to_period_id = idMaps.get("historical_periods")?.get(row.to_period_id) ?? row.to_period_id;
+    }
   }
 
   if (table === "role_assignments") {

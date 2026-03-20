@@ -92,6 +92,7 @@ export const religions = sqliteTable("religions", {
 export const sects = sqliteTable("sects", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   religionId: integer("religion_id").notNull(),
+  parentSectId: integer("parent_sect_id"),
   name: text("name").notNull(),
   aliases: text("aliases"),
   description: text("description"),

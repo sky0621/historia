@@ -146,6 +146,41 @@ export default async function HistoricalPeriodDetailPage({
         </div>
       </div>
 
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">時代区分関係</h2>
+          <Link href={`/period-relations/new?fromPeriodId=${view.period.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+            関係を追加
+          </Link>
+        </div>
+        <div className="mt-4 space-y-3">
+          {view.periodRelations.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">時代区分関係はまだありません。</p>
+          ) : (
+            view.periodRelations.map((relation) => (
+              <div key={relation.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-medium">
+                    <Link href={`/periods/${relation.fromPeriodId}`} className="underline-offset-4 hover:underline">
+                      {relation.fromName}
+                    </Link>{" "}
+                    →{" "}
+                    <Link href={`/periods/${relation.toPeriodId}`} className="underline-offset-4 hover:underline">
+                      {relation.toName}
+                    </Link>
+                  </div>
+                  <Link href={`/period-relations/${relation.id}/edit`} className="text-xs underline-offset-4 hover:underline">
+                    編集
+                  </Link>
+                </div>
+                <div className="mt-1 text-[var(--muted)]">{relation.relationType}</div>
+                {relation.note ? <div className="mt-1 text-[var(--muted)]">{relation.note}</div> : null}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
           <div className="flex items-center justify-between gap-3">
