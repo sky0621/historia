@@ -251,7 +251,16 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             {events.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">
-                  まだイベントはありません。
+                  <div className="flex flex-col gap-3">
+                    <span>{activeFilters.length > 0 ? "条件に一致するイベントはありません。" : "まだイベントはありません。"}</span>
+                    {activeFilters.length > 0 ? (
+                      <span>
+                        <Link href="/events" className="underline-offset-4 hover:underline">
+                          フィルタを解除して一覧に戻る
+                        </Link>
+                      </span>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ) : (
