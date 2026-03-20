@@ -143,6 +143,28 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
           )}
         </div>
       </div>
+
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">出典</h2>
+          <Link href={`/citations/new?targetType=religion&targetId=${view.religion.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+            引用を追加
+          </Link>
+        </div>
+        <div className="mt-4 space-y-3">
+          {view.citations.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">出典はまだありません。</p>
+          ) : (
+            view.citations.map((citation) => (
+              <Link key={citation.id} href={`/sources/${citation.sourceId}`} className="block rounded-2xl border border-[var(--border)] px-4 py-3 text-sm hover:bg-stone-50">
+                <div className="font-medium">{citation.source?.title ?? `Source #${citation.sourceId}`}</div>
+                {citation.locator ? <div className="mt-1 text-[var(--muted)]">位置: {citation.locator}</div> : null}
+                {citation.quote ? <div className="mt-1 whitespace-pre-wrap text-[var(--muted)]">{citation.quote}</div> : null}
+              </Link>
+            ))
+          )}
+        </div>
+      </div>
     </section>
   );
 }

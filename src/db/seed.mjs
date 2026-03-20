@@ -24,6 +24,10 @@ function insert(table, values) {
 
 function clearTables() {
   const tables = [
+    "change_histories",
+    "citations",
+    "sources",
+    "conflict_outcome_participants",
     "conflict_outcomes",
     "conflict_participants",
     "event_relations",
@@ -662,6 +666,108 @@ function runSeed() {
     side: "loser",
     participant_type: "polity",
     participant_id: polityIds.japan
+  });
+
+  const sourceIds = {};
+  sourceIds.nihonKoten = insert("sources", {
+    title: "日本後紀",
+    author: null,
+    publisher: "国史大系",
+    published_at_label: "9世紀成立 / 現代校訂版あり",
+    url: null,
+    note: "平安遷都の一次史料として参照。",
+    created_at: now,
+    updated_at: now
+  });
+  sourceIds.crusadeBook = insert("sources", {
+    title: "A History of the Crusades",
+    author: "Steven Runciman",
+    publisher: "Cambridge University Press",
+    published_at_label: "1951-1954",
+    url: null,
+    note: "十字軍史の通史。",
+    created_at: now,
+    updated_at: now
+  });
+
+  insert("citations", {
+    source_id: sourceIds.nihonKoten,
+    target_type: "event",
+    target_id: eventIds.heianCapital,
+    locator: "延暦13年条",
+    quote: "平安京遷都に関する記述。",
+    note: "概要確認用。",
+    created_at: now,
+    updated_at: now
+  });
+  insert("citations", {
+    source_id: sourceIds.crusadeBook,
+    target_type: "religion",
+    target_id: religionIds.christianity,
+    locator: "Vol.1, pp. 1-20",
+    quote: "十字軍運動の宗教的背景。",
+    note: null,
+    created_at: now,
+    updated_at: now
+  });
+  insert("citations", {
+    source_id: sourceIds.crusadeBook,
+    target_type: "person",
+    target_id: personIds.urban,
+    locator: "Vol.1, pp. 80-95",
+    quote: "ウルバヌス2世の呼びかけ。",
+    note: null,
+    created_at: now,
+    updated_at: now
+  });
+  insert("citations", {
+    source_id: sourceIds.nihonKoten,
+    target_type: "historical_period",
+    target_id: periodIds.heian,
+    locator: "平安京関連記事",
+    quote: "平安時代初期の政治文化。",
+    note: null,
+    created_at: now,
+    updated_at: now
+  });
+  insert("citations", {
+    source_id: sourceIds.nihonKoten,
+    target_type: "polity",
+    target_id: polityIds.japan,
+    locator: "桓武朝関連",
+    quote: "律令国家の運用。",
+    note: null,
+    created_at: now,
+    updated_at: now
+  });
+
+  insert("change_histories", {
+    target_type: "event",
+    target_id: eventIds.heianCapital,
+    action: "create",
+    snapshot_json: JSON.stringify({ id: eventIds.heianCapital, title: "平安京遷都" }),
+    changed_at: now
+  });
+  insert("change_histories", {
+    target_type: "person",
+    target_id: personIds.saicho,
+    action: "create",
+    snapshot_json: JSON.stringify({ id: personIds.saicho, name: "最澄" }),
+    changed_at: now
+  });
+  insert("change_histories", {
+    target_type: "polity",
+    target_id: polityIds.japan,
+    action: "create",
+    snapshot_json: JSON.stringify({ id: polityIds.japan, name: "日本" }),
+    changed_at: now
+  });
+  insert("change_histories", {
+    target_type: "historical_period",
+    target_id: periodIds.heian,
+    action: "create",
+    snapshot_json: JSON.stringify({ id: periodIds.heian, name: "平安時代" }),
+    changed_at: now
   });
 
   console.log(`Seeded historia database: ${resolvedDatabasePath}`);

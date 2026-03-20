@@ -145,6 +145,47 @@ export default async function HistoricalPeriodDetailPage({
           )}
         </div>
       </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">出典</h2>
+            <Link href={`/citations/new?targetType=historical_period&targetId=${view.period.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+              引用を追加
+            </Link>
+          </div>
+          <div className="mt-4 space-y-3">
+            {view.citations.length === 0 ? (
+              <p className="text-sm text-[var(--muted)]">出典はまだありません。</p>
+            ) : (
+              view.citations.map((citation) => (
+                <Link key={citation.id} href={`/sources/${citation.sourceId}`} className="block rounded-2xl border border-[var(--border)] px-4 py-3 text-sm hover:bg-stone-50">
+                  <div className="font-medium">{citation.source?.title ?? `Source #${citation.sourceId}`}</div>
+                  {citation.locator ? <div className="mt-1 text-[var(--muted)]">位置: {citation.locator}</div> : null}
+                  {citation.quote ? <div className="mt-1 whitespace-pre-wrap text-[var(--muted)]">{citation.quote}</div> : null}
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+          <h2 className="text-lg font-semibold">変更履歴</h2>
+          <div className="mt-4 space-y-3">
+            {view.changeHistory.length === 0 ? (
+              <p className="text-sm text-[var(--muted)]">履歴はまだありません。</p>
+            ) : (
+              view.changeHistory.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                  <div className="font-medium">{item.action}</div>
+                  <div className="mt-1 text-[var(--muted)]">{item.changedAtLabel}</div>
+                  <div className="mt-1 text-[var(--muted)]">{item.snapshotPreview}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

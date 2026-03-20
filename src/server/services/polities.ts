@@ -23,6 +23,8 @@ import {
   updateDynasty
 } from "@/server/repositories/dynasties";
 import { getRelatedEvents } from "@/server/services/event-references";
+import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPolityOptions() {
   return listPolities().map((polity) => ({ id: polity.id, name: polity.name }));
@@ -136,7 +138,9 @@ export function getPolityDetailView(id: number) {
     ),
     relatedEvents: getRelatedEvents({ polityId: id }),
     timeLabel: formatStoredTime("time", polity),
-    defaultTimeExpression: extractTimeExpression("time", polity)
+    defaultTimeExpression: extractTimeExpression("time", polity),
+    citations: getCitationListForTarget("polity", id),
+    changeHistory: getHistoryView("polity", id)
   };
 }
 
@@ -168,7 +172,7 @@ export function getDynastyDetailView(id: number) {
 }
 
 export function createPolityFromInput(input: PolityInput) {
-  return createPolity(
+  const id = createPolity(
     {
       name: input.name,
       aliases: joinAliases(input.aliases),
@@ -177,9 +181,17 @@ export function createPolityFromInput(input: PolityInput) {
     },
     input.regionIds
   );
+  recordChangeHistory({
+    targetType: "polity",
+    targetId: id,
+    action: "create",
+    snapshot: buildPolityHistorySnapshot(id)
+  });
+  return id;
 }
 
 export function updatePolityFromInput(id: number, input: PolityInput) {
+  const before = buildPolityHistorySnapshot(id);
   updatePolity(
     id,
     {
@@ -190,10 +202,23 @@ export function updatePolityFromInput(id: number, input: PolityInput) {
     },
     input.regionIds
   );
+  recordChangeHistory({
+    targetType: "polity",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
 }
 
 export function removePolity(id: number) {
+  const snapshot = buildPolityHistorySnapshot(id);
   deletePolity(id);
+  recordChangeHistory({
+    targetType: "polity",
+    targetId: id,
+    action: "delete",
+    snapshot
+  });
 }
 
 export function createDynastyFromInput(input: DynastyInput) {
@@ -309,4 +334,16 @@ function buildRelatedPeople(
     })
     .filter((person): person is NonNullable<typeof person> => Boolean(person))
     .sort((left, right) => right.primaryScopeCount - left.primaryScopeCount || left.name.localeCompare(right.name, "ja-JP"));
+}
+
+function buildPolityHistorySnapshot(id: number) {
+  const polity = getPolityById(id);
+  if (!polity) {
+    return { id };
+  }
+
+  return {
+    ...polity,
+    regionIds: getPolityRegionIds([id]).map((link) => link.regionId)
+  };
 }

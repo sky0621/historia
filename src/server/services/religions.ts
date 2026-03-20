@@ -28,6 +28,7 @@ import {
   updateSect
 } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
+import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getReligionOptions() {
   return listReligions().map((religion) => ({ id: religion.id, name: religion.name }));
@@ -175,7 +176,8 @@ export function getReligionDetailView(id: number) {
     relatedPeople: dedupePeople(religionPeople),
     relatedEvents: getRelatedEvents({ religionId: id }),
     timeLabel: formatStoredTime("time", religion),
-    defaultTimeExpression: extractTimeExpression("time", religion)
+    defaultTimeExpression: extractTimeExpression("time", religion),
+    citations: getCitationListForTarget("religion", id)
   };
 }
 

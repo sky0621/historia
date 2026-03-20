@@ -4,6 +4,7 @@ const navigation = [
   { href: "/events", label: "イベント" },
   { href: "/graph/events", label: "グラフ" },
   { href: "/timeline", label: "タイムライン" },
+  { href: "/manage/data", label: "データ運用" },
   { href: "/bootstrap", label: "Bootstrap" },
   { href: "/people", label: "人物" },
   { href: "/polities", label: "国家" },
@@ -13,7 +14,8 @@ const navigation = [
   { href: "/religions", label: "宗教" },
   { href: "/sects", label: "宗派" },
   { href: "/tags", label: "タグ" },
-  { href: "/regions", label: "地域" }
+  { href: "/regions", label: "地域" },
+  { href: "/sources", label: "出典" }
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {

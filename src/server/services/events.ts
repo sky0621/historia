@@ -29,6 +29,8 @@ import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { listSects } from "@/server/repositories/sects";
 import { createTag, getEventTagLinks, getTagsByIds, getTagsByNames, listTags } from "@/server/repositories/tags";
+import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { getCitationListForTarget } from "@/server/services/sources";
 
 type EventListFilters = {
   query?: string;
@@ -267,6 +269,8 @@ export function getEventDetailView(id: number) {
             }))
         }
       : null,
+    citations: getCitationListForTarget("event", id),
+    changeHistory: getHistoryView("event", id),
     defaultTimeExpression: extractTimeExpression("time", event),
     defaultStartTimeExpression: extractStandaloneTime("start", event),
     defaultEndTimeExpression: extractStandaloneTime("end", event),
@@ -347,12 +351,20 @@ export function createEventFromInput(input: EventInput) {
         : []
     );
 
+    recordChangeHistory({
+      targetType: "event",
+      targetId: eventId,
+      action: "create",
+      snapshot: buildEventHistorySnapshot(eventId)
+    });
+
     return eventId;
   });
 }
 
 export function updateEventFromInput(id: number, input: EventInput) {
   db.transaction(() => {
+    const before = buildEventHistorySnapshot(id);
     updateEvent(id, {
       title: input.title,
       eventType: input.eventType,
@@ -418,13 +430,27 @@ export function updateEventFromInput(id: number, input: EventInput) {
           }))
         : []
     );
+
+    recordChangeHistory({
+      targetType: "event",
+      targetId: id,
+      action: "update",
+      snapshot: before
+    });
   });
 }
 
 export function removeEvent(id: number) {
   db.transaction(() => {
+    const snapshot = buildEventHistorySnapshot(id);
     deleteEventLinksAndRelations(id);
     deleteEvent(id);
+    recordChangeHistory({
+      targetType: "event",
+      targetId: id,
+      action: "delete",
+      snapshot
+    });
   });
 }
 
@@ -594,6 +620,31 @@ function compareEventListItems(
   }
 
   return left.title.localeCompare(right.title, "ja");
+}
+
+function buildEventHistorySnapshot(id: number) {
+  const event = getEventById(id);
+  if (!event) {
+    return { id };
+  }
+
+  const links = getEventLinks([id]);
+
+  return {
+    ...event,
+    personIds: links.personLinks.map((link) => link.personId),
+    polityIds: links.polityLinks.map((link) => link.polityId),
+    dynastyIds: links.dynastyLinks.map((link) => link.dynastyId),
+    periodIds: links.periodLinks.map((link) => link.periodId),
+    religionIds: links.religionLinks.map((link) => link.religionId),
+    sectIds: links.sectLinks.map((link) => link.sectId),
+    regionIds: links.regionLinks.map((link) => link.regionId),
+    tagIds: links.tagLinks.map((link) => link.tagId),
+    relations: getEventRelationsByEventIds([id]),
+    conflictParticipants: getConflictParticipantsByEventIds([id]),
+    conflictOutcome: getConflictOutcomesByEventIds([id])[0] ?? null,
+    conflictOutcomeParticipants: getConflictOutcomeParticipantsByEventIds([id])
+  };
 }
 
 function getComparableRange(era: string | null, startYear: number | null, endYear: number | null) {

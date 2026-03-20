@@ -29,6 +29,13 @@
       "when": 1773502000000,
       "tag": "0003_wise_event_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1773987149857,
+      "tag": "0004_acoustic_sauron",
+      "breakpoints": true
     }
   ]
 }

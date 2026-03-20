@@ -14,7 +14,9 @@ import {
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { getRelatedEvents } from "@/server/services/event-references";
+import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getPeriodCategoryOptions } from "@/server/services/period-categories";
+import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getHistoricalPeriodFormOptions() {
   return {
@@ -99,12 +101,14 @@ export function getHistoricalPeriodDetailView(id: number) {
     relatedEvents: getRelatedEvents({ periodId: id }),
     timeLabel: formatStoredTime("time", period),
     defaultTimeExpression: extractTimeExpression("time", period),
-    formOptions: options
+    formOptions: options,
+    citations: getCitationListForTarget("historical_period", id),
+    changeHistory: getHistoryView("historical_period", id)
   };
 }
 
 export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
-  return createHistoricalPeriod(
+  const id = createHistoricalPeriod(
     {
       categoryId: input.categoryId,
       polityId: input.polityId ?? null,
@@ -117,9 +121,17 @@ export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
     },
     input.regionIds
   );
+  recordChangeHistory({
+    targetType: "historical_period",
+    targetId: id,
+    action: "create",
+    snapshot: buildHistoricalPeriodHistorySnapshot(id)
+  });
+  return id;
 }
 
 export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPeriodInput) {
+  const before = buildHistoricalPeriodHistorySnapshot(id);
   updateHistoricalPeriod(
     id,
     {
@@ -134,10 +146,23 @@ export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPer
     },
     input.regionIds
   );
+  recordChangeHistory({
+    targetType: "historical_period",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
 }
 
 export function removeHistoricalPeriod(id: number) {
+  const snapshot = buildHistoricalPeriodHistorySnapshot(id);
   deleteHistoricalPeriod(id);
+  recordChangeHistory({
+    targetType: "historical_period",
+    targetId: id,
+    action: "delete",
+    snapshot
+  });
 }
 
 function joinAliases(aliases: string[]) {
@@ -200,4 +225,16 @@ function dedupePeople(people: Array<{ id: number; name: string }>) {
     seen.add(person.id);
     return true;
   });
+}
+
+function buildHistoricalPeriodHistorySnapshot(id: number) {
+  const period = getHistoricalPeriodById(id);
+  if (!period) {
+    return { id };
+  }
+
+  return {
+    ...period,
+    regionIds: getHistoricalPeriodRegionIds([id]).map((link) => link.regionId)
+  };
 }

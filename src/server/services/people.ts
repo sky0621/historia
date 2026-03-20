@@ -27,6 +27,8 @@ import { listReligions } from "@/server/repositories/religions";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listSects } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
+import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPersonOptions() {
   return listPeopleDetailed().map((person) => ({ id: person.id, name: person.name }));
@@ -144,7 +146,9 @@ export function getPersonDetailView(id: number) {
     defaultBirthTimeExpression: extractTimeExpression("birth", person),
     defaultDeathTimeExpression: extractTimeExpression("death", person),
     lifeLabel: [formatStoredTime("birth", person), formatStoredTime("death", person)].join(" - "),
-    formOptions: options
+    formOptions: options,
+    citations: getCitationListForTarget("person", id),
+    changeHistory: getHistoryView("person", id)
   };
 }
 
@@ -172,12 +176,20 @@ export function createPersonFromInput(input: PersonInput) {
       ...toStoredTime("time", role.timeExpression)
     })));
 
+    recordChangeHistory({
+      targetType: "person",
+      targetId: personId,
+      action: "create",
+      snapshot: buildPersonHistorySnapshot(personId)
+    });
+
     return personId;
   });
 }
 
 export function updatePersonFromInput(id: number, input: PersonInput) {
   db.transaction(() => {
+    const before = buildPersonHistorySnapshot(id);
     updatePerson(id, {
       name: input.name,
       aliases: joinAliases(input.aliases),
@@ -199,17 +211,31 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
       isIncumbent: role.isIncumbent,
       ...toStoredTime("time", role.timeExpression)
     })));
+
+    recordChangeHistory({
+      targetType: "person",
+      targetId: id,
+      action: "update",
+      snapshot: before
+    });
   });
 }
 
 export function removePerson(id: number) {
   db.transaction(() => {
+    const snapshot = buildPersonHistorySnapshot(id);
     replacePersonRegionLinks(id, []);
     replacePersonReligionLinks(id, []);
     replacePersonSectLinks(id, []);
     replacePersonPeriodLinks(id, []);
     replaceRoleAssignments(id, []);
     deletePerson(id);
+    recordChangeHistory({
+      targetType: "person",
+      targetId: id,
+      action: "delete",
+      snapshot
+    });
   });
 }
 
@@ -260,6 +286,22 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
+}
+
+function buildPersonHistorySnapshot(id: number) {
+  const person = getPersonById(id);
+  if (!person) {
+    return { id };
+  }
+
+  return {
+    ...person,
+    regionIds: getPersonRegionLinks([id]).map((link) => link.regionId),
+    religionIds: getPersonReligionLinks([id]).map((link) => link.religionId),
+    sectIds: getPersonSectLinks([id]).map((link) => link.sectId),
+    periodIds: getPersonPeriodLinks([id]).map((link) => link.periodId),
+    roles: getRoleAssignmentsByPersonIds([id])
+  };
 }
 
 function matchesPeopleFilters(
