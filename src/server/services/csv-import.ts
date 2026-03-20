@@ -1,5 +1,6 @@
 import { eventSchema, type EventInput } from "@/features/events/schema";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
+import { sqlite } from "@/db/client";
 import { listDynasties } from "@/server/repositories/dynasties";
 import { listEvents } from "@/server/repositories/events";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
@@ -8,6 +9,7 @@ import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { listSects } from "@/server/repositories/sects";
+import { createEventFromInput } from "@/server/services/events";
 
 const EVENT_HEADERS = [
   "title",
@@ -44,7 +46,7 @@ type CsvDuplicateCandidate = {
   reason: string;
 };
 
-type CsvPreviewRow<TInput> = {
+export type CsvPreviewRow<TInput> = {
   rowNumber: number;
   label: string;
   status: CsvPreviewStatus;
@@ -54,7 +56,7 @@ type CsvPreviewRow<TInput> = {
   input?: TInput;
 };
 
-type CsvPreviewSummary = {
+export type CsvPreviewSummary = {
   totalRows: number;
   okCount: number;
   duplicateCandidateCount: number;
@@ -68,6 +70,11 @@ export type CsvPreviewResult<TInput> = {
   unknownHeaders: string[];
   summary: CsvPreviewSummary;
   rows: CsvPreviewRow<TInput>[];
+};
+
+export type CsvImportResult = {
+  kind: "event" | "person";
+  importedCount: number;
 };
 
 type ParsedCsvRow = {
@@ -169,6 +176,35 @@ export function previewEventCsvImport(rawCsv: string): CsvPreviewResult<EventInp
     unknownHeaders,
     summary: summarizeRows(rows),
     rows
+  };
+}
+
+export function applyEventCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewEventCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+
+  if (blockingRows.length > 0) {
+    throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  }
+
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+
+    for (const row of preview.rows) {
+      if (!row.input) {
+        continue;
+      }
+
+      createEventFromInput(row.input);
+      count += 1;
+    }
+
+    return count;
+  })();
+
+  return {
+    kind: "event",
+    importedCount
   };
 }
 

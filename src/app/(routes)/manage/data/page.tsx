@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CsvImportPanel } from "@/features/csv-import/components/csv-import-panel";
 import { ImportWorkspacePanel } from "@/features/sources/components/import-workspace-panel";
 
 export default function ManageDataPage() {
@@ -43,8 +44,10 @@ export default function ManageDataPage() {
             </div>
           </div>
         </div>
-
-        <ImportWorkspacePanel />
+        <div className="space-y-6">
+          <CsvImportPanel />
+          <ImportWorkspacePanel />
+        </div>
       </div>
     </section>
   );

@@ -8,7 +8,8 @@ const repositoryMocks = vi.hoisted(() => ({
   listHistoricalPeriods: vi.fn(),
   listReligions: vi.fn(),
   listSects: vi.fn(),
-  listRegions: vi.fn()
+  listRegions: vi.fn(),
+  createEventFromInput: vi.fn()
 }));
 
 vi.mock("@/server/repositories/events", () => ({
@@ -43,7 +44,11 @@ vi.mock("@/server/repositories/regions", () => ({
   listRegions: repositoryMocks.listRegions
 }));
 
-import { parseCsv, previewEventCsvImport } from "@/server/services/csv-import";
+vi.mock("@/server/services/events", () => ({
+  createEventFromInput: repositoryMocks.createEventFromInput
+}));
+
+import { applyEventCsvImport, parseCsv, previewEventCsvImport } from "@/server/services/csv-import";
 
 describe("csv import service", () => {
   beforeEach(() => {
@@ -64,6 +69,8 @@ describe("csv import service", () => {
     repositoryMocks.listReligions.mockReturnValue([]);
     repositoryMocks.listSects.mockReturnValue([]);
     repositoryMocks.listRegions.mockReturnValue([]);
+    repositoryMocks.createEventFromInput.mockReset();
+    repositoryMocks.createEventFromInput.mockReturnValue(1);
   });
 
   it("parses quoted csv cells with commas and newlines", () => {
@@ -166,5 +173,54 @@ describe("csv import service", () => {
       }
     ]);
     expect(preview.rows[0].input).toBeUndefined();
+  });
+
+  it("imports only clean event rows", () => {
+    repositoryMocks.listPolities.mockReturnValue([{ id: 2, name: "日本" }]);
+
+    const result = applyEventCsvImport(
+      "title,event_type,time_start_year,polities\n平安京遷都,general,794,日本\n鎌倉幕府成立,general,1185,日本"
+    );
+
+    expect(result).toEqual({
+      kind: "event",
+      importedCount: 2
+    });
+    expect(repositoryMocks.createEventFromInput).toHaveBeenCalledTimes(2);
+    expect(repositoryMocks.createEventFromInput).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        title: "平安京遷都",
+        polityIds: [2]
+      })
+    );
+  });
+
+  it("rejects import when preview contains duplicate candidates", () => {
+    repositoryMocks.listEvents.mockReturnValue([
+      {
+        id: 99,
+        title: "平安京遷都",
+        eventType: "general",
+        description: null,
+        timeCalendarEra: "CE",
+        timeStartYear: 794,
+        timeEndYear: null,
+        timeIsApproximate: false,
+        timePrecision: "year",
+        timeDisplayLabel: "794年",
+        startCalendarEra: null,
+        startYear: null,
+        endCalendarEra: null,
+        endYear: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]);
+
+    expect(() =>
+      applyEventCsvImport("title,event_type,time_start_year\n平安京遷都,general,794")
+    ).toThrow("error または duplicate-candidate を含むため import を実行できません");
+    expect(repositoryMocks.createEventFromInput).not.toHaveBeenCalled();
   });
 });
