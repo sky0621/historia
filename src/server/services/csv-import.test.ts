@@ -9,8 +9,10 @@ const repositoryMocks = vi.hoisted(() => ({
   listReligions: vi.fn(),
   listSects: vi.fn(),
   listRegions: vi.fn(),
+  getRoleAssignmentsByPersonIds: vi.fn(),
   createEventFromInput: vi.fn(),
-  createPersonFromInput: vi.fn()
+  createPersonFromInput: vi.fn(),
+  appendRoleAssignmentsToPerson: vi.fn()
 }));
 
 vi.mock("@/server/repositories/events", () => ({
@@ -45,15 +47,28 @@ vi.mock("@/server/repositories/regions", () => ({
   listRegions: repositoryMocks.listRegions
 }));
 
+vi.mock("@/server/repositories/role-assignments", () => ({
+  getRoleAssignmentsByPersonIds: repositoryMocks.getRoleAssignmentsByPersonIds
+}));
+
 vi.mock("@/server/services/events", () => ({
   createEventFromInput: repositoryMocks.createEventFromInput
 }));
 
 vi.mock("@/server/services/people", () => ({
-  createPersonFromInput: repositoryMocks.createPersonFromInput
+  createPersonFromInput: repositoryMocks.createPersonFromInput,
+  appendRoleAssignmentsToPerson: repositoryMocks.appendRoleAssignmentsToPerson
 }));
 
-import { applyEventCsvImport, applyPersonCsvImport, parseCsv, previewEventCsvImport, previewPersonCsvImport } from "@/server/services/csv-import";
+import {
+  applyEventCsvImport,
+  applyPersonCsvImport,
+  applyRoleAssignmentCsvImport,
+  parseCsv,
+  previewEventCsvImport,
+  previewPersonCsvImport,
+  previewRoleAssignmentCsvImport
+} from "@/server/services/csv-import";
 
 describe("csv import service", () => {
   beforeEach(() => {
@@ -65,6 +80,7 @@ describe("csv import service", () => {
     repositoryMocks.listReligions.mockReset();
     repositoryMocks.listSects.mockReset();
     repositoryMocks.listRegions.mockReset();
+    repositoryMocks.getRoleAssignmentsByPersonIds.mockReset();
 
     repositoryMocks.listEvents.mockReturnValue([]);
     repositoryMocks.listPeopleDetailed.mockReturnValue([]);
@@ -74,10 +90,12 @@ describe("csv import service", () => {
     repositoryMocks.listReligions.mockReturnValue([]);
     repositoryMocks.listSects.mockReturnValue([]);
     repositoryMocks.listRegions.mockReturnValue([]);
+    repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([]);
     repositoryMocks.createEventFromInput.mockReset();
     repositoryMocks.createEventFromInput.mockReturnValue(1);
     repositoryMocks.createPersonFromInput.mockReset();
     repositoryMocks.createPersonFromInput.mockReturnValue(1);
+    repositoryMocks.appendRoleAssignmentsToPerson.mockReset();
   });
 
   it("parses quoted csv cells with commas and newlines", () => {
@@ -372,5 +390,139 @@ describe("csv import service", () => {
       applyPersonCsvImport("name,birth_start_year,death_start_year\n最澄,767,822")
     ).toThrow("error または duplicate-candidate を含むため import を実行できません");
     expect(repositoryMocks.createPersonFromInput).not.toHaveBeenCalled();
+  });
+
+  it("builds role assignment preview rows with resolved references and duplicate candidates", () => {
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 1, name: "最澄", aliases: null }]);
+    repositoryMocks.listPolities.mockReturnValue([{ id: 2, name: "日本" }]);
+    repositoryMocks.listDynasties.mockReturnValue([{ id: 3, name: "平安朝" }]);
+    repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([
+      {
+        id: 40,
+        personId: 1,
+        title: "天台座主",
+        polityId: 2,
+        dynastyId: 3,
+        note: null,
+        isIncumbent: false,
+        timeCalendarEra: "CE",
+        timeStartYear: 804,
+        timeEndYear: 822,
+        timeIsApproximate: false,
+        timePrecision: "year",
+        timeDisplayLabel: null
+      }
+    ]);
+
+    const preview = previewRoleAssignmentCsvImport(
+      "person,title,polity,dynasty,time_start_year,time_end_year,is_incumbent\n最澄,天台座主,日本,平安朝,804,822,false"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 1,
+      errorCount: 0,
+      warningCount: 0
+    });
+    expect(preview.rows[0]).toMatchObject({
+      label: "最澄: 天台座主",
+      status: "duplicate-candidate",
+      input: {
+        personId: 1,
+        personName: "最澄",
+        role: {
+          title: "天台座主",
+          polityId: 2,
+          dynastyId: 3,
+          isIncumbent: false,
+          timeExpression: {
+            calendarEra: "CE",
+            startYear: 804,
+            endYear: 822,
+            isApproximate: false,
+            precision: "year",
+            displayLabel: ""
+          }
+        }
+      }
+    });
+  });
+
+  it("reports role assignment preview issues for unknown references", () => {
+    const preview = previewRoleAssignmentCsvImport(
+      "person,title,polity\n最澄,天台座主,日本"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 0,
+      errorCount: 1,
+      warningCount: 0
+    });
+    expect(preview.rows[0].issues).toEqual([
+      {
+        field: "people",
+        message: "未登録の参照名です: 最澄"
+      },
+      {
+        field: "polities",
+        message: "未登録の参照名です: 日本"
+      }
+    ]);
+  });
+
+  it("imports clean role assignment rows grouped by person", () => {
+    repositoryMocks.listPeopleDetailed.mockReturnValue([
+      { id: 1, name: "最澄", aliases: null },
+      { id: 2, name: "空海", aliases: null }
+    ]);
+    repositoryMocks.listPolities.mockReturnValue([{ id: 2, name: "日本" }]);
+    repositoryMocks.listDynasties.mockReturnValue([{ id: 3, name: "平安朝" }]);
+
+    const result = applyRoleAssignmentCsvImport(
+      "person,title,polity,dynasty,time_start_year,time_end_year,is_incumbent\n最澄,天台座主,日本,平安朝,804,822,false\n最澄,僧,日本,,805,,false\n空海,僧都,日本,,810,,false"
+    );
+
+    expect(result).toEqual({
+      kind: "role-assignment",
+      importedCount: 3
+    });
+    expect(repositoryMocks.appendRoleAssignmentsToPerson).toHaveBeenCalledTimes(2);
+    expect(repositoryMocks.appendRoleAssignmentsToPerson).toHaveBeenNthCalledWith(
+      1,
+      1,
+      [
+        expect.objectContaining({ title: "天台座主", polityId: 2, dynastyId: 3 }),
+        expect.objectContaining({ title: "僧", polityId: 2, dynastyId: null })
+      ]
+    );
+  });
+
+  it("rejects role assignment import when preview contains duplicate candidates", () => {
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 1, name: "最澄", aliases: null }]);
+    repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([
+      {
+        id: 40,
+        personId: 1,
+        title: "天台座主",
+        polityId: null,
+        dynastyId: null,
+        note: null,
+        isIncumbent: false,
+        timeCalendarEra: "CE",
+        timeStartYear: 804,
+        timeEndYear: 822,
+        timeIsApproximate: false,
+        timePrecision: "year",
+        timeDisplayLabel: null
+      }
+    ]);
+
+    expect(() =>
+      applyRoleAssignmentCsvImport("person,title,time_start_year,time_end_year\n最澄,天台座主,804,822")
+    ).toThrow("error または duplicate-candidate を含むため import を実行できません");
+    expect(repositoryMocks.appendRoleAssignmentsToPerson).not.toHaveBeenCalled();
   });
 });

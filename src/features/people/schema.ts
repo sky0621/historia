@@ -27,6 +27,7 @@ export const personSchema = z.object({
 });
 
 export type PersonInput = z.infer<typeof personSchema>;
+export type RoleAssignmentInput = z.infer<typeof roleAssignmentSchema>;
 
 export function parsePersonFormData(formData: FormData): PersonInput {
   return personSchema.parse({

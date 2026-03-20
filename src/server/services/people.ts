@@ -2,7 +2,7 @@ import { db } from "@/db/client";
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
-import type { PersonInput } from "@/features/people/schema";
+import type { PersonInput, RoleAssignmentInput } from "@/features/people/schema";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listDynasties } from "@/server/repositories/dynasties";
 import {
@@ -236,6 +236,39 @@ export function removePerson(id: number) {
       action: "delete",
       snapshot
     });
+  });
+}
+
+export function appendRoleAssignmentsToPerson(id: number, roles: RoleAssignmentInput[]) {
+  const person = getPersonById(id);
+  if (!person) {
+    throw new Error(`人物が見つかりません: ${id}`);
+  }
+
+  const before = buildPersonHistorySnapshot(id);
+  const existingRoles = getRoleAssignmentsByPersonIds([id]);
+
+  replaceRoleAssignments(
+    id,
+    [
+      ...existingRoles,
+      ...roles.map((role) => ({
+        personId: id,
+        title: role.title,
+        polityId: role.polityId ?? null,
+        dynastyId: role.dynastyId ?? null,
+        note: nullable(role.note),
+        isIncumbent: role.isIncumbent,
+        ...toStoredTime("time", role.timeExpression)
+      }))
+    ]
+  );
+
+  recordChangeHistory({
+    targetType: "person",
+    targetId: id,
+    action: "update",
+    snapshot: before
   });
 }
 

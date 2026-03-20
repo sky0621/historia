@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { importCsvAction } from "@/features/csv-import/actions";
 import type { EventInput } from "@/features/events/schema";
 import type { PersonInput } from "@/features/people/schema";
-import type { CsvPreviewResult, CsvPreviewRow } from "@/server/services/csv-import";
+import type { CsvPreviewResult, CsvPreviewRow, RoleAssignmentCsvInput } from "@/server/services/csv-import";
 
 const initialState: Awaited<ReturnType<typeof importCsvAction>> = {
   targetType: "event"
@@ -18,8 +18,8 @@ export function CsvImportPanel() {
     <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
       <h2 className="text-lg font-semibold">CSV import</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-        `Sprint 3` では `Event CSV` と `Person CSV` を preview/import できます。まず preview し、`error` と
-        `duplicate-candidate` がないことを確認してから import します。
+        `Sprint 5` では `Event / Person / RoleAssignment CSV` を preview/import できます。まず preview し、
+        `error` と `duplicate-candidate` がないことを確認してから import します。
       </p>
 
       <form action={action} className="mt-6 space-y-4">
@@ -34,6 +34,15 @@ export function CsvImportPanel() {
               <input type="radio" name="targetType" value="person" defaultChecked={targetType === "person"} />
               <span>Person</span>
             </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="role-assignment"
+                defaultChecked={targetType === "role-assignment"}
+              />
+              <span>RoleAssignment</span>
+            </label>
           </div>
         </fieldset>
 
@@ -46,6 +55,8 @@ export function CsvImportPanel() {
             placeholder={
               targetType === "person"
                 ? "name,aliases,birth_start_year,regions\n最澄,伝教大師,767,近江|比叡山"
+                : targetType === "role-assignment"
+                  ? "person,title,polity,dynasty,time_start_year,time_end_year,is_incumbent\n最澄,天台座主,日本,,804,822,false"
                 : "title,event_type,time_start_year,people,polities\n平安京遷都,general,794,桓武天皇,日本"
             }
             required
@@ -99,10 +110,15 @@ export function CsvImportPanel() {
                 const preview = state.preview as CsvPreviewResult<EventInput>;
                 return preview.rows.map((row) => renderEventRow(row));
               })()
-            ) : (
+            ) : state.preview.kind === "person" ? (
               (() => {
                 const preview = state.preview as CsvPreviewResult<PersonInput>;
                 return preview.rows.map((row) => renderPersonRow(row));
+              })()
+            ) : (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<RoleAssignmentCsvInput>;
+                return preview.rows.map((row) => renderRoleAssignmentRow(row));
               })()
             )}
           </div>
@@ -113,7 +129,11 @@ export function CsvImportPanel() {
         <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
           <h3 className="text-sm font-semibold text-emerald-900">import 完了</h3>
           <p className="mt-2 text-sm text-emerald-900">
-            追加した {state.result.kind === "person" ? "Person" : "Event"} 件数: {state.result.importedCount}
+            追加した
+            {" "}
+            {state.result.kind === "person" ? "Person" : state.result.kind === "role-assignment" ? "RoleAssignment" : "Event"}
+            {" "}
+            件数: {state.result.importedCount}
           </p>
         </div>
       ) : null}
@@ -161,6 +181,32 @@ function renderPersonRow(row: CsvPreviewRow<PersonInput>) {
             links: regions {row.input.regionIds.length}, religions {row.input.religionIds.length}, sects {row.input.sectIds.length},
             {" "}
             periods {row.input.periodIds.length}
+          </p>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderRoleAssignmentRow(row: CsvPreviewRow<RoleAssignmentCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          <p>
+            person: {row.input.personName}
+            {row.input.role.timeExpression?.startYear ? ` / from: ${row.input.role.timeExpression.startYear}` : ""}
+            {row.input.role.timeExpression?.endYear ? ` / to: ${row.input.role.timeExpression.endYear}` : ""}
+          </p>
+          <p>
+            polity: {row.input.role.polityId ?? "-"}
+            {" / "}
+            dynasty: {row.input.role.dynastyId ?? "-"}
+            {" / "}
+            incumbent: {row.input.role.isIncumbent ? "true" : "false"}
           </p>
         </div>
       ) : null}
