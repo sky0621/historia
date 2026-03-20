@@ -117,9 +117,13 @@ export function getEventsListView(filters: EventListFilters = {}) {
         timeLabel: formatEventTime(event),
         relationSummaryItems,
         relationSummary: relationSummaryItems.map((item) => item.name).join(", "),
-        relationTypes: relations
-          .filter((relation) => relation.fromEventId === event.id || relation.toEventId === event.id)
-          .map((relation) => relation.relationType),
+        relationTypes: Array.from(
+          new Set(
+            relations
+              .filter((relation) => relation.fromEventId === event.id || relation.toEventId === event.id)
+              .map((relation) => relation.relationType)
+          )
+        ),
         personIds: links.personLinks.filter((link) => link.eventId === event.id).map((link) => link.personId),
         polityIds: links.polityLinks.filter((link) => link.eventId === event.id).map((link) => link.polityId),
         dynastyIds: links.dynastyLinks.filter((link) => link.eventId === event.id).map((link) => link.dynastyId),

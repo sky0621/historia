@@ -244,13 +244,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">タイトル</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">時代</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">種別</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">関係</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">関連主体</th>
             </tr>
           </thead>
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={5} className="px-5 py-6 text-[var(--muted)]">
                   <div className="flex flex-col gap-3">
                     <span>{activeFilters.length > 0 ? "条件に一致するイベントはありません。" : "まだイベントはありません。"}</span>
                     {activeFilters.length > 0 ? (
@@ -273,6 +274,20 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   </td>
                   <td className="px-5 py-4">{event.timeLabel}</td>
                   <td className="px-5 py-4">{event.eventType}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {event.relationTypes.length === 0 ? (
+                      "-"
+                    ) : (
+                      event.relationTypes.map((type, index) => (
+                        <span key={`${event.id}-relation-${type}`}>
+                          {index > 0 ? ", " : null}
+                          <Link href={`/events?relationType=${encodeURIComponent(type)}`} className="underline-offset-4 hover:underline">
+                            {type}
+                          </Link>
+                        </span>
+                      ))
+                    )}
+                  </td>
                   <td className="px-5 py-4 text-[var(--muted)]">
                     {event.relationSummaryItems.length === 0 ? (
                       "-"
