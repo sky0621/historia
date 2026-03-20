@@ -1,0 +1,4 @@
+title,event_type,description,time_start_year,time_end_year,time_is_approximate,people,polities,periods,religions,sects,regions,tags
+平安京遷都,general,長岡京から平安京へ遷都した,794,,,桓武天皇,日本,平安時代,,,京都,都城|日本史
+応仁の乱,civil_war,京都を主戦場とした内乱,1467,1477,false,,日本,室町時代,,,京都,内乱|戦争
+第1回十字軍,war,西欧から聖地へ向かった遠征,1096,1099,false,,エルサレム王国,中世,キリスト教,カトリック教会,ヨーロッパ|エルサレム,宗教|戦争

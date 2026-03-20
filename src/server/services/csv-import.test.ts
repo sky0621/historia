@@ -182,6 +182,27 @@ describe("csv import service", () => {
     expect(preview.rows[0].input).toBeUndefined();
   });
 
+  it("rejects csv without required headers", () => {
+    expect(() => previewEventCsvImport("description,time_start_year\n説明,794")).toThrow(
+      "必須ヘッダーが不足しています: title, event_type"
+    );
+    expect(() => previewPersonCsvImport("aliases,birth_start_year\n伝教大師,767")).toThrow(
+      "必須ヘッダーが不足しています: name"
+    );
+  });
+
+  it("keeps unknown headers as warnings", () => {
+    const preview = previewEventCsvImport("title,event_type,unknown_column\n平安京遷都,general,ignored");
+
+    expect(preview.unknownHeaders).toEqual(["unknown_column"]);
+    expect(preview.rows[0].warnings).toEqual([
+      {
+        field: "_header",
+        message: "未対応列は無視されます: unknown_column"
+      }
+    ]);
+  });
+
   it("imports only clean event rows", () => {
     repositoryMocks.listPolities.mockReturnValue([{ id: 2, name: "日本" }]);
 
@@ -301,5 +322,55 @@ describe("csv import service", () => {
         regionIds: [10]
       })
     );
+  });
+
+  it("reports person preview issues for unknown references", () => {
+    const preview = previewPersonCsvImport("name,regions,religions\n最澄,比叡山,仏教");
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 0,
+      errorCount: 1,
+      warningCount: 0
+    });
+    expect(preview.rows[0].issues).toEqual([
+      {
+        field: "regions",
+        message: "未登録の参照名です: 比叡山"
+      },
+      {
+        field: "religions",
+        message: "未登録の参照名です: 仏教"
+      }
+    ]);
+  });
+
+  it("rejects person import when preview contains duplicate candidates", () => {
+    repositoryMocks.listPeopleDetailed.mockReturnValue([
+      {
+        id: 50,
+        name: "最澄",
+        aliases: "伝教大師",
+        note: null,
+        birthCalendarEra: "CE",
+        birthStartYear: 767,
+        birthEndYear: null,
+        birthIsApproximate: false,
+        birthPrecision: "year",
+        birthDisplayLabel: "767年",
+        deathCalendarEra: "CE",
+        deathStartYear: 822,
+        deathEndYear: null,
+        deathIsApproximate: false,
+        deathPrecision: "year",
+        deathDisplayLabel: "822年"
+      }
+    ]);
+
+    expect(() =>
+      applyPersonCsvImport("name,birth_start_year,death_start_year\n最澄,767,822")
+    ).toThrow("error または duplicate-candidate を含むため import を実行できません");
+    expect(repositoryMocks.createPersonFromInput).not.toHaveBeenCalled();
   });
 });
