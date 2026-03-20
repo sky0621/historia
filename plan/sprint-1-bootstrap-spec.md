@@ -155,3 +155,30 @@ Sprint 1 で以下を固定する。
 - App Router の Server Action を使うか API Route を使うかは Sprint 1 で固定する。
 - 既定は `Server Actions + server/services` とし、CRUD が複雑化するまで API Route は増やさない。
 - UI 部品は早い段階で分割しすぎず、2 画面以上で再利用が見えた時点で共通化する。
+
+## 実装状況
+更新日: 2026-03-20
+
+### Sprint 1 完了条件の判定
+- 充足: `pnpm install` 後にローカル起動できる。
+- 充足: Drizzle で初回マイグレーションを生成・適用できる。
+- 充足: 共通レイアウトとナビゲーションが表示される。
+- 充足: `TimeExpression` の型、Zod スキーマ、表示関数、入力部品が存在する。
+- 充足: 少なくとも 1 つのダミー一覧画面と 1 つのダミーフォーム画面が共通部品で描画される、という要件は、現在はそれを超えて実 CRUD 画面群に置き換わっている。
+
+### 実装済み
+- 実装済み: `Next.js 15系 App Router`、`TypeScript`、`Tailwind CSS`、`Drizzle ORM`、`SQLite`、`Zod`、`react-hook-form`、`Vitest`、`pnpm`。
+- 実装済み: `Server Actions + server/services` 方針。
+- 実装済み: `src/app`、`src/components`、`src/db`、`src/features`、`src/lib/time-expression`、`src/server/repositories`、`src/server/services` を中心とした構成。
+- 実装済み: トップページからイベント一覧へのリダイレクトと、主要ルートの一覧・作成・詳細・編集。
+- 実装済み: 共通 `TimeExpression` の型、Zod スキーマ、表示、保存形式との相互変換、入力部品。
+- 実装済み: 初回マイグレーション、seed、ロジック単体テスト。
+
+### 当初仕様からの差分
+- 差分: `features/dynasties/` のような完全独立ディレクトリではなく、王朝は `features/polities/` 配下で管理している。
+- 差分: `TimeExpression` 単体確認用の専用サンプル画面や Story は独立ページとしては残していない。
+- 差分: 「プレースホルダ一覧画面 / 作成画面」は、現在は実データ接続済みの一覧・作成画面に発展している。
+
+### 備考
+- このファイルの内容は、Sprint 1 の bootstrap 仕様としては実装済みと判断してよい。
+- 現在のコードベースは Sprint 1 を超えて、MVP 実装まで進行している。
