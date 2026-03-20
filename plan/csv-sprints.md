@@ -101,11 +101,198 @@
 - `pnpm test`
 - `pnpm build`
 
+## Sprint 5: RoleAssignment CSV
+
+### 対象
+- `RoleAssignment CSV import`
+
+### 目的
+- `Person CSV v1` で未対応だった役職履歴を別 CSV で投入できるようにする。
+- 人物、国家、王朝の既存データを壊さずに、役職だけを後から追加できるようにする。
+
+### 実装内容
+- `RoleAssignment CSV v1` の列仕様を定義する。
+- `previewRoleAssignmentCsvImport(rawCsv)` を実装する。
+- `applyRoleAssignmentCsvImport(rawCsv)` を実装する。
+- `person / polity / dynasty` の名前完全一致解決を行う。
+- 在任期間の `TimeExpression` と `is_incumbent` を扱う。
+
+### 想定列
+- `person`
+- `title`
+- `polity`
+- `dynasty`
+- `start_label`
+- `start_calendar_era`
+- `start_start_year`
+- `start_end_year`
+- `start_is_approximate`
+- `end_label`
+- `end_calendar_era`
+- `end_start_year`
+- `end_end_year`
+- `end_is_approximate`
+- `is_incumbent`
+- `note`
+
+### 完了条件
+- `/manage/data` から `RoleAssignment CSV` の preview/import ができる。
+- 未知の人物・国家・王朝を検出できる。
+- 同一人物への役職履歴を複数行で追加できる。
+
+## Sprint 6: EventRelation CSV
+
+### 対象
+- `EventRelation CSV import`
+
+### 目的
+- 大量投入したイベント同士に、前後関係・因果関係・関連関係をまとめて付与できるようにする。
+
+### 実装内容
+- `EventRelation CSV v1` の列仕様を定義する。
+- `previewEventRelationCsvImport(rawCsv)` を実装する。
+- `applyEventRelationCsvImport(rawCsv)` を実装する。
+- `from_event / to_event` の名前解決を行う。
+- `relation_type` の列挙値検証を行う。
+
+### 想定列
+- `from_event`
+- `to_event`
+- `relation_type`
+
+### 完了条件
+- `/manage/data` から `EventRelation CSV` の preview/import ができる。
+- `before / after / cause / related` のみ受け付ける。
+- 未知イベントや自己参照を検出できる。
+
+## Sprint 7: ConflictParticipant / ConflictOutcome CSV
+
+### 対象
+- `ConflictParticipant CSV import`
+- `ConflictOutcome CSV import`
+
+### 目的
+- 戦争・乱イベントの参加勢力と勝敗結果を、Event 本体とは別に追加入力できるようにする。
+
+### 実装内容
+- `ConflictParticipant CSV v1` の列仕様を定義する。
+- `ConflictOutcome CSV v1` の列仕様を定義する。
+- 各 preview/import 関数を実装する。
+- `event`、参加主体、勝者側、敗者側の参照解決を行う。
+
+### 想定列
+- `ConflictParticipant CSV`
+  - `event`
+  - `participant_type`
+  - `participant_name`
+  - `role`
+  - `note`
+- `ConflictOutcome CSV`
+  - `event`
+  - `winner_participants`
+  - `loser_participants`
+  - `settlement_summary`
+  - `note`
+
+### 完了条件
+- `/manage/data` から `ConflictParticipant CSV` の preview/import ができる。
+- `/manage/data` から `ConflictOutcome CSV` の preview/import ができる。
+- 戦争・乱以外のイベントに対する不正な投入を preview で止められる。
+
+## Sprint 8: 主要マスタ CSV 前半
+
+### 対象
+- `Region CSV import`
+- `PeriodCategory CSV import`
+- `Polity CSV import`
+- `Religion CSV import`
+
+### 目的
+- 他 CSV の参照先になる主要マスタを、依存の少ない順でまとめて投入できるようにする。
+
+### 実装内容
+- 各マスタの `CSV v1` を定義する。
+- preview/import を追加する。
+- `Region` は親地域参照、`Polity` と `Religion` は時間表現を扱う。
+
+### 完了条件
+- 4 種のマスタを `/manage/data` から preview/import できる。
+- 参照依存がある列は完全一致で検証できる。
+
+## Sprint 9: 主要マスタ CSV 後半
+
+### 対象
+- `Dynasty CSV import`
+- `HistoricalPeriod CSV import`
+- `Sect CSV import`
+- `Tag CSV import`
+
+### 目的
+- 依存があるマスタを後段で追加し、主要ドメインの一括初期投入を可能にする。
+
+### 実装内容
+- `Dynasty` は `Polity` 参照を必須にする。
+- `HistoricalPeriod` は `PeriodCategory` と任意の `Polity / Region` 参照を扱う。
+- `Sect` は `Religion` 参照を必須にする。
+- `Tag` は最小列で軽量に import できるようにする。
+
+### 完了条件
+- 4 種のマスタを `/manage/data` から preview/import できる。
+- `Dynasty / HistoricalPeriod / Sect` の親参照が壊れた行を止められる。
+
+## Sprint 10: 運用高度化 CSV
+
+### 対象
+- `Source CSV import`
+- `Citation CSV import`
+- `PolityTransition CSV import`
+- `DynastySuccession CSV import`
+- `RegionRelation CSV import`
+- `HistoricalPeriodRelation CSV import`
+
+### 目的
+- 出典・引用・主体間関係の大量投入を支え、研究用データ運用を強化する。
+
+### 実装内容
+- `Source / Citation` の import を追加する。
+- 既存の関係モデル群に対する CSV import を追加する。
+- 依存先の存在確認と関係種別検証を行う。
+
+### 完了条件
+- 各関係 CSV の preview/import ができる。
+- 未知参照、重複関係、不正な relation type を止められる。
+
+## Sprint 11: UI と運用改善
+
+### 対象
+- file upload UI
+- 曖昧一致候補 UI
+- import 履歴と結果再確認 UI
+
+### 目的
+- テキスト貼り付け中心の初期 UI を、実運用向けに改善する。
+
+### 実装内容
+- `/manage/data` に file upload を追加する。
+- 名前の曖昧一致候補を preview 上で確認できるようにする。
+- import 結果の保存と再表示を追加する。
+
+### 完了条件
+- ファイル選択から preview/import まで完結できる。
+- 完全一致に失敗した場合も、候補確認まで UI で辿れる。
+
 ## 実装順の推奨
 1. Sprint 1
 2. Sprint 2
 3. Sprint 3
 4. Sprint 4
+5. Sprint 5
+6. Sprint 6
+7. Sprint 7
+8. Sprint 8
+9. Sprint 9
+10. Sprint 10
+11. Sprint 11
 
 ## リリース単位の考え方
 
@@ -121,10 +308,37 @@
 - Sprint 4
 - テスト、ドキュメント、サンプルを揃えて安定運用に入る。
 
+### Release D
+- Sprint 5 から Sprint 7
+- 役職履歴、イベント関係、戦争補助データを CSV で追加入力できるようにする。
+
+### Release E
+- Sprint 8 と Sprint 9
+- 主要マスタを CSV で初期投入できるようにする。
+
+### Release F
+- Sprint 10 と Sprint 11
+- 出典・関係データ・運用 UI まで含めて CSV import を実用レベルへ引き上げる。
+
 ## 先送り項目
 - file upload UI
 - `RoleAssignment CSV`
 - `EventRelation CSV`
 - `ConflictParticipant CSV`
+- `ConflictOutcome CSV`
+- `Region CSV`
+- `PeriodCategory CSV`
+- `Polity CSV`
+- `Religion CSV`
+- `Dynasty CSV`
+- `HistoricalPeriod CSV`
+- `Sect CSV`
+- `Tag CSV`
+- `Source CSV`
+- `Citation CSV`
+- `PolityTransition CSV`
+- `DynastySuccession CSV`
+- `RegionRelation CSV`
+- `HistoricalPeriodRelation CSV`
 - 曖昧一致候補 UI
 - 自動マージ
