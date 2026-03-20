@@ -76,6 +76,14 @@
 - JSON import ができる。
 - import は preview 付きで、重複候補を表示する。
 - `Event` と `Person` の CSV export ができる。
+- `Event CSV import` と `Person CSV import` ができる。
+- CSV import は `preview` 必須で、`ok / duplicate-candidate / error` を行単位で確認できる。
+- CSV import は `error` または `duplicate-candidate` を含む場合は実行できない。
+- `Event CSV` は `people / polities / dynasties / periods / religions / sects / regions` を名前完全一致で解決する。
+- `Person CSV` は `regions / religions / sects / periods` を名前完全一致で解決する。
+- `Event CSV` の複数値列は `|` 区切り、`Person.aliases` は `,` 区切りで扱う。
+- `Person CSV v1` では役職履歴 import は未対応。
+- サンプル CSV を [events-import-sample.csv](/Users/sky0621/work/github.com/sky0621/historia/examples/csv/events-import-sample.csv) と [people-import-sample.csv](/Users/sky0621/work/github.com/sky0621/historia/examples/csv/people-import-sample.csv) に置いている。
 - 主要詳細画面では出典と変更履歴を確認できる。
 
 ## 7. 出典・履歴
