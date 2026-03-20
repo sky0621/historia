@@ -11,6 +11,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const tagId = getNumericParam(params.tagId);
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
   const relationType = getSingleParam(params.relationType) as "before" | "after" | "cause" | "related" | undefined;
+  const sortBy = (getSingleParam(params.sortBy) as "timeAsc" | "timeDesc" | "titleAsc" | "updatedDesc" | undefined) ?? "timeAsc";
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
   const dynastyId = getNumericParam(params.dynastyId);
@@ -25,6 +26,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     tagId,
     eventType,
     relationType,
+    sortBy,
     personId,
     polityId,
     dynastyId,
@@ -41,6 +43,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     tagId,
     eventType,
     relationType,
+    sortBy,
     personId,
     polityId,
     dynastyId,
@@ -115,6 +118,15 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             <option value="after">after</option>
             <option value="cause">cause</option>
             <option value="related">related</option>
+          </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">並び順</span>
+          <select name="sortBy" defaultValue={sortBy} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+            <option value="timeAsc">年代順</option>
+            <option value="timeDesc">新しい年代順</option>
+            <option value="titleAsc">名前順</option>
+            <option value="updatedDesc">更新順</option>
           </select>
         </label>
         <label className="space-y-2 text-sm">
@@ -235,6 +247,21 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       <div className="rounded-[32px] border border-[var(--border)] bg-white/80 px-5 py-4 text-sm text-[var(--muted)] shadow-sm">
         {events.length} 件のイベント
         {activeFilters.length > 0 ? " が現在の条件に一致しています。" : " を表示しています。"}
+      </div>
+
+      <div className="flex flex-wrap gap-3 rounded-[32px] border border-[var(--border)] bg-white/80 p-4 text-sm shadow-sm">
+        <Link
+          href={currentParams.toString().length > 0 ? `/graph/events?${currentParams.toString()}` : "/graph/events"}
+          className="rounded-full border border-[var(--border)] px-4 py-2 transition hover:border-[var(--accent)]"
+        >
+          現在条件でグラフ
+        </Link>
+        <Link
+          href={currentParams.toString().length > 0 ? `/timeline?${currentParams.toString()}` : "/timeline"}
+          className="rounded-full border border-[var(--border)] px-4 py-2 transition hover:border-[var(--accent)]"
+        >
+          現在条件でタイムライン
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-white/80 shadow-sm">

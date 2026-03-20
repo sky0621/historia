@@ -35,6 +35,7 @@ type EventListFilters = {
   tagId?: number;
   eventType?: "general" | "war" | "rebellion" | "civil_war";
   relationType?: "before" | "after" | "cause" | "related";
+  sortBy?: "timeAsc" | "timeDesc" | "titleAsc" | "updatedDesc";
   personId?: number;
   polityId?: number;
   dynastyId?: number;
@@ -180,7 +181,8 @@ export function getEventsListView(filters: EventListFilters = {}) {
       }
 
       return matchesQuery([event.title, event.description, event.relationSummary], normalizedQuery);
-    });
+    })
+    .sort((left, right) => compareEventListItems(left, right, filters.sortBy));
 }
 
 export function getEventDetailView(id: number) {
@@ -541,6 +543,57 @@ function matchesYearRange(
   const filterEnd = toYear ?? Number.POSITIVE_INFINITY;
 
   return range.start <= filterEnd && range.end >= filterStart;
+}
+
+function compareEventListItems(
+  left: {
+    title: string;
+    updatedAt: Date;
+    timeCalendarEra: string | null;
+    timeStartYear: number | null;
+    timeEndYear: number | null;
+    startCalendarEra: string | null;
+    startYear: number | null;
+    endCalendarEra: string | null;
+    endYear: number | null;
+  },
+  right: {
+    title: string;
+    updatedAt: Date;
+    timeCalendarEra: string | null;
+    timeStartYear: number | null;
+    timeEndYear: number | null;
+    startCalendarEra: string | null;
+    startYear: number | null;
+    endCalendarEra: string | null;
+    endYear: number | null;
+  },
+  sortBy: EventListFilters["sortBy"] = "timeAsc"
+) {
+  if (sortBy === "titleAsc") {
+    return left.title.localeCompare(right.title, "ja");
+  }
+
+  if (sortBy === "updatedDesc") {
+    return right.updatedAt.getTime() - left.updatedAt.getTime();
+  }
+
+  const leftRange =
+    getComparableRangeFromStandalone(left.startCalendarEra, left.startYear, left.endCalendarEra, left.endYear) ??
+    getComparableRange(left.timeCalendarEra, left.timeStartYear, left.timeEndYear);
+  const rightRange =
+    getComparableRangeFromStandalone(right.startCalendarEra, right.startYear, right.endCalendarEra, right.endYear) ??
+    getComparableRange(right.timeCalendarEra, right.timeStartYear, right.timeEndYear);
+
+  const leftStart = leftRange?.start ?? Number.POSITIVE_INFINITY;
+  const rightStart = rightRange?.start ?? Number.POSITIVE_INFINITY;
+  const diff = sortBy === "timeDesc" ? rightStart - leftStart : leftStart - rightStart;
+
+  if (diff !== 0) {
+    return diff;
+  }
+
+  return left.title.localeCompare(right.title, "ja");
 }
 
 function getComparableRange(era: string | null, startYear: number | null, endYear: number | null) {

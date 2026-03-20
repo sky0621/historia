@@ -2,6 +2,8 @@ import Link from "next/link";
 
 const navigation = [
   { href: "/events", label: "イベント" },
+  { href: "/graph/events", label: "グラフ" },
+  { href: "/timeline", label: "タイムライン" },
   { href: "/bootstrap", label: "Bootstrap" },
   { href: "/people", label: "人物" },
   { href: "/polities", label: "国家" },
