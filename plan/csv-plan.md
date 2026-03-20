@@ -11,11 +11,18 @@
   - `JSON import` preview
   - `Event CSV export`
   - `Person CSV export`
-- 未実装:
-  - `CSV import`
+  - `Event CSV import`
+  - `Person CSV import`
   - CSV preview
   - CSV 行単位の重複候補表示
   - CSV エラーの行番号付き検証結果
+- 未実装:
+  - `RoleAssignment CSV import`
+  - `EventRelation CSV import`
+  - `ConflictParticipant / ConflictOutcome CSV import`
+  - 各種マスタ CSV import
+  - file upload UI
+  - 名前の曖昧一致候補 UI
 
 ## スコープ
 
@@ -35,6 +42,103 @@
 - `EventRelation CSV`
 - `ConflictParticipant CSV`
 - 必要になった時点で個別に追加する。
+
+### Phase 4: マスタ CSV
+- `Region CSV`
+- `Polity CSV`
+- `Dynasty CSV`
+- `HistoricalPeriod CSV`
+- `PeriodCategory CSV`
+- `Religion CSV`
+- `Sect CSV`
+- `Tag CSV`
+- 初期は依存の少ないものから追加し、参照解決に使う主要マスタを先に固める。
+
+## 未対応データの整理
+
+### 優先度 A: 早めに必要なもの
+- `RoleAssignment CSV`
+  - 理由: `Person CSV v1` で未対応の役職履歴を補完できる。
+  - 主な列案:
+    - `person`
+    - `title`
+    - `polity`
+    - `dynasty`
+    - `start_*`
+    - `end_*`
+    - `is_incumbent`
+    - `note`
+- `EventRelation CSV`
+  - 理由: イベントを大量投入した後に前後関係・因果関係をまとめて張りたい需要が高い。
+  - 主な列案:
+    - `from_event`
+    - `to_event`
+    - `relation_type`
+- `ConflictParticipant CSV`
+  - 理由: 戦争・乱を Event 本体とは別に増補したい。
+  - 主な列案:
+    - `event`
+    - `participant_type`
+    - `participant_name`
+    - `role`
+    - `note`
+- `ConflictOutcome CSV`
+  - 理由: 勝者・敗者・講和要約を別投入できるようにする。
+  - 主な列案:
+    - `event`
+    - `winner_participants`
+    - `loser_participants`
+    - `settlement_summary`
+    - `note`
+
+### 優先度 B: マスタ整備用
+- `Region CSV`
+- `PeriodCategory CSV`
+- `Polity CSV`
+- `Religion CSV`
+- `Tag CSV`
+- 理由: 他 CSV の参照先として使いやすく、依存関係が比較的単純。
+
+### 優先度 C: 依存があるマスタ
+- `Dynasty CSV`
+  - `Polity` への参照が必要。
+- `HistoricalPeriod CSV`
+  - `PeriodCategory` と任意の `Polity / Region` への参照が必要。
+- `Sect CSV`
+  - `Religion` への参照が必要。
+
+### 優先度 D: 運用高度化向け
+- `Source CSV`
+- `Citation CSV`
+- `PolityTransition CSV`
+- `DynastySuccession CSV`
+- `RegionRelation CSV`
+- `HistoricalPeriodRelation CSV`
+- 理由: 実装価値はあるが、初回の大量データ投入よりは後回しでよい。
+
+## 推奨実装順
+1. `RoleAssignment CSV`
+2. `EventRelation CSV`
+3. `ConflictParticipant CSV`
+4. `ConflictOutcome CSV`
+5. `Region CSV`
+6. `PeriodCategory CSV`
+7. `Polity CSV`
+8. `Religion CSV`
+9. `Dynasty CSV`
+10. `HistoricalPeriod CSV`
+11. `Sect CSV`
+12. `Tag CSV`
+13. `Source CSV`
+14. `Citation CSV`
+15. `PolityTransition / DynastySuccession / RegionRelation / HistoricalPeriodRelation CSV`
+
+## 依存関係メモ
+- `Dynasty CSV` は `Polity CSV` より先に入れない。
+- `Sect CSV` は `Religion CSV` より先に入れない。
+- `HistoricalPeriod CSV` は少なくとも `PeriodCategory CSV` より後に入れる。
+- `RoleAssignment CSV` は `Person` と `Polity / Dynasty` の既存データを前提にする。
+- `EventRelation CSV` と `Conflict* CSV` は `Event CSV` の投入後を前提にする。
 
 ## 基本方針
 - CSV import は `JSON import` と同じく `追加入力` を基本にする。
@@ -204,6 +308,10 @@
 - `RoleAssignment CSV`
 - `ConflictParticipant CSV`
 - `EventRelation CSV`
+- `ConflictOutcome CSV`
+- `Region / Polity / Dynasty / HistoricalPeriod / PeriodCategory / Religion / Sect / Tag CSV`
+- `Source / Citation CSV`
+- `PolityTransition / DynastySuccession / RegionRelation / HistoricalPeriodRelation CSV`
 - 自動マージ
 - 名前の曖昧一致候補 UI
 
