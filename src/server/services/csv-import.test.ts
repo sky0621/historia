@@ -11,15 +11,21 @@ const repositoryMocks = vi.hoisted(() => ({
   listRegions: vi.fn(),
   getRoleAssignmentsByPersonIds: vi.fn(),
   getEventRelationsByEventIds: vi.fn(),
+  getConflictParticipantsByEventIds: vi.fn(),
+  getConflictOutcomesByEventIds: vi.fn(),
   createEventFromInput: vi.fn(),
   createPersonFromInput: vi.fn(),
   appendRoleAssignmentsToPerson: vi.fn(),
-  appendEventRelationsToEvent: vi.fn()
+  appendEventRelationsToEvent: vi.fn(),
+  appendConflictParticipantsToEvent: vi.fn(),
+  appendConflictOutcomeToEvent: vi.fn()
 }));
 
 vi.mock("@/server/repositories/events", () => ({
   listEvents: repositoryMocks.listEvents,
-  getEventRelationsByEventIds: repositoryMocks.getEventRelationsByEventIds
+  getEventRelationsByEventIds: repositoryMocks.getEventRelationsByEventIds,
+  getConflictParticipantsByEventIds: repositoryMocks.getConflictParticipantsByEventIds,
+  getConflictOutcomesByEventIds: repositoryMocks.getConflictOutcomesByEventIds
 }));
 
 vi.mock("@/server/repositories/people-detail", () => ({
@@ -56,7 +62,9 @@ vi.mock("@/server/repositories/role-assignments", () => ({
 
 vi.mock("@/server/services/events", () => ({
   createEventFromInput: repositoryMocks.createEventFromInput,
-  appendEventRelationsToEvent: repositoryMocks.appendEventRelationsToEvent
+  appendEventRelationsToEvent: repositoryMocks.appendEventRelationsToEvent,
+  appendConflictParticipantsToEvent: repositoryMocks.appendConflictParticipantsToEvent,
+  appendConflictOutcomeToEvent: repositoryMocks.appendConflictOutcomeToEvent
 }));
 
 vi.mock("@/server/services/people", () => ({
@@ -65,11 +73,15 @@ vi.mock("@/server/services/people", () => ({
 }));
 
 import {
+  applyConflictOutcomeCsvImport,
+  applyConflictParticipantCsvImport,
   applyEventCsvImport,
   applyPersonCsvImport,
   applyEventRelationCsvImport,
   applyRoleAssignmentCsvImport,
   parseCsv,
+  previewConflictOutcomeCsvImport,
+  previewConflictParticipantCsvImport,
   previewEventCsvImport,
   previewEventRelationCsvImport,
   previewPersonCsvImport,
@@ -88,6 +100,8 @@ describe("csv import service", () => {
     repositoryMocks.listRegions.mockReset();
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReset();
     repositoryMocks.getEventRelationsByEventIds.mockReset();
+    repositoryMocks.getConflictParticipantsByEventIds.mockReset();
+    repositoryMocks.getConflictOutcomesByEventIds.mockReset();
 
     repositoryMocks.listEvents.mockReturnValue([]);
     repositoryMocks.listPeopleDetailed.mockReturnValue([]);
@@ -99,12 +113,16 @@ describe("csv import service", () => {
     repositoryMocks.listRegions.mockReturnValue([]);
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([]);
     repositoryMocks.getEventRelationsByEventIds.mockReturnValue([]);
+    repositoryMocks.getConflictParticipantsByEventIds.mockReturnValue([]);
+    repositoryMocks.getConflictOutcomesByEventIds.mockReturnValue([]);
     repositoryMocks.createEventFromInput.mockReset();
     repositoryMocks.createEventFromInput.mockReturnValue(1);
     repositoryMocks.createPersonFromInput.mockReset();
     repositoryMocks.createPersonFromInput.mockReturnValue(1);
     repositoryMocks.appendRoleAssignmentsToPerson.mockReset();
     repositoryMocks.appendEventRelationsToEvent.mockReset();
+    repositoryMocks.appendConflictParticipantsToEvent.mockReset();
+    repositoryMocks.appendConflictOutcomeToEvent.mockReset();
   });
 
   it("parses quoted csv cells with commas and newlines", () => {
@@ -636,5 +654,111 @@ describe("csv import service", () => {
       applyEventRelationCsvImport("from_event,to_event,relation_type\n平安京遷都,天台宗の成立,cause")
     ).toThrow("error または duplicate-candidate を含むため import を実行できません");
     expect(repositoryMocks.appendEventRelationsToEvent).not.toHaveBeenCalled();
+  });
+
+  it("builds conflict participant preview rows with resolved references and duplicate candidates", () => {
+    repositoryMocks.listEvents.mockReturnValue([
+      { id: 1, title: "第1回十字軍", eventType: "war" }
+    ]);
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 10, name: "教皇ウルバヌス2世", aliases: null }]);
+    repositoryMocks.getConflictParticipantsByEventIds.mockReturnValue([
+      {
+        eventId: 1,
+        participantType: "person",
+        participantId: 10,
+        role: "leader",
+        note: null
+      }
+    ]);
+
+    const preview = previewConflictParticipantCsvImport(
+      "event,participant_type,participant_name,role\n第1回十字軍,person,教皇ウルバヌス2世,leader"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 1,
+      errorCount: 0,
+      warningCount: 0
+    });
+  });
+
+  it("rejects non-conflict events in conflict participant preview", () => {
+    repositoryMocks.listEvents.mockReturnValue([{ id: 1, title: "平安京遷都", eventType: "general" }]);
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 10, name: "桓武天皇", aliases: null }]);
+
+    const preview = previewConflictParticipantCsvImport(
+      "event,participant_type,participant_name,role\n平安京遷都,person,桓武天皇,leader"
+    );
+
+    expect(preview.rows[0].status).toBe("error");
+    expect(preview.rows[0].issues).toEqual([
+      {
+        field: "event",
+        message: "war / rebellion / civil_war のイベントだけ登録できます"
+      }
+    ]);
+  });
+
+  it("imports clean conflict participant rows grouped by event", () => {
+    repositoryMocks.listEvents.mockReturnValue([{ id: 1, title: "第1回十字軍", eventType: "war" }]);
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 10, name: "教皇ウルバヌス2世", aliases: null }]);
+    repositoryMocks.listPolities.mockReturnValue([{ id: 20, name: "ローマ教皇庁" }]);
+
+    const result = applyConflictParticipantCsvImport(
+      "event,participant_type,participant_name,role\n第1回十字軍,person,教皇ウルバヌス2世,leader\n第1回十字軍,polity,ローマ教皇庁,ally"
+    );
+
+    expect(result).toEqual({
+      kind: "conflict-participant",
+      importedCount: 2
+    });
+    expect(repositoryMocks.appendConflictParticipantsToEvent).toHaveBeenCalledWith(1, [
+      expect.objectContaining({ participantType: "person", participantId: 10, role: "leader" }),
+      expect.objectContaining({ participantType: "polity", participantId: 20, role: "ally" })
+    ]);
+  });
+
+  it("builds conflict outcome preview rows and blocks existing outcomes", () => {
+    repositoryMocks.listEvents.mockReturnValue([{ id: 1, title: "第1回十字軍", eventType: "war" }]);
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 10, name: "教皇ウルバヌス2世", aliases: null }]);
+    repositoryMocks.listPolities.mockReturnValue([{ id: 20, name: "セルジューク朝" }]);
+    repositoryMocks.getConflictOutcomesByEventIds.mockReturnValue([{ eventId: 1 }]);
+
+    const preview = previewConflictOutcomeCsvImport(
+      "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 1,
+      errorCount: 0,
+      warningCount: 0
+    });
+  });
+
+  it("imports clean conflict outcomes", () => {
+    repositoryMocks.listEvents.mockReturnValue([{ id: 1, title: "第1回十字軍", eventType: "war" }]);
+    repositoryMocks.listPeopleDetailed.mockReturnValue([{ id: 10, name: "教皇ウルバヌス2世", aliases: null }]);
+    repositoryMocks.listPolities.mockReturnValue([{ id: 20, name: "セルジューク朝" }]);
+
+    const result = applyConflictOutcomeCsvImport(
+      "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
+    );
+
+    expect(result).toEqual({
+      kind: "conflict-outcome",
+      importedCount: 1
+    });
+    expect(repositoryMocks.appendConflictOutcomeToEvent).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        settlementSummary: "エルサレム占領",
+        winnerParticipants: [expect.objectContaining({ participantType: "person", participantId: 10, side: "winner" })],
+        loserParticipants: [expect.objectContaining({ participantType: "polity", participantId: 20, side: "loser" })]
+      })
+    );
   });
 });

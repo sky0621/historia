@@ -1,9 +1,19 @@
-import { eventSchema, type EventInput } from "@/features/events/schema";
+import {
+  conflictOutcomeParticipantSchema,
+  conflictParticipantSchema,
+  eventSchema,
+  type EventInput
+} from "@/features/events/schema";
 import { personSchema, roleAssignmentSchema, type PersonInput, type RoleAssignmentInput } from "@/features/people/schema";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import { sqlite } from "@/db/client";
 import { listDynasties } from "@/server/repositories/dynasties";
-import { getEventRelationsByEventIds, listEvents } from "@/server/repositories/events";
+import {
+  getConflictOutcomesByEventIds,
+  getConflictParticipantsByEventIds,
+  getEventRelationsByEventIds,
+  listEvents
+} from "@/server/repositories/events";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPeopleDetailed } from "@/server/repositories/people-detail";
 import { listPolities } from "@/server/repositories/polities";
@@ -11,7 +21,12 @@ import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listSects } from "@/server/repositories/sects";
-import { appendEventRelationsToEvent, createEventFromInput } from "@/server/services/events";
+import {
+  appendConflictOutcomeToEvent,
+  appendConflictParticipantsToEvent,
+  appendEventRelationsToEvent,
+  createEventFromInput
+} from "@/server/services/events";
 import { appendRoleAssignmentsToPerson, createPersonFromInput } from "@/server/services/people";
 
 const EVENT_HEADERS = [
@@ -70,10 +85,28 @@ const ROLE_ASSIGNMENT_HEADERS = [
 const REQUIRED_ROLE_ASSIGNMENT_HEADERS = ["person", "title"] as const;
 const EVENT_RELATION_HEADERS = ["from_event", "to_event", "relation_type"] as const;
 const REQUIRED_EVENT_RELATION_HEADERS = ["from_event", "to_event", "relation_type"] as const;
+const CONFLICT_PARTICIPANT_HEADERS = ["event", "participant_type", "participant_name", "role", "note"] as const;
+const REQUIRED_CONFLICT_PARTICIPANT_HEADERS = ["event", "participant_type", "participant_name", "role"] as const;
+const CONFLICT_OUTCOME_HEADERS = [
+  "event",
+  "winner_participants",
+  "loser_participants",
+  "winner_summary",
+  "loser_summary",
+  "settlement_summary",
+  "note"
+] as const;
+const REQUIRED_CONFLICT_OUTCOME_HEADERS = ["event"] as const;
 const MULTI_VALUE_SEPARATOR = "|";
 
 type CsvPreviewStatus = "ok" | "duplicate-candidate" | "error";
-type CsvImportKind = "event" | "person" | "role-assignment" | "event-relation";
+type CsvImportKind =
+  | "event"
+  | "person"
+  | "role-assignment"
+  | "event-relation"
+  | "conflict-participant"
+  | "conflict-outcome";
 
 type CsvPreviewIssue = {
   field: string;
@@ -129,6 +162,30 @@ export type EventRelationCsvInput = {
   relation: {
     toEventId: number;
     relationType: "before" | "after" | "cause" | "related";
+  };
+};
+
+export type ConflictParticipantCsvInput = {
+  eventId: number;
+  eventTitle: string;
+  participant: {
+    participantType: "polity" | "person" | "religion" | "sect";
+    participantId: number;
+    role: "attacker" | "defender" | "leader" | "ally" | "other";
+    note?: string;
+  };
+};
+
+export type ConflictOutcomeCsvInput = {
+  eventId: number;
+  eventTitle: string;
+  outcome: {
+    winnerParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
+    loserParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
+    winnerSummary?: string;
+    loserSummary?: string;
+    settlementSummary?: string;
+    note?: string;
   };
 };
 
@@ -496,6 +553,178 @@ export function previewEventRelationCsvImport(rawCsv: string): CsvPreviewResult<
   };
 }
 
+export function previewConflictParticipantCsvImport(rawCsv: string): CsvPreviewResult<ConflictParticipantCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_CONFLICT_PARTICIPANT_HEADERS);
+
+  const unknownHeaders = parsed.headers.filter(
+    (header) => !CONFLICT_PARTICIPANT_HEADERS.includes(header as (typeof CONFLICT_PARTICIPANT_HEADERS)[number])
+  );
+  const events = listEvents();
+  const eventNameMap = new Map(events.map((event) => [event.title, event]));
+  const options = buildParticipantReferenceMaps();
+  const existingParticipants = getConflictParticipantsByEventIds(events.map((event) => event.id));
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const eventTitle = cells.event.trim();
+    const event = eventNameMap.get(eventTitle);
+    if (!event) {
+      issues.push({ field: "event", message: `未登録の参照名です: ${eventTitle}` });
+    } else if (!isConflictEventType(event.eventType)) {
+      issues.push({ field: "event", message: "war / rebellion / civil_war のイベントだけ登録できます" });
+    }
+
+    const participantType = normalizeOptionalString(cells.participant_type);
+    if (!participantType || !["polity", "person", "religion", "sect"].includes(participantType)) {
+      issues.push({ field: "participant_type", message: "polity / person / religion / sect のいずれかを指定してください" });
+    }
+
+    const role = normalizeOptionalString(cells.role);
+    if (!role || !["attacker", "defender", "leader", "ally", "other"].includes(role)) {
+      issues.push({ field: "role", message: "attacker / defender / leader / ally / other のいずれかを指定してください" });
+    }
+
+    const participantId =
+      participantType && ["polity", "person", "religion", "sect"].includes(participantType)
+        ? resolveNamedEntity(
+            "participant_name",
+            cells.participant_name.trim(),
+            options[participantType as "polity" | "person" | "religion" | "sect"],
+            issues
+          )
+        : null;
+
+    if (unknownHeaders.length > 0) {
+      warnings.push({
+        field: "_header",
+        message: `未対応列は無視されます: ${unknownHeaders.join(", ")}`
+      });
+    }
+
+    const input =
+      issues.length === 0 && event && participantType && role && participantId
+        ? {
+            eventId: event.id,
+            eventTitle: event.title,
+            participant: conflictParticipantSchema.parse({
+              participantType,
+              participantId,
+              role,
+              note: normalizeOptionalString(cells.note)
+            })
+          }
+        : undefined;
+
+    const duplicateCandidates = input
+      ? findConflictParticipantDuplicateCandidates(existingParticipants, input, options)
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+
+    return {
+      rowNumber: row.rowNumber,
+      label: eventTitle && cells.participant_name.trim() ? `${eventTitle}: ${cells.participant_name.trim()}` : `row-${row.rowNumber}`,
+      status,
+      issues,
+      warnings,
+      duplicateCandidates,
+      input
+    } satisfies CsvPreviewRow<ConflictParticipantCsvInput>;
+  });
+
+  return {
+    kind: "conflict-participant",
+    headers: parsed.headers,
+    unknownHeaders,
+    summary: summarizeRows(rows),
+    rows
+  };
+}
+
+export function previewConflictOutcomeCsvImport(rawCsv: string): CsvPreviewResult<ConflictOutcomeCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_CONFLICT_OUTCOME_HEADERS);
+
+  const unknownHeaders = parsed.headers.filter(
+    (header) => !CONFLICT_OUTCOME_HEADERS.includes(header as (typeof CONFLICT_OUTCOME_HEADERS)[number])
+  );
+  const events = listEvents();
+  const eventNameMap = new Map(events.map((event) => [event.title, event]));
+  const options = buildParticipantReferenceMaps();
+  const existingOutcomes = getConflictOutcomesByEventIds(events.map((event) => event.id));
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const eventTitle = cells.event.trim();
+    const event = eventNameMap.get(eventTitle);
+
+    if (!event) {
+      issues.push({ field: "event", message: `未登録の参照名です: ${eventTitle}` });
+    } else if (!isConflictEventType(event.eventType)) {
+      issues.push({ field: "event", message: "war / rebellion / civil_war のイベントだけ登録できます" });
+    }
+
+    const winnerParticipants = parseConflictOutcomeSide(cells.winner_participants, "winner", options, issues, "winner_participants");
+    const loserParticipants = parseConflictOutcomeSide(cells.loser_participants, "loser", options, issues, "loser_participants");
+
+    if (winnerParticipants.length === 0 && loserParticipants.length === 0) {
+      issues.push({
+        field: "winner_participants",
+        message: "勝者側または敗者側の参加勢力を 1 件以上指定してください"
+      });
+    }
+
+    if (unknownHeaders.length > 0) {
+      warnings.push({
+        field: "_header",
+        message: `未対応列は無視されます: ${unknownHeaders.join(", ")}`
+      });
+    }
+
+    const input =
+      issues.length === 0 && event
+        ? {
+            eventId: event.id,
+            eventTitle: event.title,
+            outcome: {
+              winnerParticipants,
+              loserParticipants,
+              winnerSummary: normalizeOptionalString(cells.winner_summary),
+              loserSummary: normalizeOptionalString(cells.loser_summary),
+              settlementSummary: normalizeOptionalString(cells.settlement_summary),
+              note: normalizeOptionalString(cells.note)
+            }
+          }
+        : undefined;
+
+    const duplicateCandidates = input ? findConflictOutcomeDuplicateCandidates(existingOutcomes, input) : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+
+    return {
+      rowNumber: row.rowNumber,
+      label: eventTitle || `row-${row.rowNumber}`,
+      status,
+      issues,
+      warnings,
+      duplicateCandidates,
+      input
+    } satisfies CsvPreviewRow<ConflictOutcomeCsvInput>;
+  });
+
+  return {
+    kind: "conflict-outcome",
+    headers: parsed.headers,
+    unknownHeaders,
+    summary: summarizeRows(rows),
+    rows
+  };
+}
+
 export function applyEventCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewEventCsvImport(rawCsv);
   const blockingRows = preview.rows.filter((row) => row.status !== "ok");
@@ -620,6 +849,54 @@ export function applyEventRelationCsvImport(rawCsv: string): CsvImportResult {
     kind: "event-relation",
     importedCount
   };
+}
+
+export function applyConflictParticipantCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewConflictParticipantCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+
+  if (blockingRows.length > 0) {
+    throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  }
+
+  const importedCount = sqlite.transaction(() => {
+    const grouped = new Map<number, ConflictParticipantCsvInput["participant"][]>();
+
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      const list = grouped.get(row.input.eventId) ?? [];
+      list.push(row.input.participant);
+      grouped.set(row.input.eventId, list);
+    }
+
+    for (const [eventId, participants] of grouped) {
+      appendConflictParticipantsToEvent(eventId, participants);
+    }
+
+    return preview.rows.length;
+  })();
+
+  return { kind: "conflict-participant", importedCount };
+}
+
+export function applyConflictOutcomeCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewConflictOutcomeCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+
+  if (blockingRows.length > 0) {
+    throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  }
+
+  const importedCount = sqlite.transaction(() => {
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      appendConflictOutcomeToEvent(row.input.eventId, row.input.outcome);
+    }
+
+    return preview.rows.length;
+  })();
+
+  return { kind: "conflict-outcome", importedCount };
 }
 
 export function parseCsv(rawCsv: string): ParsedCsvDocument {
@@ -1017,6 +1294,106 @@ function findEventRelationDuplicateCandidates(
       reason: "同じイベント関係が登録済みです"
     }
   ];
+}
+
+function buildParticipantReferenceMaps() {
+  return {
+    person: new Map(listPeopleDetailed().map((item) => [item.name, item.id])),
+    polity: new Map(listPolities().map((item) => [item.name, item.id])),
+    religion: new Map(listReligions().map((item) => [item.name, item.id])),
+    sect: new Map(listSects().map((item) => [item.name, item.id]))
+  };
+}
+
+function isConflictEventType(eventType: string | null | undefined) {
+  return eventType === "war" || eventType === "rebellion" || eventType === "civil_war";
+}
+
+function parseConflictOutcomeSide(
+  rawValue: string | undefined,
+  side: "winner" | "loser",
+  options: ReturnType<typeof buildParticipantReferenceMaps>,
+  issues: CsvPreviewIssue[],
+  field: string
+) {
+  const values = parseDelimitedNames(rawValue);
+  const resolved: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }> = [];
+
+  for (const value of values) {
+    const [participantType, participantName] = value.split(":", 2);
+    if (!participantType || !participantName || !["polity", "person", "religion", "sect"].includes(participantType)) {
+      issues.push({
+        field,
+        message: `type:name 形式で指定してください: ${value}`
+      });
+      continue;
+    }
+
+    const participantId = options[participantType as "polity" | "person" | "religion" | "sect"].get(participantName);
+    if (!participantId) {
+      issues.push({
+        field,
+        message: `未登録の参照名です: ${value}`
+      });
+      continue;
+    }
+
+    const parsed = conflictOutcomeParticipantSchema.safeParse({
+      side,
+      participantType,
+      participantId
+    });
+
+    if (parsed.success) {
+      resolved.push(parsed.data);
+    }
+  }
+
+  return resolved;
+}
+
+function findConflictParticipantDuplicateCandidates(
+  existingParticipants: ReturnType<typeof getConflictParticipantsByEventIds>,
+  input: ConflictParticipantCsvInput,
+  options: ReturnType<typeof buildParticipantReferenceMaps>
+) {
+  const participantMaps = {
+    person: new Map(Array.from(options.person.entries()).map(([name, id]) => [id, name])),
+    polity: new Map(Array.from(options.polity.entries()).map(([name, id]) => [id, name])),
+    religion: new Map(Array.from(options.religion.entries()).map(([name, id]) => [id, name])),
+    sect: new Map(Array.from(options.sect.entries()).map(([name, id]) => [id, name]))
+  };
+
+  return existingParticipants
+    .filter(
+      (participant) =>
+        participant.eventId === input.eventId &&
+        participant.participantType === input.participant.participantType &&
+        participant.participantId === input.participant.participantId &&
+        participant.role === input.participant.role
+    )
+    .slice(0, 5)
+    .map((participant, index) => ({
+      id: participant.eventId * 1000 + index,
+      label:
+        participantMaps[participant.participantType as "person" | "polity" | "religion" | "sect"].get(participant.participantId) ??
+        `#${participant.participantId}`,
+      reason: "同じ参加勢力が登録済みです"
+    }));
+}
+
+function findConflictOutcomeDuplicateCandidates(
+  existingOutcomes: ReturnType<typeof getConflictOutcomesByEventIds>,
+  input: ConflictOutcomeCsvInput
+) {
+  return existingOutcomes
+    .filter((outcome) => outcome.eventId === input.eventId)
+    .slice(0, 5)
+    .map((outcome) => ({
+      id: outcome.eventId,
+      label: input.eventTitle,
+      reason: "このイベントには既に結果が登録されています"
+    }));
 }
 
 function findDuplicateValues(values: string[]) {

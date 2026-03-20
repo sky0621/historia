@@ -2,14 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  applyConflictOutcomeCsvImport,
+  applyConflictParticipantCsvImport,
   applyEventRelationCsvImport,
   applyRoleAssignmentCsvImport,
   applyEventCsvImport,
   applyPersonCsvImport,
+  previewConflictOutcomeCsvImport,
+  previewConflictParticipantCsvImport,
   previewEventRelationCsvImport,
   previewRoleAssignmentCsvImport,
   previewEventCsvImport,
   previewPersonCsvImport,
+  type ConflictOutcomeCsvInput,
+  type ConflictParticipantCsvInput,
   type EventRelationCsvInput,
   type RoleAssignmentCsvInput,
   type CsvImportResult,
@@ -20,12 +26,14 @@ import type { PersonInput } from "@/features/people/schema";
 
 export type CsvImportState = {
   error?: string;
-  targetType?: "event" | "person" | "role-assignment" | "event-relation";
+  targetType?: "event" | "person" | "role-assignment" | "event-relation" | "conflict-participant" | "conflict-outcome";
   preview?:
     | CsvPreviewResult<EventInput>
     | CsvPreviewResult<PersonInput>
     | CsvPreviewResult<RoleAssignmentCsvInput>
-    | CsvPreviewResult<EventRelationCsvInput>;
+    | CsvPreviewResult<EventRelationCsvInput>
+    | CsvPreviewResult<ConflictParticipantCsvInput>
+    | CsvPreviewResult<ConflictOutcomeCsvInput>;
   result?: CsvImportResult;
 };
 
@@ -34,7 +42,11 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
   const intent = String(formData.get("intent") ?? "preview");
   const targetTypeValue = String(formData.get("targetType") ?? "event");
   const targetType =
-    targetTypeValue === "person" || targetTypeValue === "role-assignment" || targetTypeValue === "event-relation"
+    targetTypeValue === "person" ||
+    targetTypeValue === "role-assignment" ||
+    targetTypeValue === "event-relation" ||
+    targetTypeValue === "conflict-participant" ||
+    targetTypeValue === "conflict-outcome"
       ? targetTypeValue
       : "event";
 
@@ -46,6 +58,10 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
             ? previewRoleAssignmentCsvImport(rawCsv)
             : targetType === "event-relation"
               ? previewEventRelationCsvImport(rawCsv)
+              : targetType === "conflict-participant"
+                ? previewConflictParticipantCsvImport(rawCsv)
+                : targetType === "conflict-outcome"
+                  ? previewConflictOutcomeCsvImport(rawCsv)
           : previewEventCsvImport(rawCsv);
 
     if (intent === "import") {
@@ -56,6 +72,10 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
             ? applyRoleAssignmentCsvImport(rawCsv)
             : targetType === "event-relation"
               ? applyEventRelationCsvImport(rawCsv)
+              : targetType === "conflict-participant"
+                ? applyConflictParticipantCsvImport(rawCsv)
+                : targetType === "conflict-outcome"
+                  ? applyConflictOutcomeCsvImport(rawCsv)
             : applyEventCsvImport(rawCsv);
       revalidatePath("/events");
       revalidatePath("/people");

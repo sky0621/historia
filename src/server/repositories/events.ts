@@ -113,6 +113,12 @@ export function replaceConflictParticipants(eventId: number, participants: Confl
   }
 }
 
+export function insertConflictParticipants(participants: ConflictParticipantInsert[]) {
+  if (participants.length > 0) {
+    db.insert(conflictParticipants).values(participants).run();
+  }
+}
+
 export function replaceConflictOutcome(eventId: number, outcome: ConflictOutcomeInsert | null) {
   db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
 
@@ -121,9 +127,19 @@ export function replaceConflictOutcome(eventId: number, outcome: ConflictOutcome
   }
 }
 
+export function insertConflictOutcome(outcome: ConflictOutcomeInsert) {
+  db.insert(conflictOutcomes).values(outcome).run();
+}
+
 export function replaceConflictOutcomeParticipants(eventId: number, participants: ConflictOutcomeParticipantInsert[]) {
   db.delete(conflictOutcomeParticipants).where(eq(conflictOutcomeParticipants.eventId, eventId)).run();
 
+  if (participants.length > 0) {
+    db.insert(conflictOutcomeParticipants).values(participants).run();
+  }
+}
+
+export function insertConflictOutcomeParticipants(participants: ConflictOutcomeParticipantInsert[]) {
   if (participants.length > 0) {
     db.insert(conflictOutcomeParticipants).values(participants).run();
   }

@@ -13,6 +13,9 @@ import {
   getConflictParticipantsByEventIds,
   getEventLinks,
   getEventRelationsByEventIds,
+  insertConflictOutcome,
+  insertConflictOutcomeParticipants,
+  insertConflictParticipants,
   insertEventRelations,
   listEvents,
   replaceConflictOutcome,
@@ -470,6 +473,80 @@ export function appendEventRelationsToEvent(
       fromEventId: id,
       toEventId: relation.toEventId,
       relationType: relation.relationType
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "event",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
+}
+
+export function appendConflictParticipantsToEvent(
+  id: number,
+  participants: Array<{
+    participantType: "polity" | "person" | "religion" | "sect";
+    participantId: number;
+    role: "attacker" | "defender" | "leader" | "ally" | "other";
+    note?: string;
+  }>
+) {
+  const event = getEventById(id);
+  if (!event) {
+    throw new Error(`イベントが見つかりません: ${id}`);
+  }
+
+  const before = buildEventHistorySnapshot(id);
+  insertConflictParticipants(
+    participants.map((participant) => ({
+      eventId: id,
+      participantType: participant.participantType,
+      participantId: participant.participantId,
+      role: participant.role,
+      note: nullable(participant.note)
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "event",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
+}
+
+export function appendConflictOutcomeToEvent(
+  id: number,
+  outcome: {
+    winnerParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
+    loserParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
+    winnerSummary?: string;
+    loserSummary?: string;
+    settlementSummary?: string;
+    note?: string;
+  }
+) {
+  const event = getEventById(id);
+  if (!event) {
+    throw new Error(`イベントが見つかりません: ${id}`);
+  }
+
+  const before = buildEventHistorySnapshot(id);
+  insertConflictOutcome({
+    eventId: id,
+    winnerSummary: nullable(outcome.winnerSummary),
+    loserSummary: nullable(outcome.loserSummary),
+    settlementSummary: nullable(outcome.settlementSummary),
+    note: nullable(outcome.note)
+  });
+  insertConflictOutcomeParticipants(
+    [...outcome.winnerParticipants, ...outcome.loserParticipants].map((participant) => ({
+      eventId: id,
+      side: participant.side,
+      participantType: participant.participantType,
+      participantId: participant.participantId
     }))
   );
 
