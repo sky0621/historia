@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  applyEventRelationCsvImport,
   applyRoleAssignmentCsvImport,
   applyEventCsvImport,
   applyPersonCsvImport,
+  previewEventRelationCsvImport,
   previewRoleAssignmentCsvImport,
   previewEventCsvImport,
   previewPersonCsvImport,
+  type EventRelationCsvInput,
   type RoleAssignmentCsvInput,
   type CsvImportResult,
   type CsvPreviewResult
@@ -17,8 +20,12 @@ import type { PersonInput } from "@/features/people/schema";
 
 export type CsvImportState = {
   error?: string;
-  targetType?: "event" | "person" | "role-assignment";
-  preview?: CsvPreviewResult<EventInput> | CsvPreviewResult<PersonInput> | CsvPreviewResult<RoleAssignmentCsvInput>;
+  targetType?: "event" | "person" | "role-assignment" | "event-relation";
+  preview?:
+    | CsvPreviewResult<EventInput>
+    | CsvPreviewResult<PersonInput>
+    | CsvPreviewResult<RoleAssignmentCsvInput>
+    | CsvPreviewResult<EventRelationCsvInput>;
   result?: CsvImportResult;
 };
 
@@ -27,14 +34,18 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
   const intent = String(formData.get("intent") ?? "preview");
   const targetTypeValue = String(formData.get("targetType") ?? "event");
   const targetType =
-    targetTypeValue === "person" || targetTypeValue === "role-assignment" ? targetTypeValue : "event";
+    targetTypeValue === "person" || targetTypeValue === "role-assignment" || targetTypeValue === "event-relation"
+      ? targetTypeValue
+      : "event";
 
   try {
     const preview =
       targetType === "person"
-        ? previewPersonCsvImport(rawCsv)
-        : targetType === "role-assignment"
-          ? previewRoleAssignmentCsvImport(rawCsv)
+          ? previewPersonCsvImport(rawCsv)
+          : targetType === "role-assignment"
+            ? previewRoleAssignmentCsvImport(rawCsv)
+            : targetType === "event-relation"
+              ? previewEventRelationCsvImport(rawCsv)
           : previewEventCsvImport(rawCsv);
 
     if (intent === "import") {
@@ -43,6 +54,8 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
           ? applyPersonCsvImport(rawCsv)
           : targetType === "role-assignment"
             ? applyRoleAssignmentCsvImport(rawCsv)
+            : targetType === "event-relation"
+              ? applyEventRelationCsvImport(rawCsv)
             : applyEventCsvImport(rawCsv);
       revalidatePath("/events");
       revalidatePath("/people");

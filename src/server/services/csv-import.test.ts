@@ -10,13 +10,16 @@ const repositoryMocks = vi.hoisted(() => ({
   listSects: vi.fn(),
   listRegions: vi.fn(),
   getRoleAssignmentsByPersonIds: vi.fn(),
+  getEventRelationsByEventIds: vi.fn(),
   createEventFromInput: vi.fn(),
   createPersonFromInput: vi.fn(),
-  appendRoleAssignmentsToPerson: vi.fn()
+  appendRoleAssignmentsToPerson: vi.fn(),
+  appendEventRelationsToEvent: vi.fn()
 }));
 
 vi.mock("@/server/repositories/events", () => ({
-  listEvents: repositoryMocks.listEvents
+  listEvents: repositoryMocks.listEvents,
+  getEventRelationsByEventIds: repositoryMocks.getEventRelationsByEventIds
 }));
 
 vi.mock("@/server/repositories/people-detail", () => ({
@@ -52,7 +55,8 @@ vi.mock("@/server/repositories/role-assignments", () => ({
 }));
 
 vi.mock("@/server/services/events", () => ({
-  createEventFromInput: repositoryMocks.createEventFromInput
+  createEventFromInput: repositoryMocks.createEventFromInput,
+  appendEventRelationsToEvent: repositoryMocks.appendEventRelationsToEvent
 }));
 
 vi.mock("@/server/services/people", () => ({
@@ -63,9 +67,11 @@ vi.mock("@/server/services/people", () => ({
 import {
   applyEventCsvImport,
   applyPersonCsvImport,
+  applyEventRelationCsvImport,
   applyRoleAssignmentCsvImport,
   parseCsv,
   previewEventCsvImport,
+  previewEventRelationCsvImport,
   previewPersonCsvImport,
   previewRoleAssignmentCsvImport
 } from "@/server/services/csv-import";
@@ -81,6 +87,7 @@ describe("csv import service", () => {
     repositoryMocks.listSects.mockReset();
     repositoryMocks.listRegions.mockReset();
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReset();
+    repositoryMocks.getEventRelationsByEventIds.mockReset();
 
     repositoryMocks.listEvents.mockReturnValue([]);
     repositoryMocks.listPeopleDetailed.mockReturnValue([]);
@@ -91,11 +98,13 @@ describe("csv import service", () => {
     repositoryMocks.listSects.mockReturnValue([]);
     repositoryMocks.listRegions.mockReturnValue([]);
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([]);
+    repositoryMocks.getEventRelationsByEventIds.mockReturnValue([]);
     repositoryMocks.createEventFromInput.mockReset();
     repositoryMocks.createEventFromInput.mockReturnValue(1);
     repositoryMocks.createPersonFromInput.mockReset();
     repositoryMocks.createPersonFromInput.mockReturnValue(1);
     repositoryMocks.appendRoleAssignmentsToPerson.mockReset();
+    repositoryMocks.appendEventRelationsToEvent.mockReset();
   });
 
   it("parses quoted csv cells with commas and newlines", () => {
@@ -524,5 +533,108 @@ describe("csv import service", () => {
       applyRoleAssignmentCsvImport("person,title,time_start_year,time_end_year\n最澄,天台座主,804,822")
     ).toThrow("error または duplicate-candidate を含むため import を実行できません");
     expect(repositoryMocks.appendRoleAssignmentsToPerson).not.toHaveBeenCalled();
+  });
+
+  it("builds event relation preview rows with resolved references and duplicate candidates", () => {
+    repositoryMocks.listEvents.mockReturnValue([
+      { id: 1, title: "平安京遷都" },
+      { id: 2, title: "天台宗の成立" }
+    ]);
+    repositoryMocks.getEventRelationsByEventIds.mockReturnValue([
+      { fromEventId: 1, toEventId: 2, relationType: "cause" }
+    ]);
+
+    const preview = previewEventRelationCsvImport(
+      "from_event,to_event,relation_type\n平安京遷都,天台宗の成立,cause"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 1,
+      okCount: 0,
+      duplicateCandidateCount: 1,
+      errorCount: 0,
+      warningCount: 0
+    });
+    expect(preview.rows[0]).toMatchObject({
+      label: "平安京遷都 -> 天台宗の成立",
+      status: "duplicate-candidate",
+      input: {
+        fromEventId: 1,
+        fromEventTitle: "平安京遷都",
+        relation: {
+          toEventId: 2,
+          relationType: "cause"
+        }
+      }
+    });
+  });
+
+  it("reports event relation preview issues for unknown references and self references", () => {
+    repositoryMocks.listEvents.mockReturnValue([{ id: 1, title: "平安京遷都" }]);
+
+    const preview = previewEventRelationCsvImport(
+      "from_event,to_event,relation_type\n平安京遷都,平安京遷都,cause\n平安京遷都,天台宗の成立,invalid"
+    );
+
+    expect(preview.summary).toEqual({
+      totalRows: 2,
+      okCount: 0,
+      duplicateCandidateCount: 0,
+      errorCount: 2,
+      warningCount: 0
+    });
+    expect(preview.rows[0].issues).toEqual([
+      {
+        field: "to_event",
+        message: "自己参照は登録できません"
+      }
+    ]);
+    expect(preview.rows[1].issues).toEqual([
+      {
+        field: "to_event",
+        message: "未登録の参照名です: 天台宗の成立"
+      },
+      {
+        field: "relation_type",
+        message: "before / after / cause / related のいずれかを指定してください"
+      }
+    ]);
+  });
+
+  it("imports clean event relation rows grouped by source event", () => {
+    repositoryMocks.listEvents.mockReturnValue([
+      { id: 1, title: "平安京遷都" },
+      { id: 2, title: "天台宗の成立" },
+      { id: 3, title: "応仁の乱" }
+    ]);
+
+    const result = applyEventRelationCsvImport(
+      "from_event,to_event,relation_type\n平安京遷都,天台宗の成立,cause\n平安京遷都,応仁の乱,before"
+    );
+
+    expect(result).toEqual({
+      kind: "event-relation",
+      importedCount: 2
+    });
+    expect(repositoryMocks.appendEventRelationsToEvent).toHaveBeenCalledTimes(1);
+    expect(repositoryMocks.appendEventRelationsToEvent).toHaveBeenCalledWith(1, [
+      { toEventId: 2, relationType: "cause" },
+      { toEventId: 3, relationType: "before" }
+    ]);
+  });
+
+  it("rejects event relation import when preview contains duplicate candidates", () => {
+    repositoryMocks.listEvents.mockReturnValue([
+      { id: 1, title: "平安京遷都" },
+      { id: 2, title: "天台宗の成立" }
+    ]);
+    repositoryMocks.getEventRelationsByEventIds.mockReturnValue([
+      { fromEventId: 1, toEventId: 2, relationType: "cause" }
+    ]);
+
+    expect(() =>
+      applyEventRelationCsvImport("from_event,to_event,relation_type\n平安京遷都,天台宗の成立,cause")
+    ).toThrow("error または duplicate-candidate を含むため import を実行できません");
+    expect(repositoryMocks.appendEventRelationsToEvent).not.toHaveBeenCalled();
   });
 });

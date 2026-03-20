@@ -13,6 +13,7 @@ import {
   getConflictParticipantsByEventIds,
   getEventLinks,
   getEventRelationsByEventIds,
+  insertEventRelations,
   listEvents,
   replaceConflictOutcome,
   replaceConflictOutcomeParticipants,
@@ -451,6 +452,32 @@ export function removeEvent(id: number) {
       action: "delete",
       snapshot
     });
+  });
+}
+
+export function appendEventRelationsToEvent(
+  id: number,
+  relations: Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>
+) {
+  const event = getEventById(id);
+  if (!event) {
+    throw new Error(`イベントが見つかりません: ${id}`);
+  }
+
+  const before = buildEventHistorySnapshot(id);
+  insertEventRelations(
+    relations.map((relation) => ({
+      fromEventId: id,
+      toEventId: relation.toEventId,
+      relationType: relation.relationType
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "event",
+    targetId: id,
+    action: "update",
+    snapshot: before
   });
 }
 

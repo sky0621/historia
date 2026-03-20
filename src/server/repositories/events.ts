@@ -99,6 +99,12 @@ export function replaceEventRelations(eventId: number, relations: EventRelationI
   }
 }
 
+export function insertEventRelations(relations: EventRelationInsert[]) {
+  if (relations.length > 0) {
+    db.insert(eventRelations).values(relations).run();
+  }
+}
+
 export function replaceConflictParticipants(eventId: number, participants: ConflictParticipantInsert[]) {
   db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
 

@@ -3,7 +3,7 @@ import { personSchema, roleAssignmentSchema, type PersonInput, type RoleAssignme
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import { sqlite } from "@/db/client";
 import { listDynasties } from "@/server/repositories/dynasties";
-import { listEvents } from "@/server/repositories/events";
+import { getEventRelationsByEventIds, listEvents } from "@/server/repositories/events";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPeopleDetailed } from "@/server/repositories/people-detail";
 import { listPolities } from "@/server/repositories/polities";
@@ -11,7 +11,7 @@ import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listSects } from "@/server/repositories/sects";
-import { createEventFromInput } from "@/server/services/events";
+import { appendEventRelationsToEvent, createEventFromInput } from "@/server/services/events";
 import { appendRoleAssignmentsToPerson, createPersonFromInput } from "@/server/services/people";
 
 const EVENT_HEADERS = [
@@ -68,10 +68,12 @@ const ROLE_ASSIGNMENT_HEADERS = [
   "note"
 ] as const;
 const REQUIRED_ROLE_ASSIGNMENT_HEADERS = ["person", "title"] as const;
+const EVENT_RELATION_HEADERS = ["from_event", "to_event", "relation_type"] as const;
+const REQUIRED_EVENT_RELATION_HEADERS = ["from_event", "to_event", "relation_type"] as const;
 const MULTI_VALUE_SEPARATOR = "|";
 
 type CsvPreviewStatus = "ok" | "duplicate-candidate" | "error";
-type CsvImportKind = "event" | "person" | "role-assignment";
+type CsvImportKind = "event" | "person" | "role-assignment" | "event-relation";
 
 type CsvPreviewIssue = {
   field: string;
@@ -119,6 +121,15 @@ export type RoleAssignmentCsvInput = {
   personId: number;
   personName: string;
   role: RoleAssignmentInput;
+};
+
+export type EventRelationCsvInput = {
+  fromEventId: number;
+  fromEventTitle: string;
+  relation: {
+    toEventId: number;
+    relationType: "before" | "after" | "cause" | "related";
+  };
 };
 
 type ParsedCsvRow = {
@@ -397,6 +408,94 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
   };
 }
 
+export function previewEventRelationCsvImport(rawCsv: string): CsvPreviewResult<EventRelationCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_EVENT_RELATION_HEADERS);
+
+  const unknownHeaders = parsed.headers.filter(
+    (header) => !EVENT_RELATION_HEADERS.includes(header as (typeof EVENT_RELATION_HEADERS)[number])
+  );
+  const existingEvents = listEvents();
+  const eventNameMap = new Map(existingEvents.map((event) => [event.title, event.id]));
+  const eventById = new Map(existingEvents.map((event) => [event.id, event.title]));
+  const existingRelations = buildExistingEventRelationKeys(existingEvents.map((event) => event.id));
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+
+    if (row.values.length > parsed.headers.length) {
+      issues.push({
+        field: "_row",
+        message: `列数がヘッダー数を超えています (${row.values.length} > ${parsed.headers.length})`
+      });
+    }
+
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const fromEventTitle = cells.from_event.trim();
+    const toEventTitle = cells.to_event.trim();
+    const fromEventId = resolveNamedEntity("from_event", fromEventTitle, eventNameMap, issues);
+    const toEventId = resolveNamedEntity("to_event", toEventTitle, eventNameMap, issues);
+    const relationType = normalizeOptionalString(cells.relation_type);
+
+    if (relationType && !["before", "after", "cause", "related"].includes(relationType)) {
+      issues.push({
+        field: "relation_type",
+        message: "before / after / cause / related のいずれかを指定してください"
+      });
+    }
+
+    if (fromEventId && toEventId && fromEventId === toEventId) {
+      issues.push({
+        field: "to_event",
+        message: "自己参照は登録できません"
+      });
+    }
+
+    if (unknownHeaders.length > 0) {
+      warnings.push({
+        field: "_header",
+        message: `未対応列は無視されます: ${unknownHeaders.join(", ")}`
+      });
+    }
+
+    const previewInput =
+      issues.length === 0 && fromEventId && toEventId && relationType
+        ? {
+            fromEventId,
+            fromEventTitle: eventById.get(fromEventId) ?? fromEventTitle,
+            relation: {
+              toEventId,
+              relationType: relationType as "before" | "after" | "cause" | "related"
+            }
+          }
+        : undefined;
+
+    const duplicateCandidates = previewInput
+      ? findEventRelationDuplicateCandidates(previewInput, existingRelations, eventById)
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+
+    return {
+      rowNumber: row.rowNumber,
+      label: fromEventTitle && toEventTitle ? `${fromEventTitle} -> ${toEventTitle}` : `row-${row.rowNumber}`,
+      status,
+      issues,
+      warnings,
+      duplicateCandidates,
+      input: previewInput
+    } satisfies CsvPreviewRow<EventRelationCsvInput>;
+  });
+
+  return {
+    kind: "event-relation",
+    headers: parsed.headers,
+    unknownHeaders,
+    summary: summarizeRows(rows),
+    rows
+  };
+}
+
 export function applyEventCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewEventCsvImport(rawCsv);
   const blockingRows = preview.rows.filter((row) => row.status !== "ok");
@@ -485,6 +584,40 @@ export function applyRoleAssignmentCsvImport(rawCsv: string): CsvImportResult {
 
   return {
     kind: "role-assignment",
+    importedCount
+  };
+}
+
+export function applyEventRelationCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewEventRelationCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+
+  if (blockingRows.length > 0) {
+    throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  }
+
+  const importedCount = sqlite.transaction(() => {
+    const grouped = new Map<number, Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>>();
+
+    for (const row of preview.rows) {
+      if (!row.input) {
+        continue;
+      }
+
+      const list = grouped.get(row.input.fromEventId) ?? [];
+      list.push(row.input.relation);
+      grouped.set(row.input.fromEventId, list);
+    }
+
+    for (const [eventId, relations] of grouped) {
+      appendEventRelationsToEvent(eventId, relations);
+    }
+
+    return preview.rows.length;
+  })();
+
+  return {
+    kind: "event-relation",
     importedCount
   };
 }
@@ -632,6 +765,33 @@ function resolveSingleReference(
         message: "必須です"
       });
     }
+    return null;
+  }
+
+  const id = map.get(normalized);
+  if (!id) {
+    issues.push({
+      field,
+      message: `未登録の参照名です: ${normalized}`
+    });
+    return null;
+  }
+
+  return id;
+}
+
+function resolveNamedEntity(
+  field: string,
+  rawValue: string | undefined,
+  map: Map<string, number>,
+  issues: CsvPreviewIssue[]
+) {
+  const normalized = normalizeOptionalString(rawValue);
+  if (!normalized) {
+    issues.push({
+      field,
+      message: "必須です"
+    });
     return null;
   }
 
@@ -830,6 +990,33 @@ function findRoleAssignmentDuplicateCandidates(
         .join(" / "),
       reason: "同一人物に同じ役職履歴が登録済みです"
     }));
+}
+
+function buildExistingEventRelationKeys(eventIds: number[]) {
+  return new Set(
+    getEventRelationsByEventIds(eventIds).map(
+      (relation) => `${relation.fromEventId}:${relation.toEventId}:${relation.relationType}`
+    )
+  );
+}
+
+function findEventRelationDuplicateCandidates(
+  input: EventRelationCsvInput,
+  existingRelations: Set<string>,
+  eventById: Map<number, string>
+): CsvDuplicateCandidate[] {
+  const key = `${input.fromEventId}:${input.relation.toEventId}:${input.relation.relationType}`;
+  if (!existingRelations.has(key)) {
+    return [];
+  }
+
+  return [
+    {
+      id: input.fromEventId,
+      label: `${input.fromEventTitle} -> ${eventById.get(input.relation.toEventId) ?? `#${input.relation.toEventId}`}`,
+      reason: "同じイベント関係が登録済みです"
+    }
+  ];
 }
 
 function findDuplicateValues(values: string[]) {
