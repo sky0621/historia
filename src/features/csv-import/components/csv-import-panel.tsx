@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { importCsvAction } from "@/features/csv-import/actions";
 import type { EventInput } from "@/features/events/schema";
 import type { PersonInput } from "@/features/people/schema";
@@ -33,6 +33,8 @@ const initialState: Awaited<ReturnType<typeof importCsvAction>> = {
 
 export function CsvImportPanel() {
   const [state, action, pending] = useActionState(importCsvAction, initialState);
+  const [payload, setPayload] = useState("");
+  const [fileName, setFileName] = useState("");
   const targetType = state.targetType ?? "event";
 
   return (
@@ -45,6 +47,26 @@ export function CsvImportPanel() {
       </p>
 
       <form action={action} className="mt-6 space-y-4">
+        <label className="grid gap-2 text-sm">
+          <span>File</span>
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+            onChange={async (event) => {
+              const file = event.currentTarget.files?.[0];
+              if (!file) {
+                setFileName("");
+                return;
+              }
+              setFileName(file.name);
+              setPayload(await file.text());
+            }}
+          />
+          <input type="hidden" name="fileName" value={fileName} />
+          {fileName ? <span className="text-xs text-[var(--muted)]">selected: {fileName}</span> : null}
+        </label>
+
         <fieldset className="space-y-2">
           <legend className="text-sm">Target</legend>
           <div className="flex flex-wrap gap-3">
@@ -187,6 +209,8 @@ export function CsvImportPanel() {
             name="payload"
             rows={14}
             className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2 font-mono text-xs"
+            value={payload}
+            onChange={(event) => setPayload(event.target.value)}
             placeholder={
               targetType === "person"
                 ? "name,aliases,birth_start_year,regions\n最澄,伝教大師,767,近江|比叡山"
@@ -270,6 +294,12 @@ export function CsvImportPanel() {
           {state.preview.unknownHeaders.length > 0 ? (
             <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               未対応列は無視されます: {state.preview.unknownHeaders.join(", ")}
+            </p>
+          ) : null}
+
+          {state.preview.summary.duplicateCandidateCount > 0 ? (
+            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              重複候補があります。候補カードを確認して、必要なら CSV を修正してから import します。
             </p>
           ) : null}
 

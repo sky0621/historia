@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { importWorkspaceAction } from "@/features/sources/actions";
 
 const initialState: Awaited<ReturnType<typeof importWorkspaceAction>> = {};
 
 export function ImportWorkspacePanel() {
   const [state, action, pending] = useActionState(importWorkspaceAction, initialState);
+  const [payload, setPayload] = useState("");
+  const [fileName, setFileName] = useState("");
 
   return (
     <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
@@ -17,11 +19,33 @@ export function ImportWorkspacePanel() {
 
       <form action={action} className="mt-6 space-y-4">
         <label className="grid gap-2 text-sm">
+          <span>File</span>
+          <input
+            type="file"
+            accept=".json,application/json"
+            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+            onChange={async (event) => {
+              const file = event.currentTarget.files?.[0];
+              if (!file) {
+                setFileName("");
+                return;
+              }
+              setFileName(file.name);
+              setPayload(await file.text());
+            }}
+          />
+          <input type="hidden" name="fileName" value={fileName} />
+          {fileName ? <span className="text-xs text-[var(--muted)]">selected: {fileName}</span> : null}
+        </label>
+
+        <label className="grid gap-2 text-sm">
           <span>Payload</span>
           <textarea
             name="payload"
             rows={14}
             className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2 font-mono text-xs"
+            value={payload}
+            onChange={(event) => setPayload(event.target.value)}
             placeholder='{"schemaVersion":"historia-export-v1",...}'
             required
           />

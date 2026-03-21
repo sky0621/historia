@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { parseCitationFormData, parseSourceFormData } from "@/features/sources/schema";
 import { applyImportPayload, previewImportPayload } from "@/server/services/import-export";
+import { recordImportRun } from "@/server/services/import-runs";
 import {
   createCitationFromInput,
   createSourceFromInput,
@@ -73,10 +74,24 @@ type ImportState = {
 export async function importWorkspaceAction(previousState: ImportState, formData: FormData): Promise<ImportState> {
   const rawJson = String(formData.get("payload") ?? "");
   const intent = String(formData.get("intent") ?? "preview");
+  const fileName = String(formData.get("fileName") ?? "").trim() || undefined;
 
   try {
     if (intent === "import") {
       const result = applyImportPayload(rawJson);
+      const preview = previewImportPayload(rawJson);
+      recordImportRun({
+        sourceFormat: "json",
+        targetType: "workspace",
+        action: "import",
+        fileName,
+        status: "ok",
+        summary: {
+          duplicateCount: preview.duplicateCount,
+          tableCounts: preview.tableCounts,
+          importedCounts: result.importedCounts
+        }
+      });
       revalidatePath("/events");
       revalidatePath("/people");
       revalidatePath("/polities");
@@ -85,11 +100,33 @@ export async function importWorkspaceAction(previousState: ImportState, formData
       revalidatePath("/regions");
       revalidatePath("/sources");
       revalidatePath("/manage/data");
-      return { result, preview: previewImportPayload(rawJson) };
+      return { result, preview };
     }
 
-    return { preview: previewImportPayload(rawJson) };
+    const preview = previewImportPayload(rawJson);
+    recordImportRun({
+      sourceFormat: "json",
+      targetType: "workspace",
+      action: "preview",
+      fileName,
+      status: "ok",
+      summary: {
+        duplicateCount: preview.duplicateCount,
+        tableCounts: preview.tableCounts
+      }
+    });
+    return { preview };
   } catch (error) {
+    recordImportRun({
+      sourceFormat: "json",
+      targetType: "workspace",
+      action: intent === "import" ? "import" : "preview",
+      fileName,
+      status: "error",
+      summary: {
+        message: error instanceof Error ? error.message : "import に失敗しました"
+      }
+    });
     return { error: error instanceof Error ? error.message : "import に失敗しました" };
   }
 }

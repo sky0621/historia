@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { CsvImportPanel } from "@/features/csv-import/components/csv-import-panel";
 import { ImportWorkspacePanel } from "@/features/sources/components/import-workspace-panel";
+import { getRecentImportRuns } from "@/server/services/import-runs";
 
 export default function ManageDataPage() {
+  const recentImportRuns = getRecentImportRuns();
+
   return (
     <section className="space-y-6">
       <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
         <h1 className="text-3xl font-semibold">データ運用</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-          `Sprint 6` の運用機能です。JSON export/import、CSV export、出典管理への導線をまとめています。
+          `Sprint 11` 時点の運用機能です。JSON export/import、CSV export/import、file upload、履歴確認への導線をまとめています。
         </p>
       </div>
 
@@ -47,6 +50,43 @@ export default function ManageDataPage() {
         <div className="space-y-6">
           <CsvImportPanel />
           <ImportWorkspacePanel />
+
+          <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+            <h2 className="text-lg font-semibold">Import 履歴</h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              preview/import の直近結果を再確認できます。CSV と JSON をまとめて表示します。
+            </p>
+
+            {recentImportRuns.length === 0 ? (
+              <p className="mt-5 text-sm text-[var(--muted)]">まだ履歴はありません。</p>
+            ) : (
+              <div className="mt-5 space-y-3">
+                {recentImportRuns.map((item) => (
+                  <article key={item.id} className="rounded-2xl border border-[var(--border)] px-4 py-4">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className="font-medium">{item.sourceFormat.toUpperCase()}</span>
+                      <span>{item.targetType}</span>
+                      <span>{item.action}</span>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                          item.status === "ok" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-[var(--muted)]">
+                      {item.fileName ? <p>file: {item.fileName}</p> : null}
+                      <p>at: {item.createdAt.toLocaleString("ja-JP")}</p>
+                    </div>
+                    <pre className="mt-3 overflow-x-auto rounded-2xl bg-[var(--surface)] px-3 py-3 text-xs text-[var(--muted)]">
+                      {JSON.stringify(item.summary, null, 2)}
+                    </pre>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

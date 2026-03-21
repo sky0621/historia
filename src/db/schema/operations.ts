@@ -32,3 +32,14 @@ export const changeHistories = sqliteTable("change_histories", {
   snapshotJson: text("snapshot_json").notNull(),
   changedAt: integer("changed_at", { mode: "timestamp_ms" }).notNull()
 });
+
+export const importRuns = sqliteTable("import_runs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  sourceFormat: text("source_format").notNull(),
+  targetType: text("target_type").notNull(),
+  action: text("action").notNull(),
+  fileName: text("file_name"),
+  status: text("status").notNull(),
+  summaryJson: text("summary_json").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull()
+});

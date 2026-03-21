@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { recordImportRun } from "@/server/services/import-runs";
 import {
   applyCitationCsvImport,
   applyConflictOutcomeCsvImport,
@@ -116,6 +117,7 @@ export type CsvImportState = {
 export async function importCsvAction(previousState: CsvImportState, formData: FormData): Promise<CsvImportState> {
   const rawCsv = String(formData.get("payload") ?? "");
   const intent = String(formData.get("intent") ?? "preview");
+  const fileName = String(formData.get("fileName") ?? "").trim() || undefined;
   const targetTypeValue = String(formData.get("targetType") ?? "event");
   const targetType =
     targetTypeValue === "person" ||
@@ -223,6 +225,18 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                                             : targetType === "historical-period-relation"
                                               ? applyHistoricalPeriodRelationCsvImport(rawCsv)
             : applyEventCsvImport(rawCsv);
+      recordImportRun({
+        sourceFormat: "csv",
+        targetType,
+        action: "import",
+        fileName,
+        status: "ok",
+        summary: {
+          preview: preview.summary,
+          importedCount: result.importedCount,
+          unknownHeaders: preview.unknownHeaders
+        }
+      });
       revalidatePath("/events");
       revalidatePath("/people");
       revalidatePath("/polities");
@@ -249,8 +263,30 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
       };
     }
 
+    recordImportRun({
+      sourceFormat: "csv",
+      targetType,
+      action: "preview",
+      fileName,
+      status: "ok",
+      summary: {
+        preview: preview.summary,
+        unknownHeaders: preview.unknownHeaders
+      }
+    });
+
     return { targetType, preview };
   } catch (error) {
+    recordImportRun({
+      sourceFormat: "csv",
+      targetType,
+      action: intent === "import" ? "import" : "preview",
+      fileName,
+      status: "error",
+      summary: {
+        message: error instanceof Error ? error.message : "CSV import に失敗しました"
+      }
+    });
     return {
       targetType,
       error: error instanceof Error ? error.message : "CSV import に失敗しました"

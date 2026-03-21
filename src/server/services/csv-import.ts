@@ -2122,7 +2122,7 @@ function resolveReferences(
     if (!id) {
       issues.push({
         field,
-        message: `未登録の参照名です: ${name}`
+        message: formatUnknownReferenceMessage(name, map)
       });
       continue;
     }
@@ -2155,7 +2155,7 @@ function resolveSingleReference(
   if (!id) {
     issues.push({
       field,
-      message: `未登録の参照名です: ${normalized}`
+      message: formatUnknownReferenceMessage(normalized, map)
     });
     return null;
   }
@@ -2182,7 +2182,7 @@ function resolveNamedEntity(
   if (!id) {
     issues.push({
       field,
-      message: `未登録の参照名です: ${normalized}`
+      message: formatUnknownReferenceMessage(normalized, map)
     });
     return null;
   }
@@ -2205,7 +2205,7 @@ function resolveNamedEntityOptional(
   if (!id) {
     issues.push({
       field,
-      message: `未登録の参照名です: ${normalized}`
+      message: formatUnknownReferenceMessage(normalized, map)
     });
     return null;
   }
@@ -2538,6 +2538,54 @@ function findNameDuplicateCandidates(
       label: item.name,
       reason
     }));
+}
+
+function formatUnknownReferenceMessage(name: string, map: Map<string, number>) {
+  const suggestions = findReferenceSuggestions(name, Array.from(map.keys()));
+  return suggestions.length > 0
+    ? `未登録の参照名です: ${name} / 候補: ${suggestions.join(", ")}`
+    : `未登録の参照名です: ${name}`;
+}
+
+function findReferenceSuggestions(name: string, candidates: string[]) {
+  const normalized = normalizeSearchText(name);
+  if (normalized.length === 0) {
+    return [];
+  }
+
+  const ranked = candidates
+    .map((candidate) => {
+      const current = normalizeSearchText(candidate);
+      const score =
+        current === normalized
+          ? 100
+          : current.includes(normalized) || normalized.includes(current)
+            ? 80
+            : current.startsWith(normalized) || normalized.startsWith(current)
+              ? 70
+              : sharedCharacterScore(normalized, current);
+      return { candidate, score };
+    })
+    .filter((item) => item.score >= 2)
+    .sort((a, b) => b.score - a.score || a.candidate.localeCompare(b.candidate, "ja-JP"))
+    .slice(0, 5);
+
+  return ranked.map((item) => item.candidate);
+}
+
+function normalizeSearchText(value: string) {
+  return value.trim().toLocaleLowerCase("ja-JP").replace(/\s+/g, "");
+}
+
+function sharedCharacterScore(left: string, right: string) {
+  const chars = new Set(left);
+  let score = 0;
+  for (const char of right) {
+    if (chars.has(char)) {
+      score += 1;
+    }
+  }
+  return score;
 }
 
 function findDuplicateValues(values: string[]) {
