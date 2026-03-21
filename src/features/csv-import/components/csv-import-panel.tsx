@@ -9,12 +9,16 @@ import type {
   CsvPreviewRow,
   ConflictOutcomeCsvInput,
   ConflictParticipantCsvInput,
+  DynastyCsvInput,
   EventRelationCsvInput,
+  HistoricalPeriodCsvInput,
   PeriodCategoryCsvInput,
   PolityCsvInput,
   RegionCsvInput,
   ReligionCsvInput,
-  RoleAssignmentCsvInput
+  RoleAssignmentCsvInput,
+  SectCsvInput,
+  TagCsvInput
 } from "@/server/services/csv-import";
 
 const initialState: Awaited<ReturnType<typeof importCsvAction>> = {
@@ -29,8 +33,8 @@ export function CsvImportPanel() {
     <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
       <h2 className="text-lg font-semibold">CSV import</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-        `Sprint 8` では `Region / PeriodCategory / Polity / Religion CSV` も preview/import できます。まず
-        preview し、`error` と `duplicate-candidate` がないことを確認してから import します。
+        `Sprint 9` では `Dynasty / HistoricalPeriod / Sect / Tag CSV` も preview/import できます。まず preview し、
+        `error` と `duplicate-candidate` がないことを確認してから import します。
       </p>
 
       <form action={action} className="mt-6 space-y-4">
@@ -102,6 +106,27 @@ export function CsvImportPanel() {
               <input type="radio" name="targetType" value="religion" defaultChecked={targetType === "religion"} />
               <span>Religion</span>
             </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="dynasty" defaultChecked={targetType === "dynasty"} />
+              <span>Dynasty</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="historical-period"
+                defaultChecked={targetType === "historical-period"}
+              />
+              <span>HistoricalPeriod</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="sect" defaultChecked={targetType === "sect"} />
+              <span>Sect</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="tag" defaultChecked={targetType === "tag"} />
+              <span>Tag</span>
+            </label>
           </div>
         </fieldset>
 
@@ -130,6 +155,14 @@ export function CsvImportPanel() {
                             ? "name,aliases,time_start_year,regions\n日本,日本国,660,日本|東アジア"
                             : targetType === "religion"
                               ? "name,aliases,time_start_year,regions,founders\n仏教,佛教,-566,インド|東アジア,釈迦"
+                              : targetType === "dynasty"
+                                ? "name,polity,time_start_year,regions\n平安朝,日本,794,日本"
+                                : targetType === "historical-period"
+                                  ? "name,category,polity,time_start_year,regions\n平安時代,日本史区分,日本,794,日本"
+                                  : targetType === "sect"
+                                    ? "name,religion,time_start_year,regions,founders\n天台宗,仏教,805,日本,最澄"
+                                    : targetType === "tag"
+                                      ? "name\n都城"
                 : "title,event_type,time_start_year,people,polities\n平安京遷都,general,794,桓武天皇,日本"
             }
             required
@@ -223,10 +256,30 @@ export function CsvImportPanel() {
                 const preview = state.preview as CsvPreviewResult<PolityCsvInput>;
                 return preview.rows.map((row) => renderPolityRow(row));
               })()
-            ) : (
+            ) : state.preview.kind === "religion" ? (
               (() => {
                 const preview = state.preview as CsvPreviewResult<ReligionCsvInput>;
                 return preview.rows.map((row) => renderReligionRow(row));
+              })()
+            ) : state.preview.kind === "dynasty" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<DynastyCsvInput>;
+                return preview.rows.map((row) => renderDynastyRow(row));
+              })()
+            ) : state.preview.kind === "historical-period" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<HistoricalPeriodCsvInput>;
+                return preview.rows.map((row) => renderHistoricalPeriodRow(row));
+              })()
+            ) : state.preview.kind === "sect" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<SectCsvInput>;
+                return preview.rows.map((row) => renderSectRow(row));
+              })()
+            ) : (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<TagCsvInput>;
+                return preview.rows.map((row) => renderTagRow(row));
               })()
             )}
           </div>
@@ -253,10 +306,18 @@ export function CsvImportPanel() {
                         ? "Region"
                         : state.result.kind === "period-category"
                           ? "PeriodCategory"
-                          : state.result.kind === "polity"
-                            ? "Polity"
-                            : state.result.kind === "religion"
-                              ? "Religion"
+                            : state.result.kind === "polity"
+                              ? "Polity"
+                              : state.result.kind === "religion"
+                                ? "Religion"
+                                : state.result.kind === "dynasty"
+                                  ? "Dynasty"
+                                  : state.result.kind === "historical-period"
+                                    ? "HistoricalPeriod"
+                                    : state.result.kind === "sect"
+                                      ? "Sect"
+                                      : state.result.kind === "tag"
+                                        ? "Tag"
                   : "Event"}
             {" "}
             件数: {state.result.importedCount}
@@ -441,6 +502,45 @@ function renderReligionRow(row: CsvPreviewRow<ReligionCsvInput>) {
           regions: {row.input.regionIds.length} / founders: {row.input.founderIds.length}
         </div>
       ) : null}
+    </article>
+  );
+}
+
+function renderDynastyRow(row: CsvPreviewRow<DynastyCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">polityId: {row.input.polityId} / regions: {row.input.regionIds.length}</div> : null}
+    </article>
+  );
+}
+
+function renderHistoricalPeriodRow(row: CsvPreviewRow<HistoricalPeriodCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">categoryId: {row.input.categoryId} / regions: {row.input.regionIds.length}</div> : null}
+    </article>
+  );
+}
+
+function renderSectRow(row: CsvPreviewRow<SectCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">religionId: {row.input.religionId} / founders: {row.input.founderIds.length}</div> : null}
+    </article>
+  );
+}
+
+function renderTagRow(row: CsvPreviewRow<TagCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
     </article>
   );
 }

@@ -4,34 +4,46 @@ import { revalidatePath } from "next/cache";
 import {
   applyConflictOutcomeCsvImport,
   applyConflictParticipantCsvImport,
+  applyDynastyCsvImport,
   applyEventRelationCsvImport,
+  applyHistoricalPeriodCsvImport,
   applyPeriodCategoryCsvImport,
   applyPolityCsvImport,
   applyRegionCsvImport,
   applyReligionCsvImport,
   applyRoleAssignmentCsvImport,
+  applySectCsvImport,
+  applyTagCsvImport,
   applyEventCsvImport,
   applyPersonCsvImport,
   previewConflictOutcomeCsvImport,
   previewConflictParticipantCsvImport,
+  previewDynastyCsvImport,
   previewEventRelationCsvImport,
+  previewHistoricalPeriodCsvImport,
   previewPeriodCategoryCsvImport,
   previewPolityCsvImport,
   previewRegionCsvImport,
   previewReligionCsvImport,
   previewRoleAssignmentCsvImport,
+  previewSectCsvImport,
+  previewTagCsvImport,
   previewEventCsvImport,
   previewPersonCsvImport,
   type ConflictOutcomeCsvInput,
   type ConflictParticipantCsvInput,
+  type DynastyCsvInput,
   type EventRelationCsvInput,
+  type HistoricalPeriodCsvInput,
   type PeriodCategoryCsvInput,
   type PolityCsvInput,
   type RegionCsvInput,
   type ReligionCsvInput,
   type RoleAssignmentCsvInput,
+  type SectCsvInput,
   type CsvImportResult,
-  type CsvPreviewResult
+  type CsvPreviewResult,
+  type TagCsvInput
 } from "@/server/services/csv-import";
 import type { EventInput } from "@/features/events/schema";
 import type { PersonInput } from "@/features/people/schema";
@@ -48,7 +60,11 @@ export type CsvImportState = {
     | "region"
     | "period-category"
     | "polity"
-    | "religion";
+    | "religion"
+    | "dynasty"
+    | "historical-period"
+    | "sect"
+    | "tag";
   preview?:
     | CsvPreviewResult<EventInput>
     | CsvPreviewResult<PersonInput>
@@ -59,7 +75,11 @@ export type CsvImportState = {
     | CsvPreviewResult<RegionCsvInput>
     | CsvPreviewResult<PeriodCategoryCsvInput>
     | CsvPreviewResult<PolityCsvInput>
-    | CsvPreviewResult<ReligionCsvInput>;
+    | CsvPreviewResult<ReligionCsvInput>
+    | CsvPreviewResult<DynastyCsvInput>
+    | CsvPreviewResult<HistoricalPeriodCsvInput>
+    | CsvPreviewResult<SectCsvInput>
+    | CsvPreviewResult<TagCsvInput>;
   result?: CsvImportResult;
 };
 
@@ -76,7 +96,11 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
     targetTypeValue === "region" ||
     targetTypeValue === "period-category" ||
     targetTypeValue === "polity" ||
-    targetTypeValue === "religion"
+    targetTypeValue === "religion" ||
+    targetTypeValue === "dynasty" ||
+    targetTypeValue === "historical-period" ||
+    targetTypeValue === "sect" ||
+    targetTypeValue === "tag"
       ? targetTypeValue
       : "event";
 
@@ -100,6 +124,14 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                         ? previewPolityCsvImport(rawCsv)
                         : targetType === "religion"
                           ? previewReligionCsvImport(rawCsv)
+                          : targetType === "dynasty"
+                            ? previewDynastyCsvImport(rawCsv)
+                            : targetType === "historical-period"
+                              ? previewHistoricalPeriodCsvImport(rawCsv)
+                              : targetType === "sect"
+                                ? previewSectCsvImport(rawCsv)
+                                : targetType === "tag"
+                                  ? previewTagCsvImport(rawCsv)
           : previewEventCsvImport(rawCsv);
 
     if (intent === "import") {
@@ -122,6 +154,14 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                         ? applyPolityCsvImport(rawCsv)
                         : targetType === "religion"
                           ? applyReligionCsvImport(rawCsv)
+                          : targetType === "dynasty"
+                            ? applyDynastyCsvImport(rawCsv)
+                            : targetType === "historical-period"
+                              ? applyHistoricalPeriodCsvImport(rawCsv)
+                              : targetType === "sect"
+                                ? applySectCsvImport(rawCsv)
+                                : targetType === "tag"
+                                  ? applyTagCsvImport(rawCsv)
             : applyEventCsvImport(rawCsv);
       revalidatePath("/events");
       revalidatePath("/people");
@@ -129,7 +169,10 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
       revalidatePath("/dynasties");
       revalidatePath("/regions");
       revalidatePath("/period-categories");
+      revalidatePath("/periods");
       revalidatePath("/religions");
+      revalidatePath("/sects");
+      revalidatePath("/tags");
       revalidatePath("/manage/data");
       revalidatePath("/graph/events");
       revalidatePath("/timeline");
