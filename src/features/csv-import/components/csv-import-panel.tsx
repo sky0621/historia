@@ -5,19 +5,25 @@ import { importCsvAction } from "@/features/csv-import/actions";
 import type { EventInput } from "@/features/events/schema";
 import type { PersonInput } from "@/features/people/schema";
 import type {
+  CitationCsvInput,
   CsvPreviewResult,
   CsvPreviewRow,
   ConflictOutcomeCsvInput,
   ConflictParticipantCsvInput,
   DynastyCsvInput,
+  DynastySuccessionCsvInput,
   EventRelationCsvInput,
   HistoricalPeriodCsvInput,
+  HistoricalPeriodRelationCsvInput,
   PeriodCategoryCsvInput,
   PolityCsvInput,
+  PolityTransitionCsvInput,
   RegionCsvInput,
+  RegionRelationCsvInput,
   ReligionCsvInput,
   RoleAssignmentCsvInput,
   SectCsvInput,
+  SourceCsvInput,
   TagCsvInput
 } from "@/server/services/csv-import";
 
@@ -33,8 +39,9 @@ export function CsvImportPanel() {
     <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
       <h2 className="text-lg font-semibold">CSV import</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-        `Sprint 9` では `Dynasty / HistoricalPeriod / Sect / Tag CSV` も preview/import できます。まず preview し、
-        `error` と `duplicate-candidate` がないことを確認してから import します。
+        `Sprint 10` では `Source / Citation / PolityTransition / DynastySuccession / RegionRelation / HistoricalPeriodRelation CSV`
+        も preview/import できます。まず preview し、`error` と `duplicate-candidate` がないことを確認してから
+        import します。
       </p>
 
       <form action={action} className="mt-6 space-y-4">
@@ -127,6 +134,50 @@ export function CsvImportPanel() {
               <input type="radio" name="targetType" value="tag" defaultChecked={targetType === "tag"} />
               <span>Tag</span>
             </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="source" defaultChecked={targetType === "source"} />
+              <span>Source</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input type="radio" name="targetType" value="citation" defaultChecked={targetType === "citation"} />
+              <span>Citation</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="polity-transition"
+                defaultChecked={targetType === "polity-transition"}
+              />
+              <span>PolityTransition</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="dynasty-succession"
+                defaultChecked={targetType === "dynasty-succession"}
+              />
+              <span>DynastySuccession</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="region-relation"
+                defaultChecked={targetType === "region-relation"}
+              />
+              <span>RegionRelation</span>
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-sm">
+              <input
+                type="radio"
+                name="targetType"
+                value="historical-period-relation"
+                defaultChecked={targetType === "historical-period-relation"}
+              />
+              <span>HistoricalPeriodRelation</span>
+            </label>
           </div>
         </fieldset>
 
@@ -163,6 +214,18 @@ export function CsvImportPanel() {
                                     ? "name,religion,time_start_year,regions,founders\n天台宗,仏教,805,日本,最澄"
                                     : targetType === "tag"
                                       ? "name\n都城"
+                                      : targetType === "source"
+                                        ? "title,author,publisher,published_at_label,url\n日本書紀,舎人親王,朝廷,720,https://example.com"
+                                        : targetType === "citation"
+                                          ? "source,target_type,target_name,locator\n日本書紀,event,平安京遷都,巻第38"
+                                          : targetType === "polity-transition"
+                                            ? "predecessor_polity,successor_polity,transition_type,time_start_year\nローマ共和国,ローマ帝国,succession,-27"
+                                            : targetType === "dynasty-succession"
+                                              ? "polity,predecessor_dynasty,successor_dynasty,time_start_year\n日本,奈良朝,平安朝,794"
+                                              : targetType === "region-relation"
+                                                ? "from_region,to_region,relation_type\n日本,東アジア,cultural_sphere"
+                                                : targetType === "historical-period-relation"
+                                                  ? "from_period,to_period,relation_type\n奈良時代,平安時代,succeeds"
                 : "title,event_type,time_start_year,people,polities\n平安京遷都,general,794,桓武天皇,日本"
             }
             required
@@ -276,6 +339,36 @@ export function CsvImportPanel() {
                 const preview = state.preview as CsvPreviewResult<SectCsvInput>;
                 return preview.rows.map((row) => renderSectRow(row));
               })()
+            ) : state.preview.kind === "source" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<SourceCsvInput>;
+                return preview.rows.map((row) => renderSourceRow(row));
+              })()
+            ) : state.preview.kind === "citation" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<CitationCsvInput>;
+                return preview.rows.map((row) => renderCitationRow(row));
+              })()
+            ) : state.preview.kind === "polity-transition" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<PolityTransitionCsvInput>;
+                return preview.rows.map((row) => renderPolityTransitionRow(row));
+              })()
+            ) : state.preview.kind === "dynasty-succession" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<DynastySuccessionCsvInput>;
+                return preview.rows.map((row) => renderDynastySuccessionRow(row));
+              })()
+            ) : state.preview.kind === "region-relation" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<RegionRelationCsvInput>;
+                return preview.rows.map((row) => renderRegionRelationRow(row));
+              })()
+            ) : state.preview.kind === "historical-period-relation" ? (
+              (() => {
+                const preview = state.preview as CsvPreviewResult<HistoricalPeriodRelationCsvInput>;
+                return preview.rows.map((row) => renderHistoricalPeriodRelationRow(row));
+              })()
             ) : (
               (() => {
                 const preview = state.preview as CsvPreviewResult<TagCsvInput>;
@@ -318,6 +411,18 @@ export function CsvImportPanel() {
                                       ? "Sect"
                                       : state.result.kind === "tag"
                                         ? "Tag"
+                                        : state.result.kind === "source"
+                                          ? "Source"
+                                          : state.result.kind === "citation"
+                                            ? "Citation"
+                                            : state.result.kind === "polity-transition"
+                                              ? "PolityTransition"
+                                              : state.result.kind === "dynasty-succession"
+                                                ? "DynastySuccession"
+                                                : state.result.kind === "region-relation"
+                                                  ? "RegionRelation"
+                                                  : state.result.kind === "historical-period-relation"
+                                                    ? "HistoricalPeriodRelation"
                   : "Event"}
             {" "}
             件数: {state.result.importedCount}
@@ -541,6 +646,90 @@ function renderTagRow(row: CsvPreviewRow<TagCsvInput>) {
     <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
       <RowHeader row={row} />
       <RowIssues row={row} />
+    </article>
+  );
+}
+
+function renderSourceRow(row: CsvPreviewRow<SourceCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          author: {row.input.author || "-"} / publisher: {row.input.publisher || "-"}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderCitationRow(row: CsvPreviewRow<CitationCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          sourceId: {row.input.sourceId} / target: {row.input.targetType} #{row.input.targetId}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderPolityTransitionRow(row: CsvPreviewRow<PolityTransitionCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          predecessor: {row.input.predecessorPolityId} / successor: {row.input.successorPolityId} / type: {row.input.transitionType}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderDynastySuccessionRow(row: CsvPreviewRow<DynastySuccessionCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          polityId: {row.input.polityId} / predecessor: {row.input.predecessorDynastyId} / successor: {row.input.successorDynastyId}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderRegionRelationRow(row: CsvPreviewRow<RegionRelationCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          from: {row.input.fromRegionId} / to: {row.input.toRegionId} / type: {row.input.relationType}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderHistoricalPeriodRelationRow(row: CsvPreviewRow<HistoricalPeriodRelationCsvInput>) {
+  return (
+    <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
+      <RowHeader row={row} />
+      <RowIssues row={row} />
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          from: {row.input.fromPeriodId} / to: {row.input.toPeriodId} / type: {row.input.relationType}
+        </div>
+      ) : null}
     </article>
   );
 }

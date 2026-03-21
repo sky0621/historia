@@ -11,6 +11,12 @@ const repositoryMocks = vi.hoisted(() => ({
   listSects: vi.fn(),
   listRegions: vi.fn(),
   listTags: vi.fn(),
+  listSources: vi.fn(),
+  listCitations: vi.fn(),
+  listPolityTransitions: vi.fn(),
+  listDynastySuccessions: vi.fn(),
+  listRegionRelations: vi.fn(),
+  listHistoricalPeriodRelations: vi.fn(),
   getRoleAssignmentsByPersonIds: vi.fn(),
   getEventRelationsByEventIds: vi.fn(),
   getConflictParticipantsByEventIds: vi.fn(),
@@ -29,7 +35,13 @@ const repositoryMocks = vi.hoisted(() => ({
   createDynastyFromInput: vi.fn(),
   createHistoricalPeriodFromInput: vi.fn(),
   createSectFromInput: vi.fn(),
-  createTagFromInput: vi.fn()
+  createTagFromInput: vi.fn(),
+  createSourceFromInput: vi.fn(),
+  createCitationFromInput: vi.fn(),
+  createPolityTransitionFromInput: vi.fn(),
+  createDynastySuccessionFromInput: vi.fn(),
+  createRegionRelationFromInput: vi.fn(),
+  createHistoricalPeriodRelationFromInput: vi.fn()
 }));
 
 vi.mock("@/server/repositories/events", () => ({
@@ -75,6 +87,30 @@ vi.mock("@/server/repositories/tags", () => ({
   listTags: repositoryMocks.listTags
 }));
 
+vi.mock("@/server/repositories/sources", () => ({
+  listSources: repositoryMocks.listSources
+}));
+
+vi.mock("@/server/repositories/citations", () => ({
+  listCitations: repositoryMocks.listCitations
+}));
+
+vi.mock("@/server/repositories/polity-transitions", () => ({
+  listPolityTransitions: repositoryMocks.listPolityTransitions
+}));
+
+vi.mock("@/server/repositories/dynasty-successions", () => ({
+  listDynastySuccessions: repositoryMocks.listDynastySuccessions
+}));
+
+vi.mock("@/server/repositories/region-relations", () => ({
+  listRegionRelations: repositoryMocks.listRegionRelations
+}));
+
+vi.mock("@/server/repositories/historical-period-relations", () => ({
+  listHistoricalPeriodRelations: repositoryMocks.listHistoricalPeriodRelations
+}));
+
 vi.mock("@/server/repositories/role-assignments", () => ({
   getRoleAssignmentsByPersonIds: repositoryMocks.getRoleAssignmentsByPersonIds
 }));
@@ -117,35 +153,59 @@ vi.mock("@/server/services/tags", () => ({
   createTagFromInput: repositoryMocks.createTagFromInput
 }));
 
+vi.mock("@/server/services/sources", () => ({
+  createSourceFromInput: repositoryMocks.createSourceFromInput,
+  createCitationFromInput: repositoryMocks.createCitationFromInput
+}));
+
+vi.mock("@/server/services/relations", () => ({
+  createPolityTransitionFromInput: repositoryMocks.createPolityTransitionFromInput,
+  createDynastySuccessionFromInput: repositoryMocks.createDynastySuccessionFromInput,
+  createRegionRelationFromInput: repositoryMocks.createRegionRelationFromInput,
+  createHistoricalPeriodRelationFromInput: repositoryMocks.createHistoricalPeriodRelationFromInput
+}));
+
 import {
+  applyCitationCsvImport,
   applyConflictOutcomeCsvImport,
   applyConflictParticipantCsvImport,
   applyDynastyCsvImport,
+  applyDynastySuccessionCsvImport,
   applyEventCsvImport,
   applyEventRelationCsvImport,
   applyHistoricalPeriodCsvImport,
+  applyHistoricalPeriodRelationCsvImport,
   applyPeriodCategoryCsvImport,
   applyPersonCsvImport,
   applyPolityCsvImport,
+  applyPolityTransitionCsvImport,
+  applyRegionRelationCsvImport,
   applyRegionCsvImport,
   applyReligionCsvImport,
   applyRoleAssignmentCsvImport,
   applySectCsvImport,
+  applySourceCsvImport,
   applyTagCsvImport,
+  previewCitationCsvImport,
   parseCsv,
   previewConflictOutcomeCsvImport,
   previewConflictParticipantCsvImport,
   previewDynastyCsvImport,
+  previewDynastySuccessionCsvImport,
   previewEventCsvImport,
   previewEventRelationCsvImport,
   previewHistoricalPeriodCsvImport,
+  previewHistoricalPeriodRelationCsvImport,
   previewPeriodCategoryCsvImport,
   previewPersonCsvImport,
   previewPolityCsvImport,
+  previewPolityTransitionCsvImport,
+  previewRegionRelationCsvImport,
   previewRegionCsvImport,
   previewReligionCsvImport,
   previewRoleAssignmentCsvImport,
   previewSectCsvImport,
+  previewSourceCsvImport,
   previewTagCsvImport
 } from "@/server/services/csv-import";
 
@@ -161,6 +221,12 @@ describe("csv import service", () => {
     repositoryMocks.listSects.mockReset();
     repositoryMocks.listRegions.mockReset();
     repositoryMocks.listTags.mockReset();
+    repositoryMocks.listSources.mockReset();
+    repositoryMocks.listCitations.mockReset();
+    repositoryMocks.listPolityTransitions.mockReset();
+    repositoryMocks.listDynastySuccessions.mockReset();
+    repositoryMocks.listRegionRelations.mockReset();
+    repositoryMocks.listHistoricalPeriodRelations.mockReset();
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReset();
     repositoryMocks.getEventRelationsByEventIds.mockReset();
     repositoryMocks.getConflictParticipantsByEventIds.mockReset();
@@ -176,6 +242,12 @@ describe("csv import service", () => {
     repositoryMocks.listSects.mockReturnValue([]);
     repositoryMocks.listRegions.mockReturnValue([]);
     repositoryMocks.listTags.mockReturnValue([]);
+    repositoryMocks.listSources.mockReturnValue([]);
+    repositoryMocks.listCitations.mockReturnValue([]);
+    repositoryMocks.listPolityTransitions.mockReturnValue([]);
+    repositoryMocks.listDynastySuccessions.mockReturnValue([]);
+    repositoryMocks.listRegionRelations.mockReturnValue([]);
+    repositoryMocks.listHistoricalPeriodRelations.mockReturnValue([]);
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([]);
     repositoryMocks.getEventRelationsByEventIds.mockReturnValue([]);
     repositoryMocks.getConflictParticipantsByEventIds.mockReturnValue([]);
@@ -196,6 +268,12 @@ describe("csv import service", () => {
     repositoryMocks.createHistoricalPeriodFromInput.mockReset();
     repositoryMocks.createSectFromInput.mockReset();
     repositoryMocks.createTagFromInput.mockReset();
+    repositoryMocks.createSourceFromInput.mockReset();
+    repositoryMocks.createCitationFromInput.mockReset();
+    repositoryMocks.createPolityTransitionFromInput.mockReset();
+    repositoryMocks.createDynastySuccessionFromInput.mockReset();
+    repositoryMocks.createRegionRelationFromInput.mockReset();
+    repositoryMocks.createHistoricalPeriodRelationFromInput.mockReset();
   });
 
   it("parses quoted csv cells with commas and newlines", () => {
@@ -973,5 +1051,118 @@ describe("csv import service", () => {
     const result = applyTagCsvImport("name\n都城");
     expect(result).toEqual({ kind: "tag", importedCount: 1 });
     expect(repositoryMocks.createTagFromInput).toHaveBeenCalledWith(expect.objectContaining({ name: "都城" }));
+  });
+
+  it("previews and imports sources", () => {
+    const preview = previewSourceCsvImport("title,author,publisher\n日本書紀,舎人親王,朝廷");
+    expect(preview.rows[0]).toMatchObject({
+      status: "ok",
+      input: { title: "日本書紀", author: "舎人親王", publisher: "朝廷" }
+    });
+
+    const result = applySourceCsvImport("title,author,publisher\n日本書紀,舎人親王,朝廷");
+    expect(result).toEqual({ kind: "source", importedCount: 1 });
+    expect(repositoryMocks.createSourceFromInput).toHaveBeenCalled();
+  });
+
+  it("previews and imports citations", () => {
+    repositoryMocks.listSources.mockReturnValue([{ id: 1, title: "日本書紀" }]);
+    repositoryMocks.listEvents.mockReturnValue([{ id: 2, title: "平安京遷都" }]);
+    const preview = previewCitationCsvImport("source,target_type,target_name,locator\n日本書紀,event,平安京遷都,巻第38");
+    expect(preview.rows[0]).toMatchObject({
+      status: "ok",
+      input: { sourceId: 1, targetType: "event", targetId: 2, locator: "巻第38" }
+    });
+
+    const result = applyCitationCsvImport("source,target_type,target_name,locator\n日本書紀,event,平安京遷都,巻第38");
+    expect(result).toEqual({ kind: "citation", importedCount: 1 });
+    expect(repositoryMocks.createCitationFromInput).toHaveBeenCalled();
+  });
+
+  it("previews and imports polity transitions", () => {
+    repositoryMocks.listPolities.mockReturnValue([
+      { id: 1, name: "ローマ共和国" },
+      { id: 2, name: "ローマ帝国" }
+    ]);
+    const preview = previewPolityTransitionCsvImport(
+      "predecessor_polity,successor_polity,transition_type,time_start_year\nローマ共和国,ローマ帝国,succession,-27"
+    );
+    expect(preview.rows[0]).toMatchObject({
+      status: "ok",
+      input: {
+        predecessorPolityId: 1,
+        successorPolityId: 2,
+        transitionType: "succession",
+        timeExpression: expect.objectContaining({ startYear: -27 })
+      }
+    });
+
+    const result = applyPolityTransitionCsvImport(
+      "predecessor_polity,successor_polity,transition_type,time_start_year\nローマ共和国,ローマ帝国,succession,-27"
+    );
+    expect(result).toEqual({ kind: "polity-transition", importedCount: 1 });
+    expect(repositoryMocks.createPolityTransitionFromInput).toHaveBeenCalled();
+  });
+
+  it("previews and imports dynasty successions", () => {
+    repositoryMocks.listPolities.mockReturnValue([{ id: 1, name: "日本" }]);
+    repositoryMocks.listDynasties.mockReturnValue([
+      { id: 2, name: "奈良朝" },
+      { id: 3, name: "平安朝" }
+    ]);
+    const preview = previewDynastySuccessionCsvImport(
+      "polity,predecessor_dynasty,successor_dynasty,time_start_year\n日本,奈良朝,平安朝,794"
+    );
+    expect(preview.rows[0]).toMatchObject({
+      status: "ok",
+      input: {
+        polityId: 1,
+        predecessorDynastyId: 2,
+        successorDynastyId: 3,
+        timeExpression: expect.objectContaining({ startYear: 794 })
+      }
+    });
+
+    const result = applyDynastySuccessionCsvImport(
+      "polity,predecessor_dynasty,successor_dynasty,time_start_year\n日本,奈良朝,平安朝,794"
+    );
+    expect(result).toEqual({ kind: "dynasty-succession", importedCount: 1 });
+    expect(repositoryMocks.createDynastySuccessionFromInput).toHaveBeenCalled();
+  });
+
+  it("previews and imports region relations", () => {
+    repositoryMocks.listRegions.mockReturnValue([
+      { id: 1, name: "日本" },
+      { id: 2, name: "東アジア" }
+    ]);
+    const preview = previewRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_sphere");
+    expect(preview.rows[0]).toMatchObject({
+      status: "ok",
+      input: { fromRegionId: 1, toRegionId: 2, relationType: "cultural_sphere" }
+    });
+
+    const result = applyRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_sphere");
+    expect(result).toEqual({ kind: "region-relation", importedCount: 1 });
+    expect(repositoryMocks.createRegionRelationFromInput).toHaveBeenCalled();
+  });
+
+  it("previews and imports historical period relations", () => {
+    repositoryMocks.listHistoricalPeriods.mockReturnValue([
+      { id: 1, name: "奈良時代" },
+      { id: 2, name: "平安時代" }
+    ]);
+    const preview = previewHistoricalPeriodRelationCsvImport(
+      "from_period,to_period,relation_type\n奈良時代,平安時代,succeeds"
+    );
+    expect(preview.rows[0]).toMatchObject({
+      status: "ok",
+      input: { fromPeriodId: 1, toPeriodId: 2, relationType: "succeeds" }
+    });
+
+    const result = applyHistoricalPeriodRelationCsvImport(
+      "from_period,to_period,relation_type\n奈良時代,平安時代,succeeds"
+    );
+    expect(result).toEqual({ kind: "historical-period-relation", importedCount: 1 });
+    expect(repositoryMocks.createHistoricalPeriodRelationFromInput).toHaveBeenCalled();
   });
 });

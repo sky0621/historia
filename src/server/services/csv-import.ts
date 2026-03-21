@@ -7,12 +7,25 @@ import {
 import { periodCategorySchema, type PeriodCategoryInput } from "@/features/periods/schema";
 import { personSchema, roleAssignmentSchema, type PersonInput, type RoleAssignmentInput } from "@/features/people/schema";
 import { dynastySchema, politySchema, type DynastyInput, type PolityInput } from "@/features/polities/schema";
+import {
+  dynastySuccessionSchema,
+  historicalPeriodRelationSchema,
+  polityTransitionSchema,
+  regionRelationSchema,
+  type DynastySuccessionInput,
+  type HistoricalPeriodRelationInput,
+  type PolityTransitionInput,
+  type RegionRelationInput
+} from "@/features/relations/schema";
 import { regionSchema, type RegionInput } from "@/features/regions/schema";
 import { religionSchema, sectSchema, type ReligionInput, type SectInput } from "@/features/religions/schema";
 import { historicalPeriodSchema, type HistoricalPeriodInput } from "@/features/periods/schema";
+import { citationSchema, sourceSchema, type CitationInput, type SourceInput } from "@/features/sources/schema";
 import { tagSchema, type TagInput } from "@/features/tags/schema";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import { sqlite } from "@/db/client";
+import { listCitations } from "@/server/repositories/citations";
+import { listDynastySuccessions } from "@/server/repositories/dynasty-successions";
 import { listDynasties } from "@/server/repositories/dynasties";
 import {
   getConflictOutcomesByEventIds,
@@ -21,13 +34,17 @@ import {
   listEvents
 } from "@/server/repositories/events";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
+import { listHistoricalPeriodRelations } from "@/server/repositories/historical-period-relations";
 import { listPeriodCategories } from "@/server/repositories/period-categories";
 import { listPeopleDetailed } from "@/server/repositories/people-detail";
 import { listPolities } from "@/server/repositories/polities";
+import { listPolityTransitions } from "@/server/repositories/polity-transitions";
+import { listRegionRelations } from "@/server/repositories/region-relations";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listSects } from "@/server/repositories/sects";
+import { listSources } from "@/server/repositories/sources";
 import { listTags } from "@/server/repositories/tags";
 import {
   appendConflictOutcomeToEvent,
@@ -38,9 +55,16 @@ import {
 import { appendRoleAssignmentsToPerson, createPersonFromInput } from "@/server/services/people";
 import { createPeriodCategoryFromInput } from "@/server/services/period-categories";
 import { createDynastyFromInput, createPolityFromInput } from "@/server/services/polities";
+import {
+  createDynastySuccessionFromInput,
+  createHistoricalPeriodRelationFromInput,
+  createPolityTransitionFromInput,
+  createRegionRelationFromInput
+} from "@/server/services/relations";
 import { createRegionFromInput } from "@/server/services/regions";
 import { createReligionFromInput, createSectFromInput } from "@/server/services/religions";
 import { createHistoricalPeriodFromInput } from "@/server/services/historical-periods";
+import { createCitationFromInput, createSourceFromInput } from "@/server/services/sources";
 import { createTagFromInput } from "@/server/services/tags";
 
 const EVENT_HEADERS = [
@@ -188,6 +212,38 @@ const SECT_HEADERS = [
 const REQUIRED_SECT_HEADERS = ["name", "religion"] as const;
 const TAG_HEADERS = ["name"] as const;
 const REQUIRED_TAG_HEADERS = ["name"] as const;
+const SOURCE_HEADERS = ["title", "author", "publisher", "published_at_label", "url", "note"] as const;
+const REQUIRED_SOURCE_HEADERS = ["title"] as const;
+const CITATION_HEADERS = ["source", "target_type", "target_name", "locator", "quote", "note"] as const;
+const REQUIRED_CITATION_HEADERS = ["source", "target_type", "target_name"] as const;
+const POLITY_TRANSITION_HEADERS = [
+  "predecessor_polity",
+  "successor_polity",
+  "transition_type",
+  "note",
+  "time_label",
+  "time_calendar_era",
+  "time_start_year",
+  "time_end_year",
+  "time_is_approximate"
+] as const;
+const REQUIRED_POLITY_TRANSITION_HEADERS = ["predecessor_polity", "successor_polity", "transition_type"] as const;
+const DYNASTY_SUCCESSION_HEADERS = [
+  "polity",
+  "predecessor_dynasty",
+  "successor_dynasty",
+  "note",
+  "time_label",
+  "time_calendar_era",
+  "time_start_year",
+  "time_end_year",
+  "time_is_approximate"
+] as const;
+const REQUIRED_DYNASTY_SUCCESSION_HEADERS = ["polity", "predecessor_dynasty", "successor_dynasty"] as const;
+const REGION_RELATION_HEADERS = ["from_region", "to_region", "relation_type", "note"] as const;
+const REQUIRED_REGION_RELATION_HEADERS = ["from_region", "to_region", "relation_type"] as const;
+const HISTORICAL_PERIOD_RELATION_HEADERS = ["from_period", "to_period", "relation_type", "note"] as const;
+const REQUIRED_HISTORICAL_PERIOD_RELATION_HEADERS = ["from_period", "to_period", "relation_type"] as const;
 const MULTI_VALUE_SEPARATOR = "|";
 
 type CsvPreviewStatus = "ok" | "duplicate-candidate" | "error";
@@ -205,7 +261,13 @@ type CsvImportKind =
   | "dynasty"
   | "historical-period"
   | "sect"
-  | "tag";
+  | "tag"
+  | "source"
+  | "citation"
+  | "polity-transition"
+  | "dynasty-succession"
+  | "region-relation"
+  | "historical-period-relation";
 
 type CsvPreviewIssue = {
   field: string;
@@ -296,6 +358,12 @@ export type DynastyCsvInput = DynastyInput;
 export type HistoricalPeriodCsvInput = HistoricalPeriodInput;
 export type SectCsvInput = SectInput;
 export type TagCsvInput = TagInput;
+export type SourceCsvInput = SourceInput;
+export type CitationCsvInput = CitationInput;
+export type PolityTransitionCsvInput = PolityTransitionInput;
+export type DynastySuccessionCsvInput = DynastySuccessionInput;
+export type RegionRelationCsvInput = RegionRelationInput;
+export type HistoricalPeriodRelationCsvInput = HistoricalPeriodRelationInput;
 
 type ParsedCsvRow = {
   rowNumber: number;
@@ -1517,6 +1585,424 @@ export function applyTagCsvImport(rawCsv: string): CsvImportResult {
     return count;
   })();
   return { kind: "tag", importedCount };
+}
+
+export function previewSourceCsvImport(rawCsv: string): CsvPreviewResult<SourceCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_SOURCE_HEADERS);
+  const unknownHeaders = parsed.headers.filter((header) => !SOURCE_HEADERS.includes(header as (typeof SOURCE_HEADERS)[number]));
+  const sources = listSources();
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const inputCandidate = {
+      title: cells.title.trim(),
+      author: normalizeOptionalString(cells.author) ?? undefined,
+      publisher: normalizeOptionalString(cells.publisher) ?? undefined,
+      publishedAtLabel: normalizeOptionalString(cells.published_at_label) ?? undefined,
+      url: normalizeOptionalString(cells.url) ?? undefined,
+      note: normalizeOptionalString(cells.note) ?? undefined
+    };
+    const parsedInput = sourceSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
+      }
+    }
+    if (unknownHeaders.length > 0) {
+      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
+    }
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+    const duplicateCandidates = previewInput
+      ? sources
+          .filter((item) => item.title === previewInput.title)
+          .map((item) => ({
+            id: item.id,
+            label: item.title,
+            reason: "同名の出典が登録済みです"
+          }))
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    return { rowNumber: row.rowNumber, label: inputCandidate.title || `row-${row.rowNumber}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<SourceCsvInput>;
+  });
+
+  return { kind: "source", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
+}
+
+export function previewCitationCsvImport(rawCsv: string): CsvPreviewResult<CitationCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_CITATION_HEADERS);
+  const unknownHeaders = parsed.headers.filter((header) => !CITATION_HEADERS.includes(header as (typeof CITATION_HEADERS)[number]));
+  const sources = new Map(listSources().map((item) => [item.title, item.id]));
+  const citations = listCitations();
+  const targetMaps = {
+    event: new Map(listEvents().map((item) => [item.title, item.id])),
+    person: new Map(listPeopleDetailed().map((item) => [item.name, item.id])),
+    polity: new Map(listPolities().map((item) => [item.name, item.id])),
+    historical_period: new Map(listHistoricalPeriods().map((item) => [item.name, item.id])),
+    religion: new Map(listReligions().map((item) => [item.name, item.id]))
+  } satisfies Record<CitationInput["targetType"], Map<string, number>>;
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const sourceId = resolveNamedEntity("source", cells.source, sources, issues);
+    const targetType = normalizeOptionalString(cells.target_type);
+    if (!targetType) {
+      issues.push({ field: "target_type", message: "必須です" });
+    } else if (!["event", "person", "polity", "historical_period", "religion"].includes(targetType)) {
+      issues.push({ field: "target_type", message: "event / person / polity / historical_period / religion のいずれかを指定してください" });
+    }
+    const targetId =
+      targetType && ["event", "person", "polity", "historical_period", "religion"].includes(targetType)
+        ? resolveNamedEntity("target_name", cells.target_name, targetMaps[targetType as CitationInput["targetType"]], issues)
+        : null;
+    const inputCandidate = {
+      sourceId,
+      targetType: targetType as CitationInput["targetType"],
+      targetId,
+      locator: normalizeOptionalString(cells.locator) ?? undefined,
+      quote: normalizeOptionalString(cells.quote) ?? undefined,
+      note: normalizeOptionalString(cells.note) ?? undefined
+    };
+    const parsedInput = citationSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
+      }
+    }
+    if (unknownHeaders.length > 0) {
+      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
+    }
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+    const duplicateCandidates = previewInput
+      ? citations
+          .filter((item) =>
+            item.sourceId === previewInput.sourceId &&
+            item.targetType === previewInput.targetType &&
+            item.targetId === previewInput.targetId &&
+            (item.locator ?? "") === (previewInput.locator ?? "")
+          )
+          .map((item) => ({
+            id: item.id,
+            label: `${cells.source} -> ${cells.target_name}`,
+            reason: "同一の引用が登録済みです"
+          }))
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    return { rowNumber: row.rowNumber, label: `${cells.source || "?"} -> ${cells.target_name || "?"}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<CitationCsvInput>;
+  });
+
+  return { kind: "citation", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
+}
+
+export function previewPolityTransitionCsvImport(rawCsv: string): CsvPreviewResult<PolityTransitionCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_POLITY_TRANSITION_HEADERS);
+  const unknownHeaders = parsed.headers.filter((header) => !POLITY_TRANSITION_HEADERS.includes(header as (typeof POLITY_TRANSITION_HEADERS)[number]));
+  const references = buildReferenceMaps();
+  const transitions = listPolityTransitions();
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const inputCandidate = {
+      predecessorPolityId: resolveSingleReference("polities", cells.predecessor_polity, references.polities, issues),
+      successorPolityId: resolveSingleReference("polities", cells.successor_polity, references.polities, issues),
+      transitionType: cells.transition_type.trim(),
+      note: normalizeOptionalString(cells.note) ?? undefined,
+      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues)
+    };
+    const parsedInput = polityTransitionSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
+      }
+    }
+    if (parsedInput.success && parsedInput.data.predecessorPolityId === parsedInput.data.successorPolityId) {
+      issues.push({ field: "successor_polity", message: "同一国家同士の遷移は登録できません" });
+    }
+    if (unknownHeaders.length > 0) {
+      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
+    }
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+    const duplicateCandidates = previewInput
+      ? transitions
+          .filter((item) =>
+            item.predecessorPolityId === previewInput.predecessorPolityId &&
+            item.successorPolityId === previewInput.successorPolityId &&
+            item.transitionType === previewInput.transitionType
+          )
+          .map((item) => ({
+            id: item.id,
+            label: `${cells.predecessor_polity} -> ${cells.successor_polity}`,
+            reason: "同一の国家遷移が登録済みです"
+          }))
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    return { rowNumber: row.rowNumber, label: `${cells.predecessor_polity || "?"} -> ${cells.successor_polity || "?"}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<PolityTransitionCsvInput>;
+  });
+
+  return { kind: "polity-transition", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
+}
+
+export function previewDynastySuccessionCsvImport(rawCsv: string): CsvPreviewResult<DynastySuccessionCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_DYNASTY_SUCCESSION_HEADERS);
+  const unknownHeaders = parsed.headers.filter((header) => !DYNASTY_SUCCESSION_HEADERS.includes(header as (typeof DYNASTY_SUCCESSION_HEADERS)[number]));
+  const references = buildReferenceMaps();
+  const successions = listDynastySuccessions();
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const inputCandidate = {
+      polityId: resolveSingleReference("polities", cells.polity, references.polities, issues),
+      predecessorDynastyId: resolveSingleReference("dynasties", cells.predecessor_dynasty, references.dynasties, issues),
+      successorDynastyId: resolveSingleReference("dynasties", cells.successor_dynasty, references.dynasties, issues),
+      note: normalizeOptionalString(cells.note) ?? undefined,
+      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues)
+    };
+    const parsedInput = dynastySuccessionSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
+      }
+    }
+    if (parsedInput.success && parsedInput.data.predecessorDynastyId === parsedInput.data.successorDynastyId) {
+      issues.push({ field: "successor_dynasty", message: "同一王朝同士の継承は登録できません" });
+    }
+    if (unknownHeaders.length > 0) {
+      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
+    }
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+    const duplicateCandidates = previewInput
+      ? successions
+          .filter((item) =>
+            item.polityId === previewInput.polityId &&
+            item.predecessorDynastyId === previewInput.predecessorDynastyId &&
+            item.successorDynastyId === previewInput.successorDynastyId
+          )
+          .map((item) => ({
+            id: item.id,
+            label: `${cells.predecessor_dynasty} -> ${cells.successor_dynasty}`,
+            reason: "同一の王朝継承が登録済みです"
+          }))
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    return { rowNumber: row.rowNumber, label: `${cells.predecessor_dynasty || "?"} -> ${cells.successor_dynasty || "?"}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<DynastySuccessionCsvInput>;
+  });
+
+  return { kind: "dynasty-succession", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
+}
+
+export function previewRegionRelationCsvImport(rawCsv: string): CsvPreviewResult<RegionRelationCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_REGION_RELATION_HEADERS);
+  const unknownHeaders = parsed.headers.filter((header) => !REGION_RELATION_HEADERS.includes(header as (typeof REGION_RELATION_HEADERS)[number]));
+  const references = buildReferenceMaps();
+  const relations = listRegionRelations();
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const inputCandidate = {
+      fromRegionId: resolveSingleReference("regions", cells.from_region, references.regions, issues),
+      toRegionId: resolveSingleReference("regions", cells.to_region, references.regions, issues),
+      relationType: cells.relation_type.trim(),
+      note: normalizeOptionalString(cells.note) ?? undefined
+    };
+    const parsedInput = regionRelationSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
+      }
+    }
+    if (parsedInput.success && parsedInput.data.fromRegionId === parsedInput.data.toRegionId) {
+      issues.push({ field: "to_region", message: "同一地域同士の関係は登録できません" });
+    }
+    if (unknownHeaders.length > 0) {
+      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
+    }
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+    const duplicateCandidates = previewInput
+      ? relations
+          .filter((item) =>
+            item.fromRegionId === previewInput.fromRegionId &&
+            item.toRegionId === previewInput.toRegionId &&
+            item.relationType === previewInput.relationType
+          )
+          .map((item) => ({
+            id: item.id,
+            label: `${cells.from_region} -> ${cells.to_region}`,
+            reason: "同一の地域関係が登録済みです"
+          }))
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    return { rowNumber: row.rowNumber, label: `${cells.from_region || "?"} -> ${cells.to_region || "?"}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<RegionRelationCsvInput>;
+  });
+
+  return { kind: "region-relation", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
+}
+
+export function previewHistoricalPeriodRelationCsvImport(rawCsv: string): CsvPreviewResult<HistoricalPeriodRelationCsvInput> {
+  const parsed = parseCsv(rawCsv);
+  validateRequiredHeaders(parsed.headers, REQUIRED_HISTORICAL_PERIOD_RELATION_HEADERS);
+  const unknownHeaders = parsed.headers.filter(
+    (header) => !HISTORICAL_PERIOD_RELATION_HEADERS.includes(header as (typeof HISTORICAL_PERIOD_RELATION_HEADERS)[number])
+  );
+  const references = buildReferenceMaps();
+  const relations = listHistoricalPeriodRelations();
+
+  const rows = parsed.rows.map((row) => {
+    const issues: CsvPreviewIssue[] = [];
+    const warnings: CsvPreviewIssue[] = [];
+    const cells = mapRowToCells(parsed.headers, row.values);
+    const inputCandidate = {
+      fromPeriodId: resolveSingleReference("periods", cells.from_period, references.periods, issues),
+      toPeriodId: resolveSingleReference("periods", cells.to_period, references.periods, issues),
+      relationType: cells.relation_type.trim(),
+      note: normalizeOptionalString(cells.note) ?? undefined
+    };
+    const parsedInput = historicalPeriodRelationSchema.safeParse(inputCandidate);
+    if (!parsedInput.success) {
+      for (const issue of parsedInput.error.issues) {
+        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
+      }
+    }
+    if (parsedInput.success && parsedInput.data.fromPeriodId === parsedInput.data.toPeriodId) {
+      issues.push({ field: "to_period", message: "同一時代区分同士の関係は登録できません" });
+    }
+    if (unknownHeaders.length > 0) {
+      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
+    }
+    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
+    const duplicateCandidates = previewInput
+      ? relations
+          .filter((item) =>
+            item.fromPeriodId === previewInput.fromPeriodId &&
+            item.toPeriodId === previewInput.toPeriodId &&
+            item.relationType === previewInput.relationType
+          )
+          .map((item) => ({
+            id: item.id,
+            label: `${cells.from_period} -> ${cells.to_period}`,
+            reason: "同一の時代区分関係が登録済みです"
+          }))
+      : [];
+    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
+    return { rowNumber: row.rowNumber, label: `${cells.from_period || "?"} -> ${cells.to_period || "?"}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<HistoricalPeriodRelationCsvInput>;
+  });
+
+  return {
+    kind: "historical-period-relation",
+    headers: parsed.headers,
+    unknownHeaders,
+    summary: summarizeRows(rows),
+    rows
+  };
+}
+
+export function applySourceCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewSourceCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+  if (blockingRows.length > 0) throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      createSourceFromInput(row.input);
+      count += 1;
+    }
+    return count;
+  })();
+  return { kind: "source", importedCount };
+}
+
+export function applyCitationCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewCitationCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+  if (blockingRows.length > 0) throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      createCitationFromInput(row.input);
+      count += 1;
+    }
+    return count;
+  })();
+  return { kind: "citation", importedCount };
+}
+
+export function applyPolityTransitionCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewPolityTransitionCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+  if (blockingRows.length > 0) throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      createPolityTransitionFromInput(row.input);
+      count += 1;
+    }
+    return count;
+  })();
+  return { kind: "polity-transition", importedCount };
+}
+
+export function applyDynastySuccessionCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewDynastySuccessionCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+  if (blockingRows.length > 0) throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      createDynastySuccessionFromInput(row.input);
+      count += 1;
+    }
+    return count;
+  })();
+  return { kind: "dynasty-succession", importedCount };
+}
+
+export function applyRegionRelationCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewRegionRelationCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+  if (blockingRows.length > 0) throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      createRegionRelationFromInput(row.input);
+      count += 1;
+    }
+    return count;
+  })();
+  return { kind: "region-relation", importedCount };
+}
+
+export function applyHistoricalPeriodRelationCsvImport(rawCsv: string): CsvImportResult {
+  const preview = previewHistoricalPeriodRelationCsvImport(rawCsv);
+  const blockingRows = preview.rows.filter((row) => row.status !== "ok");
+  if (blockingRows.length > 0) throw new Error("error または duplicate-candidate を含むため import を実行できません");
+  const importedCount = sqlite.transaction(() => {
+    let count = 0;
+    for (const row of preview.rows) {
+      if (!row.input) continue;
+      createHistoricalPeriodRelationFromInput(row.input);
+      count += 1;
+    }
+    return count;
+  })();
+  return { kind: "historical-period-relation", importedCount };
 }
 
 export function parseCsv(rawCsv: string): ParsedCsvDocument {

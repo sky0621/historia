@@ -2,47 +2,65 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  applyCitationCsvImport,
   applyConflictOutcomeCsvImport,
   applyConflictParticipantCsvImport,
   applyDynastyCsvImport,
+  applyDynastySuccessionCsvImport,
   applyEventRelationCsvImport,
   applyHistoricalPeriodCsvImport,
+  applyHistoricalPeriodRelationCsvImport,
   applyPeriodCategoryCsvImport,
   applyPolityCsvImport,
+  applyPolityTransitionCsvImport,
+  applyRegionRelationCsvImport,
   applyRegionCsvImport,
   applyReligionCsvImport,
   applyRoleAssignmentCsvImport,
   applySectCsvImport,
+  applySourceCsvImport,
   applyTagCsvImport,
+  previewCitationCsvImport,
   applyEventCsvImport,
   applyPersonCsvImport,
   previewConflictOutcomeCsvImport,
   previewConflictParticipantCsvImport,
   previewDynastyCsvImport,
+  previewDynastySuccessionCsvImport,
   previewEventRelationCsvImport,
   previewHistoricalPeriodCsvImport,
+  previewHistoricalPeriodRelationCsvImport,
   previewPeriodCategoryCsvImport,
   previewPolityCsvImport,
+  previewPolityTransitionCsvImport,
+  previewRegionRelationCsvImport,
   previewRegionCsvImport,
   previewReligionCsvImport,
   previewRoleAssignmentCsvImport,
   previewSectCsvImport,
+  previewSourceCsvImport,
   previewTagCsvImport,
   previewEventCsvImport,
   previewPersonCsvImport,
+  type CitationCsvInput,
   type ConflictOutcomeCsvInput,
   type ConflictParticipantCsvInput,
   type DynastyCsvInput,
+  type DynastySuccessionCsvInput,
   type EventRelationCsvInput,
   type HistoricalPeriodCsvInput,
+  type HistoricalPeriodRelationCsvInput,
   type PeriodCategoryCsvInput,
   type PolityCsvInput,
+  type PolityTransitionCsvInput,
   type RegionCsvInput,
+  type RegionRelationCsvInput,
   type ReligionCsvInput,
   type RoleAssignmentCsvInput,
   type SectCsvInput,
   type CsvImportResult,
   type CsvPreviewResult,
+  type SourceCsvInput,
   type TagCsvInput
 } from "@/server/services/csv-import";
 import type { EventInput } from "@/features/events/schema";
@@ -64,7 +82,13 @@ export type CsvImportState = {
     | "dynasty"
     | "historical-period"
     | "sect"
-    | "tag";
+    | "tag"
+    | "source"
+    | "citation"
+    | "polity-transition"
+    | "dynasty-succession"
+    | "region-relation"
+    | "historical-period-relation";
   preview?:
     | CsvPreviewResult<EventInput>
     | CsvPreviewResult<PersonInput>
@@ -79,7 +103,13 @@ export type CsvImportState = {
     | CsvPreviewResult<DynastyCsvInput>
     | CsvPreviewResult<HistoricalPeriodCsvInput>
     | CsvPreviewResult<SectCsvInput>
-    | CsvPreviewResult<TagCsvInput>;
+    | CsvPreviewResult<TagCsvInput>
+    | CsvPreviewResult<SourceCsvInput>
+    | CsvPreviewResult<CitationCsvInput>
+    | CsvPreviewResult<PolityTransitionCsvInput>
+    | CsvPreviewResult<DynastySuccessionCsvInput>
+    | CsvPreviewResult<RegionRelationCsvInput>
+    | CsvPreviewResult<HistoricalPeriodRelationCsvInput>;
   result?: CsvImportResult;
 };
 
@@ -100,7 +130,13 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
     targetTypeValue === "dynasty" ||
     targetTypeValue === "historical-period" ||
     targetTypeValue === "sect" ||
-    targetTypeValue === "tag"
+    targetTypeValue === "tag" ||
+    targetTypeValue === "source" ||
+    targetTypeValue === "citation" ||
+    targetTypeValue === "polity-transition" ||
+    targetTypeValue === "dynasty-succession" ||
+    targetTypeValue === "region-relation" ||
+    targetTypeValue === "historical-period-relation"
       ? targetTypeValue
       : "event";
 
@@ -132,6 +168,18 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                                 ? previewSectCsvImport(rawCsv)
                                 : targetType === "tag"
                                   ? previewTagCsvImport(rawCsv)
+                                  : targetType === "source"
+                                    ? previewSourceCsvImport(rawCsv)
+                                    : targetType === "citation"
+                                      ? previewCitationCsvImport(rawCsv)
+                                      : targetType === "polity-transition"
+                                        ? previewPolityTransitionCsvImport(rawCsv)
+                                        : targetType === "dynasty-succession"
+                                          ? previewDynastySuccessionCsvImport(rawCsv)
+                                          : targetType === "region-relation"
+                                            ? previewRegionRelationCsvImport(rawCsv)
+                                            : targetType === "historical-period-relation"
+                                              ? previewHistoricalPeriodRelationCsvImport(rawCsv)
           : previewEventCsvImport(rawCsv);
 
     if (intent === "import") {
@@ -162,6 +210,18 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
                                 ? applySectCsvImport(rawCsv)
                                 : targetType === "tag"
                                   ? applyTagCsvImport(rawCsv)
+                                  : targetType === "source"
+                                    ? applySourceCsvImport(rawCsv)
+                                    : targetType === "citation"
+                                      ? applyCitationCsvImport(rawCsv)
+                                      : targetType === "polity-transition"
+                                        ? applyPolityTransitionCsvImport(rawCsv)
+                                        : targetType === "dynasty-succession"
+                                          ? applyDynastySuccessionCsvImport(rawCsv)
+                                          : targetType === "region-relation"
+                                            ? applyRegionRelationCsvImport(rawCsv)
+                                            : targetType === "historical-period-relation"
+                                              ? applyHistoricalPeriodRelationCsvImport(rawCsv)
             : applyEventCsvImport(rawCsv);
       revalidatePath("/events");
       revalidatePath("/people");
@@ -172,7 +232,12 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
       revalidatePath("/periods");
       revalidatePath("/religions");
       revalidatePath("/sects");
+      revalidatePath("/sources");
       revalidatePath("/tags");
+      revalidatePath("/polity-transitions/new");
+      revalidatePath("/dynasty-successions/new");
+      revalidatePath("/region-relations/new");
+      revalidatePath("/period-relations/new");
       revalidatePath("/manage/data");
       revalidatePath("/graph/events");
       revalidatePath("/timeline");
