@@ -234,6 +234,7 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
         summary: {
           preview: preview.summary,
           importedCount: result.importedCount,
+          mergedCount: result.mergedCount,
           unknownHeaders: preview.unknownHeaders
         }
       });

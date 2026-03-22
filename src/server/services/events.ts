@@ -558,6 +558,48 @@ export function appendConflictOutcomeToEvent(
   });
 }
 
+export function replaceConflictOutcomeOnEvent(
+  id: number,
+  outcome: {
+    winnerParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
+    loserParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
+    winnerSummary?: string;
+    loserSummary?: string;
+    settlementSummary?: string;
+    note?: string;
+  }
+) {
+  const event = getEventById(id);
+  if (!event) {
+    throw new Error(`イベントが見つかりません: ${id}`);
+  }
+
+  const before = buildEventHistorySnapshot(id);
+  replaceConflictOutcome(id, {
+    eventId: id,
+    winnerSummary: nullable(outcome.winnerSummary),
+    loserSummary: nullable(outcome.loserSummary),
+    settlementSummary: nullable(outcome.settlementSummary),
+    note: nullable(outcome.note)
+  });
+  replaceConflictOutcomeParticipants(
+    id,
+    [...outcome.winnerParticipants, ...outcome.loserParticipants].map((participant) => ({
+      eventId: id,
+      side: participant.side,
+      participantType: participant.participantType,
+      participantId: participant.participantId
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "event",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
+}
+
 function nullable(value: string | undefined) {
   return value && value.length > 0 ? value : null;
 }

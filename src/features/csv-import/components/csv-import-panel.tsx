@@ -42,8 +42,8 @@ export function CsvImportPanel() {
       <h2 className="text-lg font-semibold">CSV import</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
         `Sprint 10` では `Source / Citation / PolityTransition / DynastySuccession / RegionRelation / HistoricalPeriodRelation CSV`
-        も preview/import できます。まず preview し、`error` と `duplicate-candidate` がないことを確認してから
-        import します。
+        も preview/import できます。まず preview し、`error` がないことを確認してから import します。`duplicate-candidate`
+        が 1 件だけの行は自動マージされます。
       </p>
 
       <form action={action} className="mt-6 space-y-4">
@@ -456,6 +456,8 @@ export function CsvImportPanel() {
                   : "Event"}
             {" "}
             件数: {state.result.importedCount}
+            {" / "}
+            merge: {state.result.mergedCount}
           </p>
         </div>
       ) : null}
