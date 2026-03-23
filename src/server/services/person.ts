@@ -156,6 +156,7 @@ export function createPersonFromInput(input: PersonInput) {
   return db.transaction(() => {
     const personId = createPerson({
       name: input.name,
+      reading: nullable(input.reading),
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredTime("birth", input.birthTimeExpression),
@@ -192,6 +193,7 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
     const before = buildPersonHistorySnapshot(id);
     updatePerson(id, {
       name: input.name,
+      reading: nullable(input.reading),
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredTime("birth", input.birthTimeExpression),
@@ -368,6 +370,7 @@ function buildPersonHistorySnapshot(id: number) {
 function matchesPersonFilters(
   person: {
     name: string;
+    reading: string | null;
     aliases: string | null;
     note: string | null;
     regionNames: string[];
@@ -388,6 +391,7 @@ function matchesPersonFilters(
     !matchesQuery(
       [
         person.name,
+        person.reading,
         person.aliases,
         person.note,
         person.regionNames.join(", "),

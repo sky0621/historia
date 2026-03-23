@@ -15,6 +15,7 @@ export const roleAssignmentSchema = z.object({
 
 export const personSchema = z.object({
   name: z.string().trim().min(1, "氏名は必須です"),
+  reading: z.string().trim().optional(),
   aliases: z.array(z.string().trim()).default([]),
   note: z.string().trim().optional(),
   birthTimeExpression: timeExpressionSchema.optional(),
@@ -32,6 +33,7 @@ export type RoleAssignmentInput = z.infer<typeof roleAssignmentSchema>;
 export function parsePersonFormData(formData: FormData): PersonInput {
   return personSchema.parse({
     name: formData.get("name"),
+    reading: formData.get("reading") ?? undefined,
     aliases: normalizeAliases(formData.get("aliases")),
     note: formData.get("note") ?? undefined,
     birthTimeExpression: parseTimeExpressionFormData(formData, "birthTime"),

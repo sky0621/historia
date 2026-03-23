@@ -564,6 +564,7 @@ describe("csv import service", () => {
       {
         id: 50,
         name: "最澄",
+        reading: "さいちょう",
         aliases: "伝教大師",
         note: null,
         birthCalendarEra: "CE",
@@ -582,7 +583,7 @@ describe("csv import service", () => {
     ]);
 
     const preview = previewPersonCsvImport(
-      "name,aliases,birth_start_year,death_start_year,regions,religions,sects,periods\n最澄,伝教大師,767,822,近江,仏教,天台宗,平安時代"
+      "name,reading,aliases,birth_start_year,death_start_year,regions,religions,sects,periods\n最澄,さいちょう,伝教大師,767,822,近江,仏教,天台宗,平安時代"
     );
 
     expect(preview.summary).toEqual({
@@ -597,6 +598,7 @@ describe("csv import service", () => {
       status: "duplicate-candidate",
       input: {
         name: "最澄",
+        reading: "さいちょう",
         aliases: ["伝教大師"],
         regionIds: [10],
         religionIds: [11],
@@ -610,7 +612,7 @@ describe("csv import service", () => {
     repositoryMocks.listRegions.mockReturnValue([{ id: 10, name: "近江" }]);
 
     const result = applyPersonCsvImport(
-      "name,birth_start_year,regions\n最澄,767,近江\n空海,774,近江"
+      "name,reading,birth_start_year,regions\n最澄,さいちょう,767,近江\n空海,くうかい,774,近江"
     );
 
     expect(result).toEqual({
@@ -624,6 +626,7 @@ describe("csv import service", () => {
       1,
       expect.objectContaining({
         name: "最澄",
+        reading: "さいちょう",
         regionIds: [10]
       })
     );
@@ -656,6 +659,7 @@ describe("csv import service", () => {
       {
         id: 50,
         name: "最澄",
+        reading: "さいちょう",
         aliases: "伝教大師",
         note: null,
         birthCalendarEra: "CE",
@@ -673,7 +677,7 @@ describe("csv import service", () => {
       }
     ]);
 
-    expect(applyPersonCsvImport("name,birth_start_year,death_start_year\n最澄,767,822")).toEqual({
+    expect(applyPersonCsvImport("name,reading,birth_start_year,death_start_year\n最澄,さいちょう,767,822")).toEqual({
       kind: "person",
       insertedCount: 0,
       updatedCount: 1,
@@ -682,7 +686,7 @@ describe("csv import service", () => {
     expect(repositoryMocks.createPersonFromInput).not.toHaveBeenCalled();
     expect(repositoryMocks.updatePersonFromInput).toHaveBeenCalledWith(
       50,
-      expect.objectContaining({ name: "最澄" })
+      expect.objectContaining({ name: "最澄", reading: "さいちょう" })
     );
   });
 

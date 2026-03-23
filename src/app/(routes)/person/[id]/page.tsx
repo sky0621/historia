@@ -17,6 +17,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Person</p>
           <h1 className="mt-2 text-3xl font-semibold">{view.person.name}</h1>
+          {view.person.reading ? <p className="mt-2 text-sm leading-6 text-[var(--muted)]">読み方: {view.person.reading}</p> : null}
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">生没年: {view.lifeLabel}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             {view.roles.length > 0 ? `役職 ${view.roles.length} 件 / ` : "役職 0 件 / "}
@@ -46,6 +47,10 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
         <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
           <h2 className="text-lg font-semibold">基本情報</h2>
           <dl className="mt-6 grid gap-4 text-sm">
+            <div>
+              <dt className="font-medium text-[var(--muted)]">読み方</dt>
+              <dd className="mt-1">{view.person.reading ?? "-"}</dd>
+            </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">別名</dt>
               <dd className="mt-1">{view.person.aliases ?? "-"}</dd>

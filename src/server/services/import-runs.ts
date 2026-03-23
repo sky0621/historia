@@ -24,7 +24,7 @@ export function recordImportRun(input: ImportRunRecordInput) {
   ensureImportRunsTable();
   sqlite
     .prepare(
-      `INSERT INTO import_runs (source_format, target_type, action, file_name, status, summary_json, created_at)
+      `INSERT INTO import_runs (source_format, target_type, "action", file_name, status, summary_json, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
@@ -42,7 +42,7 @@ export function getRecentImportRuns(limit = 20) {
   ensureImportRunsTable();
   const rows = sqlite
     .prepare(
-      `SELECT id, source_format, target_type, action, file_name, status, summary_json, created_at
+      `SELECT id, source_format, target_type, "action", file_name, status, summary_json, created_at
        FROM import_runs
        ORDER BY created_at DESC
        LIMIT ?`
@@ -64,14 +64,14 @@ export function getRecentImportRuns(limit = 20) {
 function ensureImportRunsTable() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS import_runs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      source_format TEXT NOT NULL,
-      target_type TEXT NOT NULL,
-      action TEXT NOT NULL,
-      file_name TEXT,
-      status TEXT NOT NULL,
-      summary_json TEXT NOT NULL,
-      created_at INTEGER NOT NULL
+      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+      "source_format" TEXT NOT NULL,
+      "target_type" TEXT NOT NULL,
+      "action" TEXT NOT NULL,
+      "file_name" TEXT,
+      "status" TEXT NOT NULL,
+      "summary_json" TEXT NOT NULL,
+      "created_at" INTEGER NOT NULL
     )
   `);
 }

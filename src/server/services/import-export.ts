@@ -94,13 +94,13 @@ export function buildEventsCsv() {
 export function buildPersonCsv() {
   const rows = sqlite
     .prepare(
-      `SELECT id, name, aliases, birth_display_label, death_display_label
+      `SELECT id, name, reading, aliases, birth_display_label, death_display_label
        FROM persons
        ORDER BY name`
     )
     .all() as Array<Record<string, unknown>>;
 
-  return toCsv(rows, ["id", "name", "aliases", "birth_display_label", "death_display_label"]);
+  return toCsv(rows, ["id", "name", "reading", "aliases", "birth_display_label", "death_display_label"]);
 }
 
 export function previewImportPayload(rawJson: string) {

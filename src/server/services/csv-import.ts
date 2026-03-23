@@ -133,6 +133,7 @@ const EVENT_HEADERS = [
 const REQUIRED_EVENT_HEADERS = ["title", "event_type"] as const;
 const PERSON_HEADERS = [
   "name",
+  "reading",
   "aliases",
   "note",
   "birth_label",
@@ -538,6 +539,7 @@ export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonI
     const deathTimeExpression = parseTimeExpressionFromCsv(cells, "death", issues);
     const inputCandidate = {
       name,
+      reading: normalizeOptionalString(cells.reading),
       aliases: parseCommaSeparatedNames(cells.aliases),
       note: normalizeOptionalString(cells.note),
       birthTimeExpression,

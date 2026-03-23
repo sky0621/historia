@@ -213,7 +213,7 @@ export function CsvImportPanel() {
             onChange={(event) => setPayload(event.target.value)}
             placeholder={
               targetType === "person"
-                ? "name,aliases,birth_start_year,regions\n最澄,伝教大師,767,近江|比叡山"
+                ? "name,reading,aliases,birth_start_year,regions\n最澄,さいちょう,伝教大師,767,近江|比叡山"
                 : targetType === "role-assignment"
                   ? "person,title,polity,dynasty,time_start_year,time_end_year,is_incumbent\n最澄,天台座主,日本,,804,822,false"
                   : targetType === "event-relation"

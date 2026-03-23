@@ -30,6 +30,7 @@ type Props = {
   defaultValues?: {
     id?: number;
     name: string;
+    reading: string;
     aliases: string;
     note: string;
     regionIds: number[];
@@ -65,6 +66,10 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
           <label className="grid gap-2 text-sm">
             <span>別名</span>
             <input name="aliases" defaultValue={defaultValues?.aliases ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          </label>
+          <label className="grid gap-2 text-sm">
+            <span>読み方</span>
+            <input name="reading" defaultValue={defaultValues?.reading ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
           </label>
         </div>
 

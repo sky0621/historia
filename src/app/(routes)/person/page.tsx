@@ -125,6 +125,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
           <thead className="bg-stone-100/70">
             <tr>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">氏名</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">読み方</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">生没年</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">役職</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">宗教・時代区分</th>
@@ -134,7 +135,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
           <tbody>
             {person.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={6} className="px-5 py-6 text-[var(--muted)]">
                   まだ人物はありません。
                 </td>
               </tr>
@@ -146,6 +147,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
                       {person.name}
                     </Link>
                   </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">{person.reading ?? "-"}</td>
                   <td className="px-5 py-4">{person.lifeLabel}</td>
                   <td className="px-5 py-4">
                     {person.roles.length === 0 ? (

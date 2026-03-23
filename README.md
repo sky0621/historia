@@ -7,6 +7,7 @@
 - TypeScript
 - Tailwind CSS 4
 - Drizzle ORM
+- sqldef (`sqlite3def`)
 - SQLite
 - Zod
 - react-hook-form
@@ -14,12 +15,19 @@
 ## Setup
 1. `pnpm install`
 2. `cp .env.example .env`
-3. `pnpm db:generate`
+3. `sqlite3def` をインストールする
 4. `pnpm db:migrate`
 5. `pnpm db:seed`
 6. `pnpm dev`
 
 `DATABASE_URL` の既定値は `./.data/historia.db` です。
+
+macOS では `brew install sqldef/sqldef/sqlite3def` で入れられます。
+
+## Schema Management
+- アプリの ORM 定義は `src/db/schema/*.ts` にあります。
+- migration の正本は [src/db/schema.sql](/Users/sky0621/work/github.com/sky0621/historia/src/db/schema.sql) です。
+- 変更前の確認は `pnpm db:dry-run`、適用は `pnpm db:migrate` を使います。
 
 ## Seed Data
 - `pnpm db:seed` で、地域、国家、王朝、人物、時代区分、宗教、宗派、イベント、戦争・乱、出典、引用、履歴の最小サンプルデータを再投入できます。
@@ -67,6 +75,7 @@
 - 必須列:
   - `name`
 - 任意列:
+  - `reading`
   - `aliases`
   - `note`
   - `birth_label`
