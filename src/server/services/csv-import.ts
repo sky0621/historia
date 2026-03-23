@@ -136,16 +136,14 @@ const PERSON_HEADERS = [
   "reading",
   "aliases",
   "note",
-  "birth_label",
-  "birth_calendar_era",
-  "birth_start_year",
-  "birth_end_year",
-  "birth_is_approximate",
-  "death_label",
-  "death_calendar_era",
-  "death_start_year",
-  "death_end_year",
-  "death_is_approximate",
+  "from_label",
+  "from_calendar_era",
+  "from_year",
+  "from_is_approximate",
+  "to_label",
+  "to_calendar_era",
+  "to_year",
+  "to_is_approximate",
   "regions",
   "religions",
   "sects",
@@ -188,11 +186,14 @@ const POLITY_HEADERS = [
   "name",
   "aliases",
   "note",
-  "time_label",
-  "time_calendar_era",
-  "time_start_year",
-  "time_end_year",
-  "time_is_approximate",
+  "from_label",
+  "from_calendar_era",
+  "from_year",
+  "from_is_approximate",
+  "to_label",
+  "to_calendar_era",
+  "to_year",
+  "to_is_approximate",
   "regions"
 ] as const;
 const REQUIRED_POLITY_HEADERS = ["name"] as const;
@@ -535,8 +536,8 @@ export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonI
 
     const cells = mapRowToCells(parsed.headers, row.values);
     const name = cells.name.trim();
-    const birthTimeExpression = parseTimeExpressionFromCsv(cells, "birth", issues);
-    const deathTimeExpression = parseTimeExpressionFromCsv(cells, "death", issues);
+    const birthTimeExpression = parsePersonTimeExpressionFromCsv(cells, "from", issues);
+    const deathTimeExpression = parsePersonTimeExpressionFromCsv(cells, "to", issues);
     const inputCandidate = {
       name,
       reading: normalizeOptionalString(cells.reading),
@@ -1068,7 +1069,8 @@ export function previewPolityCsvImport(rawCsv: string): CsvPreviewResult<PolityC
       name: cells.name.trim(),
       aliases: parseCommaSeparatedNames(cells.aliases),
       note: normalizeOptionalString(cells.note),
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
+      fromTimeExpression: parsePersonTimeExpressionFromCsv(cells, "from", issues),
+      toTimeExpression: parsePersonTimeExpressionFromCsv(cells, "to", issues),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues)
     };
 
@@ -2306,12 +2308,15 @@ function mapRowToCells(headers: string[], values: string[]) {
 function parseTimeExpressionFromCsv(
   cells: Record<string, string>,
   prefix: "time" | "birth" | "death",
-  issues: CsvPreviewIssue[]
+  issues: CsvPreviewIssue[],
+  allowEndYear = true
 ): TimeExpressionInput | undefined {
   const label = normalizeOptionalString(cells[`${prefix}_label`]);
   const calendarEraRaw = normalizeOptionalString(cells[`${prefix}_calendar_era`]);
   const startYear = parseOptionalInteger(cells[`${prefix}_start_year`], `${prefix}_start_year`, issues);
-  const endYear = parseOptionalInteger(cells[`${prefix}_end_year`], `${prefix}_end_year`, issues);
+  const endYear = allowEndYear
+    ? parseOptionalInteger(cells[`${prefix}_end_year`], `${prefix}_end_year`, issues)
+    : undefined;
   const isApproximate = parseOptionalBoolean(cells[`${prefix}_is_approximate`], `${prefix}_is_approximate`, issues);
 
   if (!label && !calendarEraRaw && startYear === undefined && endYear === undefined && isApproximate === undefined) {
@@ -2327,7 +2332,7 @@ function parseTimeExpressionFromCsv(
     return undefined;
   }
 
-  if (startYear === undefined && endYear !== undefined) {
+  if (allowEndYear && startYear === undefined && endYear !== undefined) {
     issues.push({
       field: `${prefix}_start_year`,
       message: "終了年だけでは登録できません"
@@ -2338,6 +2343,38 @@ function parseTimeExpressionFromCsv(
     calendarEra,
     startYear,
     endYear,
+    isApproximate: isApproximate ?? false,
+    precision: "year",
+    displayLabel: label ?? ""
+  };
+}
+
+function parsePersonTimeExpressionFromCsv(
+  cells: Record<string, string>,
+  prefix: "from" | "to",
+  issues: CsvPreviewIssue[]
+): TimeExpressionInput | undefined {
+  const label = normalizeOptionalString(cells[`${prefix}_label`]);
+  const calendarEraRaw = normalizeOptionalString(cells[`${prefix}_calendar_era`]);
+  const startYear = parseOptionalInteger(cells[`${prefix}_year`], `${prefix}_year`, issues);
+  const isApproximate = parseOptionalBoolean(cells[`${prefix}_is_approximate`], `${prefix}_is_approximate`, issues);
+
+  if (!label && !calendarEraRaw && startYear === undefined && isApproximate === undefined) {
+    return undefined;
+  }
+
+  const calendarEra = calendarEraRaw ?? "CE";
+  if (calendarEra !== "BCE" && calendarEra !== "CE") {
+    issues.push({
+      field: `${prefix}_calendar_era`,
+      message: "BCE または CE を指定してください"
+    });
+    return undefined;
+  }
+
+  return {
+    calendarEra,
+    startYear,
     isApproximate: isApproximate ?? false,
     precision: "year",
     displayLabel: label ?? ""
@@ -2567,8 +2604,8 @@ function findPersonDuplicateCandidates(existingPerson: ReturnType<typeof listPer
         return false;
       }
 
-      const existingBirthYear = typeof personRecord.birthStartYear === "number" ? personRecord.birthStartYear : null;
-      const existingDeathYear = typeof personRecord.deathStartYear === "number" ? personRecord.deathStartYear : null;
+      const existingBirthYear = typeof personRecord.fromYear === "number" ? personRecord.fromYear : null;
+      const existingDeathYear = typeof personRecord.toYear === "number" ? personRecord.toYear : null;
       const birthMatches = birthYear === undefined || existingBirthYear === null ? true : existingBirthYear === birthYear;
       const deathMatches = deathYear === undefined || existingDeathYear === null ? true : existingDeathYear === deathYear;
       return birthMatches && deathMatches;

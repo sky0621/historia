@@ -14,7 +14,7 @@ function timeColumns(prefix: string) {
 export const regions = sqliteTable("regions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  parentRegionId: integer("parent_region_id"),
+  reading: text("reading"),
   aliases: text("aliases"),
   description: text("description"),
   note: text("note")
@@ -23,26 +23,34 @@ export const regions = sqliteTable("regions", {
 export const periodCategories = sqliteTable("period_categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  reading: text("reading"),
   description: text("description")
 });
 
 export const tags = sqliteTable("tags", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull()
+  name: text("name").notNull(),
+  reading: text("reading")
 });
 
 export const polities = sqliteTable("polities", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  reading: text("reading"),
   aliases: text("aliases"),
   note: text("note"),
-  ...timeColumns("time")
+  fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
+  fromYear: integer("from_year"),
+  fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
+  toCalendarEra: integer("to_calendar_era", { mode: "boolean" }).default(false),
+  toYear: integer("to_year"),
+  toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
 export const dynasties = sqliteTable("dynasties", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  polityId: integer("polity_id").notNull(),
   name: text("name").notNull(),
+  reading: text("reading"),
   aliases: text("aliases"),
   note: text("note"),
   ...timeColumns("time")
@@ -54,16 +62,18 @@ export const persons = sqliteTable("persons", {
   reading: text("reading"),
   aliases: text("aliases"),
   note: text("note"),
-  ...timeColumns("birth"),
-  ...timeColumns("death")
+  fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
+  fromYear: integer("from_year"),
+  fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
+  toCalendarEra: integer("to_calendar_era", { mode: "boolean" }).default(false),
+  toYear: integer("to_year"),
+  toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
 export const roleAssignments = sqliteTable("role_assignments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  personId: integer("person_id").notNull(),
   title: text("title").notNull(),
-  polityId: integer("polity_id"),
-  dynastyId: integer("dynasty_id"),
+  reading: text("reading"),
   note: text("note"),
   isIncumbent: integer("is_incumbent", { mode: "boolean" }).default(false),
   ...timeColumns("time")
@@ -71,9 +81,8 @@ export const roleAssignments = sqliteTable("role_assignments", {
 
 export const historicalPeriods = sqliteTable("historical_periods", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  categoryId: integer("category_id").notNull(),
-  polityId: integer("polity_id"),
   name: text("name").notNull(),
+  reading: text("reading"),
   regionLabel: text("region_label"),
   aliases: text("aliases"),
   description: text("description"),
@@ -84,6 +93,7 @@ export const historicalPeriods = sqliteTable("historical_periods", {
 export const religions = sqliteTable("religions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  reading: text("reading"),
   aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
@@ -92,9 +102,8 @@ export const religions = sqliteTable("religions", {
 
 export const sects = sqliteTable("sects", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  religionId: integer("religion_id").notNull(),
-  parentSectId: integer("parent_sect_id"),
   name: text("name").notNull(),
+  reading: text("reading"),
   aliases: text("aliases"),
   description: text("description"),
   note: text("note"),

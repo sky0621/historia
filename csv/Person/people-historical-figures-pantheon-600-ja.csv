@@ -1,4 +1,4 @@
-name,aliases,note,birth_label,birth_calendar_era,birth_start_year,birth_end_year,birth_is_approximate,death_label,death_calendar_era,death_start_year,death_end_year,death_is_approximate,regions,religions,sects,periods
+name,aliases,note,from_label,from_calendar_era,from_year,from_is_approximate,to_label,to_calendar_era,to_year,to_is_approximate,regions,religions,sects,periods
 ムハンマド・イブン＝アブドゥッラーフ,Muhammad,Pantheon職業: Religious Figure / 出生国: Saudi Arabia / 出生地: Mecca,,CE,570,,false,,CE,632,,false,,,,
 釈迦,The Buddha,Pantheon職業: Philosopher / 出生国: Nepal / 出生地: Lumbini,,BCE,566,,false,,BCE,452,,false,,,,
 アイザック・ニュートン,Isaac Newton,Pantheon職業: Physicist / 出生国: United Kingdom / 出生地: Woolsthorpe-by-Colsterworth,,CE,1643,,false,,CE,1726,,false,,,,

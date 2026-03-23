@@ -30,8 +30,8 @@ macOS では `brew install sqldef/sqldef/sqlite3def` で入れられます。
 - 変更前の確認は `pnpm db:dry-run`、適用は `pnpm db:migrate` を使います。
 
 ## Seed Data
-- `pnpm db:seed` で、地域、国家、王朝、人物、時代区分、宗教、宗派、イベント、戦争・乱、出典、引用、履歴の最小サンプルデータを再投入できます。
-- Seed は対象テーブルを初期化してから投入するため、既存データは上書きされます。
+- `pnpm db:seed` は対象テーブルを空にします。
+- 初期サンプルデータの投入は行いません。
 
 ## Data Operations
 - `/manage/data` で JSON export/import と `Event` / `Person` CSV export を使えます。
@@ -57,11 +57,14 @@ macOS では `brew install sqldef/sqldef/sqlite3def` で入れられます。
   - `event_type`
 - 任意列:
   - `description`
-  - `time_label`
-  - `time_calendar_era`
-  - `time_start_year`
-  - `time_end_year`
-  - `time_is_approximate`
+  - `from_label`
+  - `from_calendar_era`
+  - `from_year`
+  - `from_is_approximate`
+  - `to_label`
+  - `to_calendar_era`
+  - `to_year`
+  - `to_is_approximate`
   - `tags`
   - `people`
   - `polities`
@@ -78,16 +81,14 @@ macOS では `brew install sqldef/sqldef/sqlite3def` で入れられます。
   - `reading`
   - `aliases`
   - `note`
-  - `birth_label`
-  - `birth_calendar_era`
-  - `birth_start_year`
-  - `birth_end_year`
-  - `birth_is_approximate`
-  - `death_label`
-  - `death_calendar_era`
-  - `death_start_year`
-  - `death_end_year`
-  - `death_is_approximate`
+  - `from_label`
+  - `from_calendar_era`
+  - `from_year`
+  - `from_is_approximate`
+  - `to_label`
+  - `to_calendar_era`
+  - `to_year`
+  - `to_is_approximate`
   - `regions`
   - `religions`
   - `sects`

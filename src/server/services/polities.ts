@@ -56,7 +56,7 @@ export function getPolityListView(filters: PolityListFilters = {}) {
   return polities
     .map((polity) => ({
       ...polity,
-      timeLabel: formatStoredTime("time", polity),
+      timeLabel: formatStoredPolityTime(polity),
       regionNames: links
         .filter((link) => link.polityId === polity.id)
         .map((link) => regionNameById.get(link.regionId))
@@ -140,8 +140,9 @@ export function getPolityDetailView(id: number) {
     relatedEvents: getRelatedEvents({ polityId: id }),
     polityTransitions: getPolityTransitionView(id),
     dynastySuccessions: getDynastySuccessionViewForPolity(id),
-    timeLabel: formatStoredTime("time", polity),
-    defaultTimeExpression: extractTimeExpression("time", polity),
+    timeLabel: formatStoredPolityTime(polity),
+    defaultFromTimeExpression: extractPolityTimeExpression("from", polity),
+    defaultToTimeExpression: extractPolityTimeExpression("to", polity),
     citations: getCitationListForTarget("polity", id),
     changeHistory: getHistoryView("polity", id)
   };
@@ -181,7 +182,8 @@ export function createPolityFromInput(input: PolityInput) {
       name: input.name,
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
-      ...toStoredTime("time", input.timeExpression)
+      ...toStoredPolityTime("from", input.fromTimeExpression),
+      ...toStoredPolityTime("to", input.toTimeExpression)
     },
     input.regionIds
   );
@@ -202,7 +204,8 @@ export function updatePolityFromInput(id: number, input: PolityInput) {
       name: input.name,
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
-      ...toStoredTime("time", input.timeExpression)
+      ...toStoredPolityTime("from", input.fromTimeExpression),
+      ...toStoredPolityTime("to", input.toTimeExpression)
     },
     input.regionIds
   );
@@ -228,12 +231,12 @@ export function removePolity(id: number) {
 export function createDynastyFromInput(input: DynastyInput) {
   return createDynasty(
     {
-      polityId: input.polityId,
       name: input.name,
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredTime("time", input.timeExpression)
     },
+    input.polityId,
     input.regionIds
   );
 }
@@ -242,12 +245,12 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
   updateDynasty(
     id,
     {
-      polityId: input.polityId,
       name: input.name,
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredTime("time", input.timeExpression)
     },
+    input.polityId,
     input.regionIds
   );
 }
@@ -277,6 +280,18 @@ function toStoredTime(prefix: string, value: TimeExpressionInput | undefined) {
   };
 }
 
+function toStoredPolityTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+
+  return {
+    [calendarEraKey]: value ? value.calendarEra === "BCE" : null,
+    [yearKey]: value?.startYear ?? null,
+    [approximateKey]: value?.isApproximate ?? false
+  };
+}
+
 function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
     calendarEra: (value[`${prefix}CalendarEra`] as "BCE" | "CE" | null) ?? "CE",
@@ -288,9 +303,37 @@ function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
   });
 }
 
+function extractPolityTimeExpression(prefix: "from" | "to", value: Record<string, unknown>) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+  const isBce = value[calendarEraKey] as boolean | null | undefined;
+  const startYear = (value[yearKey] as number | null) ?? null;
+  const isApproximate = Boolean(value[approximateKey]);
+  const calendarEra = isBce ? "BCE" : "CE";
+
+  if (startYear === null && !isApproximate && isBce == null) {
+    return undefined;
+  }
+
+  return {
+    calendarEra,
+    startYear: startYear ?? undefined,
+    isApproximate,
+    precision: "year",
+    displayLabel: ""
+  } satisfies TimeExpressionInput;
+}
+
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function formatStoredPolityTime(value: Record<string, unknown>) {
+  const from = extractPolityTimeExpression("from", value);
+  const to = extractPolityTimeExpression("to", value);
+  return [from ? formatTimeExpression(from) : "年未詳", to ? formatTimeExpression(to) : "年未詳"].join(" - ");
 }
 
 function normalizeQuery(value?: string) {

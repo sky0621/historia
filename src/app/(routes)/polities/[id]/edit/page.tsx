@@ -22,7 +22,8 @@ export default async function EditPolityPage({ params }: { params: Promise<{ id:
         aliases: view.polity.aliases ?? "",
         note: view.polity.note ?? "",
         regionIds: view.regions.map((region) => region.id),
-        timeExpression: view.defaultTimeExpression
+        fromTimeExpression: view.defaultFromTimeExpression,
+        toTimeExpression: view.defaultToTimeExpression
       }}
     />
   );

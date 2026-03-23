@@ -9,7 +9,8 @@ export const politySchema = z.object({
   name: z.string().trim().min(1, "名称は必須です"),
   aliases: aliasesSchema,
   note: z.string().trim().optional(),
-  timeExpression: timeExpressionSchema.optional(),
+  fromTimeExpression: timeExpressionSchema.optional(),
+  toTimeExpression: timeExpressionSchema.optional(),
   regionIds: regionIdsSchema
 });
 
@@ -30,7 +31,8 @@ export function parsePolityFormData(formData: FormData): PolityInput {
     name: formData.get("name"),
     aliases: normalizeAliases(formData.get("aliases")),
     note: formData.get("note") ?? undefined,
-    timeExpression: parseTimeExpressionFormData(formData, "time"),
+    fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
+    toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
     regionIds: normalizeIds(formData.getAll("regionIds"))
   });
 }

@@ -80,9 +80,9 @@ export function getPersonListView(filters: PersonListFilters = {}) {
   return person
     .map((person) => ({
       ...person,
-      birthLabel: formatStoredTime("birth", person),
-      deathLabel: formatStoredTime("death", person),
-      lifeLabel: [formatStoredTime("birth", person), formatStoredTime("death", person)].join(" - "),
+      birthLabel: formatStoredPersonTime("birth", person),
+      deathLabel: formatStoredPersonTime("death", person),
+      lifeLabel: [formatStoredPersonTime("birth", person), formatStoredPersonTime("death", person)].join(" - "),
       regionNames: regionLinks
         .filter((link) => link.personId === person.id)
         .map((link) => regionById.get(link.regionId))
@@ -143,9 +143,9 @@ export function getPersonDetailView(id: number) {
       timeLabel: formatStoredTime("time", role),
       defaultTimeExpression: extractTimeExpression("time", role)
     })),
-    defaultBirthTimeExpression: extractTimeExpression("birth", person),
-    defaultDeathTimeExpression: extractTimeExpression("death", person),
-    lifeLabel: [formatStoredTime("birth", person), formatStoredTime("death", person)].join(" - "),
+    defaultBirthTimeExpression: extractPersonTimeExpression("birth", person),
+    defaultDeathTimeExpression: extractPersonTimeExpression("death", person),
+    lifeLabel: [formatStoredPersonTime("birth", person), formatStoredPersonTime("death", person)].join(" - "),
     formOptions: options,
     citations: getCitationListForTarget("person", id),
     changeHistory: getHistoryView("person", id)
@@ -159,8 +159,8 @@ export function createPersonFromInput(input: PersonInput) {
       reading: nullable(input.reading),
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
-      ...toStoredTime("birth", input.birthTimeExpression),
-      ...toStoredTime("death", input.deathTimeExpression)
+      ...toStoredPersonTime("birth", input.birthTimeExpression),
+      ...toStoredPersonTime("death", input.deathTimeExpression)
     });
 
     replacePersonRegionLinks(personId, input.regionIds);
@@ -196,8 +196,8 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
       reading: nullable(input.reading),
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
-      ...toStoredTime("birth", input.birthTimeExpression),
-      ...toStoredTime("death", input.deathTimeExpression)
+      ...toStoredPersonTime("birth", input.birthTimeExpression),
+      ...toStoredPersonTime("death", input.deathTimeExpression)
     });
 
     replacePersonRegionLinks(id, input.regionIds);
@@ -323,6 +323,18 @@ function toStoredTime(prefix: string, value: TimeExpressionInput | undefined) {
   };
 }
 
+function toStoredPersonTime(prefix: "birth" | "death", value: TimeExpressionInput | undefined) {
+  const calendarEraKey = prefix === "birth" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "birth" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "birth" ? "fromIsApproximate" : "toIsApproximate";
+
+  return {
+    [calendarEraKey]: value ? value.calendarEra === "BCE" : null,
+    [yearKey]: value?.startYear ?? null,
+    [approximateKey]: value?.isApproximate ?? false
+  };
+}
+
 function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
     calendarEra: (value[`${prefix}CalendarEra`] as "BCE" | "CE" | null) ?? "CE",
@@ -334,8 +346,35 @@ function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
   });
 }
 
+function extractPersonTimeExpression(prefix: "birth" | "death", value: Record<string, unknown>) {
+  const calendarEraKey = prefix === "birth" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "birth" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "birth" ? "fromIsApproximate" : "toIsApproximate";
+  const isBce = value[calendarEraKey] as boolean | null | undefined;
+  const startYear = (value[yearKey] as number | null) ?? null;
+  const isApproximate = Boolean(value[approximateKey]);
+  const calendarEra = isBce ? "BCE" : "CE";
+
+  if (startYear === null && !isApproximate && isBce == null) {
+    return undefined;
+  }
+
+  return {
+    calendarEra,
+    startYear: startYear ?? undefined,
+    isApproximate,
+    precision: "year",
+    displayLabel: ""
+  } satisfies TimeExpressionInput;
+}
+
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
+  return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function formatStoredPersonTime(prefix: "birth" | "death", value: Record<string, unknown>) {
+  const extracted = extractPersonTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
 }
 

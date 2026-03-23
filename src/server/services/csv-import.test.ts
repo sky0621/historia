@@ -480,7 +480,7 @@ describe("csv import service", () => {
     expect(() => previewEventCsvImport("description,time_start_year\n説明,794")).toThrow(
       "必須ヘッダーが不足しています: title, event_type"
     );
-    expect(() => previewPersonCsvImport("aliases,birth_start_year\n伝教大師,767")).toThrow(
+    expect(() => previewPersonCsvImport("aliases,from_year\n伝教大師,767")).toThrow(
       "必須ヘッダーが不足しています: name"
     );
   });
@@ -567,23 +567,17 @@ describe("csv import service", () => {
         reading: "さいちょう",
         aliases: "伝教大師",
         note: null,
-        birthCalendarEra: "CE",
-        birthStartYear: 767,
-        birthEndYear: null,
-        birthIsApproximate: false,
-        birthPrecision: "year",
-        birthDisplayLabel: "767年",
-        deathCalendarEra: "CE",
-        deathStartYear: 822,
-        deathEndYear: null,
-        deathIsApproximate: false,
-        deathPrecision: "year",
-        deathDisplayLabel: "822年"
+        fromCalendarEra: false,
+        fromYear: 767,
+        fromIsApproximate: false,
+        toCalendarEra: false,
+        toYear: 822,
+        toIsApproximate: false
       }
     ]);
 
     const preview = previewPersonCsvImport(
-      "name,reading,aliases,birth_start_year,death_start_year,regions,religions,sects,periods\n最澄,さいちょう,伝教大師,767,822,近江,仏教,天台宗,平安時代"
+      "name,reading,aliases,from_year,to_year,regions,religions,sects,periods\n最澄,さいちょう,伝教大師,767,822,近江,仏教,天台宗,平安時代"
     );
 
     expect(preview.summary).toEqual({
@@ -612,7 +606,7 @@ describe("csv import service", () => {
     repositoryMocks.listRegions.mockReturnValue([{ id: 10, name: "近江" }]);
 
     const result = applyPersonCsvImport(
-      "name,reading,birth_start_year,regions\n最澄,さいちょう,767,近江\n空海,くうかい,774,近江"
+      "name,reading,from_year,regions\n最澄,さいちょう,767,近江\n空海,くうかい,774,近江"
     );
 
     expect(result).toEqual({
@@ -662,22 +656,16 @@ describe("csv import service", () => {
         reading: "さいちょう",
         aliases: "伝教大師",
         note: null,
-        birthCalendarEra: "CE",
-        birthStartYear: 767,
-        birthEndYear: null,
-        birthIsApproximate: false,
-        birthPrecision: "year",
-        birthDisplayLabel: "767年",
-        deathCalendarEra: "CE",
-        deathStartYear: 822,
-        deathEndYear: null,
-        deathIsApproximate: false,
-        deathPrecision: "year",
-        deathDisplayLabel: "822年"
+        fromCalendarEra: false,
+        fromYear: 767,
+        fromIsApproximate: false,
+        toCalendarEra: false,
+        toYear: 822,
+        toIsApproximate: false
       }
     ]);
 
-    expect(applyPersonCsvImport("name,reading,birth_start_year,death_start_year\n最澄,さいちょう,767,822")).toEqual({
+    expect(applyPersonCsvImport("name,reading,from_year,to_year\n最澄,さいちょう,767,822")).toEqual({
       kind: "person",
       insertedCount: 0,
       updatedCount: 1,
@@ -1104,17 +1092,17 @@ describe("csv import service", () => {
 
   it("previews and imports polities", () => {
     repositoryMocks.listRegions.mockReturnValue([{ id: 1, name: "東アジア" }]);
-    const preview = previewPolityCsvImport("name,time_start_year,regions\n日本,660,東アジア");
+    const preview = previewPolityCsvImport("name,from_year,regions\n日本,660,東アジア");
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
       input: {
         name: "日本",
         regionIds: [1],
-        timeExpression: expect.objectContaining({ startYear: 660 })
+        fromTimeExpression: expect.objectContaining({ startYear: 660 })
       }
     });
 
-    const result = applyPolityCsvImport("name,time_start_year,regions\n日本,660,東アジア");
+    const result = applyPolityCsvImport("name,from_year,regions\n日本,660,東アジア");
     expect(result).toEqual({ kind: "polity", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createPolityFromInput).toHaveBeenCalled();
   });

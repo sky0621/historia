@@ -1,7 +1,52 @@
+-- 人物
+CREATE TABLE `persons` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `name` text NOT NULL,
+  `reading` text, -- 読み方
+  `aliases` text,
+  `note` text,
+  `from_calendar_era` integer DEFAULT false,
+  `from_year` integer,
+  `from_is_approximate` integer DEFAULT false,
+  `to_calendar_era` integer DEFAULT false,
+  `to_year` integer,
+  `to_is_approximate` integer DEFAULT false
+);
+
+-- 国家
+CREATE TABLE `polities` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `name` text NOT NULL,
+  `reading` text, -- 読み方
+  `aliases` text,
+  `note` text,
+  `from_calendar_era` integer DEFAULT false,
+  `from_year` integer,
+  `from_is_approximate` integer DEFAULT false,
+  `to_calendar_era` integer DEFAULT false,
+  `to_year` integer,
+  `to_is_approximate` integer DEFAULT false
+);
+
+-- 王朝
+CREATE TABLE `dynasties` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `name` text NOT NULL,
+  `reading` text, -- 読み方
+  `aliases` text,
+  `note` text,
+  `time_calendar_era` text,
+  `time_start_year` integer,
+  `time_end_year` integer,
+  `time_is_approximate` integer DEFAULT false,
+  `time_precision` text,
+  `time_display_label` text
+);
+
 CREATE TABLE `regions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `name` text NOT NULL,
-  `parent_region_id` integer,
+  `reading` text, -- 読み方
   `aliases` text,
   `description` text,
   `note` text
@@ -10,67 +55,20 @@ CREATE TABLE `regions` (
 CREATE TABLE `period_categories` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `name` text NOT NULL,
+  `reading` text, -- 読み方
   `description` text
 );
 
 CREATE TABLE `tags` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `name` text NOT NULL
-);
-
-CREATE TABLE `polities` (
-  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `name` text NOT NULL,
-  `aliases` text,
-  `note` text,
-  `time_calendar_era` text,
-  `time_start_year` integer,
-  `time_end_year` integer,
-  `time_is_approximate` integer DEFAULT false,
-  `time_precision` text,
-  `time_display_label` text
-);
-
-CREATE TABLE `dynasties` (
-  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `polity_id` integer NOT NULL,
-  `name` text NOT NULL,
-  `aliases` text,
-  `note` text,
-  `time_calendar_era` text,
-  `time_start_year` integer,
-  `time_end_year` integer,
-  `time_is_approximate` integer DEFAULT false,
-  `time_precision` text,
-  `time_display_label` text
-);
-
-CREATE TABLE `persons` (
-  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `name` text NOT NULL,
-  `reading` text,
-  `aliases` text,
-  `note` text,
-  `birth_calendar_era` text,
-  `birth_start_year` integer,
-  `birth_end_year` integer,
-  `birth_is_approximate` integer DEFAULT false,
-  `birth_precision` text,
-  `birth_display_label` text,
-  `death_calendar_era` text,
-  `death_start_year` integer,
-  `death_end_year` integer,
-  `death_is_approximate` integer DEFAULT false,
-  `death_precision` text,
-  `death_display_label` text
+  `reading` text -- 読み方
 );
 
 CREATE TABLE `role_assignments` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `person_id` integer NOT NULL,
   `title` text NOT NULL,
-  `polity_id` integer,
-  `dynasty_id` integer,
+  `reading` text, -- 読み方
   `note` text,
   `is_incumbent` integer DEFAULT false,
   `time_calendar_era` text,
@@ -83,9 +81,8 @@ CREATE TABLE `role_assignments` (
 
 CREATE TABLE `historical_periods` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `category_id` integer NOT NULL,
-  `polity_id` integer,
   `name` text NOT NULL,
+  `reading` text, -- 読み方
   `region_label` text,
   `aliases` text,
   `description` text,
@@ -101,6 +98,7 @@ CREATE TABLE `historical_periods` (
 CREATE TABLE `religions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `name` text NOT NULL,
+  `reading` text, -- 読み方
   `aliases` text,
   `description` text,
   `note` text,
@@ -114,9 +112,8 @@ CREATE TABLE `religions` (
 
 CREATE TABLE `sects` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `religion_id` integer NOT NULL,
-  `parent_sect_id` integer,
   `name` text NOT NULL,
+  `reading` text, -- 読み方
   `aliases` text,
   `description` text,
   `note` text,
@@ -271,6 +268,51 @@ CREATE TABLE `import_runs` (
 CREATE TABLE `event_person_links` (
   `event_id` integer NOT NULL,
   `person_id` integer NOT NULL
+);
+
+CREATE TABLE `region_parent_links` (
+  `region_id` integer NOT NULL,
+  `parent_region_id` integer NOT NULL
+);
+
+CREATE TABLE `dynasty_polity_links` (
+  `dynasty_id` integer NOT NULL,
+  `polity_id` integer NOT NULL
+);
+
+CREATE TABLE `role_assignment_person_links` (
+  `role_assignment_id` integer NOT NULL,
+  `person_id` integer NOT NULL
+);
+
+CREATE TABLE `role_assignment_polity_links` (
+  `role_assignment_id` integer NOT NULL,
+  `polity_id` integer NOT NULL
+);
+
+CREATE TABLE `role_assignment_dynasty_links` (
+  `role_assignment_id` integer NOT NULL,
+  `dynasty_id` integer NOT NULL
+);
+
+CREATE TABLE `historical_period_category_links` (
+  `period_id` integer NOT NULL,
+  `category_id` integer NOT NULL
+);
+
+CREATE TABLE `historical_period_polity_links` (
+  `period_id` integer NOT NULL,
+  `polity_id` integer NOT NULL
+);
+
+CREATE TABLE `sect_religion_links` (
+  `sect_id` integer NOT NULL,
+  `religion_id` integer NOT NULL
+);
+
+CREATE TABLE `sect_parent_links` (
+  `sect_id` integer NOT NULL,
+  `parent_sect_id` integer NOT NULL
 );
 
 CREATE TABLE `event_polity_links` (

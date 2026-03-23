@@ -74,8 +74,22 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <TimeExpressionInputs prefix="birthTime" label="生年" defaultValue={defaultValues?.birthTimeExpression} />
-          <TimeExpressionInputs prefix="deathTime" label="没年" defaultValue={defaultValues?.deathTimeExpression} />
+          <TimeExpressionInputs
+            prefix="birthTime"
+            label="生年"
+            defaultValue={defaultValues?.birthTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
+          <TimeExpressionInputs
+            prefix="deathTime"
+            label="没年"
+            defaultValue={defaultValues?.deathTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
         </div>
 
         <SelectionGroup name="regionIds" label="関連地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} />

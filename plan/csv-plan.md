@@ -181,11 +181,14 @@
   - `event_type`
 - 任意列:
   - `description`
-  - `time_label`
-  - `time_calendar_era`
-  - `time_start_year`
-  - `time_end_year`
-  - `time_is_approximate`
+  - `from_label`
+  - `from_calendar_era`
+  - `from_year`
+  - `from_is_approximate`
+  - `to_label`
+  - `to_calendar_era`
+  - `to_year`
+  - `to_is_approximate`
   - `tags`
   - `people`
   - `polities`
@@ -204,16 +207,14 @@
 - 任意列:
   - `aliases`
   - `note`
-  - `birth_label`
-  - `birth_calendar_era`
-  - `birth_start_year`
-  - `birth_end_year`
-  - `birth_is_approximate`
-  - `death_label`
-  - `death_calendar_era`
-  - `death_start_year`
-  - `death_end_year`
-  - `death_is_approximate`
+  - `from_label`
+  - `from_calendar_era`
+  - `from_year`
+  - `from_is_approximate`
+  - `to_label`
+  - `to_calendar_era`
+  - `to_year`
+  - `to_is_approximate`
   - `regions`
   - `religions`
   - `sects`

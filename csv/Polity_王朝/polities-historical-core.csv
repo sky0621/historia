@@ -1,5 +1,5 @@
-name,aliases,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,regions
-日本,日本国,古代から近現代まで連続する日本の国家主体,,CE,660,,,日本|東アジア
+name,aliases,note,from_label,from_calendar_era,from_year,from_is_approximate,to_label,to_calendar_era,to_year,to_is_approximate,regions
+日本,日本国,古代から近現代まで連続する日本の国家主体,,CE,660,,,,,,日本|東アジア
 大和政権,ヤマト王権,古墳時代の日本列島における政権主体,,CE,250,710,true,日本|近畿|東アジア
 律令国家日本,,奈良時代から平安初期の国家体制,,CE,701,1185,false,日本|近畿|東アジア
 鎌倉幕府,,武家政権としての幕府国家体制,,CE,1185,1333,false,日本|関東|日本|東アジア

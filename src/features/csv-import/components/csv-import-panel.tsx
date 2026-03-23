@@ -213,7 +213,7 @@ export function CsvImportPanel() {
             onChange={(event) => setPayload(event.target.value)}
             placeholder={
               targetType === "person"
-                ? "name,reading,aliases,birth_start_year,regions\n最澄,さいちょう,伝教大師,767,近江|比叡山"
+                ? "name,reading,aliases,from_year,regions\n最澄,さいちょう,伝教大師,767,近江|比叡山"
                 : targetType === "role-assignment"
                   ? "person,title,polity,dynasty,time_start_year,time_end_year,is_incumbent\n最澄,天台座主,日本,,804,822,false"
                   : targetType === "event-relation"
@@ -227,7 +227,7 @@ export function CsvImportPanel() {
                         : targetType === "period-category"
                           ? "name,description\n日本史区分,日本史の区分法"
                           : targetType === "polity"
-                            ? "name,aliases,time_start_year,regions\n日本,日本国,660,日本|東アジア"
+                            ? "name,aliases,from_year,regions\n日本,日本国,660,日本|東アジア"
                             : targetType === "religion"
                               ? "name,aliases,time_start_year,regions,founders\n仏教,佛教,-566,インド|東アジア,釈迦"
                               : targetType === "dynasty"
@@ -627,7 +627,11 @@ function renderPolityRow(row: CsvPreviewRow<PolityCsvInput>) {
     <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
       <RowHeader row={row} />
       <RowIssues row={row} />
-      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">regions: {row.input.regionIds.length}</div> : null}
+      {row.input ? (
+        <div className="mt-3 text-xs text-[var(--muted)]">
+          from: {row.input.fromTimeExpression?.startYear ?? "-"} / to: {row.input.toTimeExpression?.startYear ?? "-"} / regions: {row.input.regionIds.length}
+        </div>
+      ) : null}
     </article>
   );
 }
