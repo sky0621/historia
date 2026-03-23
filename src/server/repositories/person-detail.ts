@@ -6,6 +6,9 @@ import {
   personRegionLinks,
   personReligionLinks,
   personSectLinks,
+  roleAssignmentDynastyLinks,
+  roleAssignmentPersonLinks,
+  roleAssignmentPolityLinks,
   roleAssignments
 } from "@/db/schema";
 
@@ -62,11 +65,39 @@ export function replacePersonPeriodLinks(personId: number, periodIds: number[]) 
 
 export function replaceRoleAssignments(
   personId: number,
-  roles: Array<typeof roleAssignments.$inferInsert>
+  roles: Array<(typeof roleAssignments.$inferInsert) & { personId: number; polityId: number | null; dynastyId: number | null }>
 ) {
-  db.delete(roleAssignments).where(eq(roleAssignments.personId, personId)).run();
-  if (roles.length > 0) {
-    db.insert(roleAssignments).values(roles.map((role) => ({ ...role, personId }))).run();
+  const existingRoleAssignmentIds = db
+    .select()
+    .from(roleAssignmentPersonLinks)
+    .where(eq(roleAssignmentPersonLinks.personId, personId))
+    .all()
+    .map((link) => link.roleAssignmentId);
+
+  db.delete(roleAssignmentPersonLinks).where(eq(roleAssignmentPersonLinks.personId, personId)).run();
+  if (existingRoleAssignmentIds.length > 0) {
+    db.delete(roleAssignmentPolityLinks).where(inArray(roleAssignmentPolityLinks.roleAssignmentId, existingRoleAssignmentIds)).run();
+    db.delete(roleAssignmentDynastyLinks).where(inArray(roleAssignmentDynastyLinks.roleAssignmentId, existingRoleAssignmentIds)).run();
+    db.delete(roleAssignments).where(inArray(roleAssignments.id, existingRoleAssignmentIds)).run();
+  }
+
+  if (roles.length === 0) {
+    return;
+  }
+
+  for (const role of roles) {
+    const { personId: rolePersonId, polityId, dynastyId, ...roleInput } = role;
+    const result = db.insert(roleAssignments).values(roleInput).run();
+    const roleAssignmentId = Number(result.lastInsertRowid);
+    db.insert(roleAssignmentPersonLinks).values({ roleAssignmentId, personId: rolePersonId }).run();
+
+    if (polityId != null) {
+      db.insert(roleAssignmentPolityLinks).values({ roleAssignmentId, polityId }).run();
+    }
+
+    if (dynastyId != null) {
+      db.insert(roleAssignmentDynastyLinks).values({ roleAssignmentId, dynastyId }).run();
+    }
   }
 }
 

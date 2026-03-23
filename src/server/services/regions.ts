@@ -102,23 +102,28 @@ export function getRegionView(id: number) {
 }
 
 export function createRegionFromInput(input: RegionInput) {
-  return createRegion({
-    name: input.name,
-    parentRegionId: input.parentRegionId ?? null,
-    aliases: joinAliases(input.aliases),
-    description: nullable(input.description),
-    note: nullable(input.note)
-  });
+  return createRegion(
+    {
+      name: input.name,
+      aliases: joinAliases(input.aliases),
+      description: nullable(input.description),
+      note: nullable(input.note)
+    },
+    input.parentRegionId ?? null
+  );
 }
 
 export function updateRegionFromInput(id: number, input: RegionInput) {
-  updateRegion(id, {
-    name: input.name,
-    parentRegionId: input.parentRegionId ?? null,
-    aliases: joinAliases(input.aliases),
-    description: nullable(input.description),
-    note: nullable(input.note)
-  });
+  updateRegion(
+    id,
+    {
+      name: input.name,
+      aliases: joinAliases(input.aliases),
+      description: nullable(input.description),
+      note: nullable(input.note)
+    },
+    input.parentRegionId ?? null
+  );
 }
 
 export function deleteRegionById(id: number) {

@@ -1,5 +1,50 @@
 import { integer, sqliteTable } from "drizzle-orm/sqlite-core";
 
+export const regionParentLinks = sqliteTable("region_parent_links", {
+  regionId: integer("region_id").notNull(),
+  parentRegionId: integer("parent_region_id").notNull()
+});
+
+export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
+  dynastyId: integer("dynasty_id").notNull(),
+  polityId: integer("polity_id").notNull()
+});
+
+export const roleAssignmentPersonLinks = sqliteTable("role_assignment_person_links", {
+  roleAssignmentId: integer("role_assignment_id").notNull(),
+  personId: integer("person_id").notNull()
+});
+
+export const roleAssignmentPolityLinks = sqliteTable("role_assignment_polity_links", {
+  roleAssignmentId: integer("role_assignment_id").notNull(),
+  polityId: integer("polity_id").notNull()
+});
+
+export const roleAssignmentDynastyLinks = sqliteTable("role_assignment_dynasty_links", {
+  roleAssignmentId: integer("role_assignment_id").notNull(),
+  dynastyId: integer("dynasty_id").notNull()
+});
+
+export const historicalPeriodCategoryLinks = sqliteTable("historical_period_category_links", {
+  periodId: integer("period_id").notNull(),
+  categoryId: integer("category_id").notNull()
+});
+
+export const historicalPeriodPolityLinks = sqliteTable("historical_period_polity_links", {
+  periodId: integer("period_id").notNull(),
+  polityId: integer("polity_id").notNull()
+});
+
+export const sectReligionLinks = sqliteTable("sect_religion_links", {
+  sectId: integer("sect_id").notNull(),
+  religionId: integer("religion_id").notNull()
+});
+
+export const sectParentLinks = sqliteTable("sect_parent_links", {
+  sectId: integer("sect_id").notNull(),
+  parentSectId: integer("parent_sect_id").notNull()
+});
+
 export const eventPersonLinks = sqliteTable("event_person_links", {
   eventId: integer("event_id").notNull(),
   personId: integer("person_id").notNull()

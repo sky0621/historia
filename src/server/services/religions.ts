@@ -258,14 +258,14 @@ export function removeReligion(id: number) {
 export function createSectFromInput(input: SectInput) {
   return createSect(
     {
-      religionId: input.religionId,
-      parentSectId: input.parentSectId ?? null,
       name: input.name,
       aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime("time", input.timeExpression)
     },
+    input.religionId,
+    input.parentSectId ?? null,
     input.regionIds,
     input.founderIds
   );
@@ -275,14 +275,14 @@ export function updateSectFromInput(id: number, input: SectInput) {
   updateSect(
     id,
     {
-      religionId: input.religionId,
-      parentSectId: input.parentSectId ?? null,
       name: input.name,
       aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime("time", input.timeExpression)
     },
+    input.religionId,
+    input.parentSectId ?? null,
     input.regionIds,
     input.founderIds
   );

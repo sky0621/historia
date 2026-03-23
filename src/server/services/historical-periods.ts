@@ -112,8 +112,6 @@ export function getHistoricalPeriodDetailView(id: number) {
 export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
   const id = createHistoricalPeriod(
     {
-      categoryId: input.categoryId,
-      polityId: input.polityId ?? null,
       name: input.name,
       regionLabel: nullable(input.regionLabel),
       aliases: joinAliases(input.aliases),
@@ -121,6 +119,8 @@ export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
       note: nullable(input.note),
       ...toStoredTime("time", input.timeExpression)
     },
+    input.categoryId,
+    input.polityId ?? null,
     input.regionIds
   );
   recordChangeHistory({
@@ -137,8 +137,6 @@ export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPer
   updateHistoricalPeriod(
     id,
     {
-      categoryId: input.categoryId,
-      polityId: input.polityId ?? null,
       name: input.name,
       regionLabel: nullable(input.regionLabel),
       aliases: joinAliases(input.aliases),
@@ -146,6 +144,8 @@ export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPer
       note: nullable(input.note),
       ...toStoredTime("time", input.timeExpression)
     },
+    input.categoryId,
+    input.polityId ?? null,
     input.regionIds
   );
   recordChangeHistory({
