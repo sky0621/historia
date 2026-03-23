@@ -31,9 +31,9 @@ export default async function HistoricalPeriodDetailPage({
               "関連イベント 0 件"
             )}{" "}
             /{" "}
-            {view.relatedPeople.length > 0 ? (
-              <Link href={`/people?periodId=${view.period.id}`} className="underline-offset-4 hover:underline">
-                関連人物 {view.relatedPeople.length} 件
+            {view.relatedPerson.length > 0 ? (
+              <Link href={`/person?periodId=${view.period.id}`} className="underline-offset-4 hover:underline">
+                関連人物 {view.relatedPerson.length} 件
               </Link>
             ) : (
               "関連人物 0 件"
@@ -132,12 +132,12 @@ export default async function HistoricalPeriodDetailPage({
       <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
         <h2 className="text-lg font-semibold">関連人物</h2>
         <div className="mt-4 space-y-3">
-          {view.relatedPeople.length === 0 ? (
+          {view.relatedPerson.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">この時代区分に関連付けられた人物はまだありません。</p>
           ) : (
-            view.relatedPeople.map((person) => (
+            view.relatedPerson.map((person) => (
               <div key={person.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                <Link href={`/people/${person.id}`} className="font-medium underline-offset-4 hover:underline">
+                <Link href={`/person/${person.id}`} className="font-medium underline-offset-4 hover:underline">
                   {person.name}
                 </Link>
               </div>

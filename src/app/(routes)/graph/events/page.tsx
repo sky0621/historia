@@ -89,7 +89,7 @@ export default async function GraphEventsPage({ searchParams }: GraphEventsPageP
           <span className="font-medium text-[var(--muted)]">関連人物</span>
           <select name="personId" defaultValue={personId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
-            {options.people.map((item) => (
+            {options.person.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>

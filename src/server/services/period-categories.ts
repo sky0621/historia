@@ -7,7 +7,7 @@ import {
 } from "@/server/repositories/period-categories";
 import type { PeriodCategoryInput } from "@/features/periods/schema";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
-import { getPersonPeriodLinks, listPeopleDetailed } from "@/server/repositories/people-detail";
+import { getPersonPeriodLinks, listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
@@ -35,11 +35,11 @@ export function getPeriodCategoryView(id: number) {
   const relatedEvents = dedupeRelatedEvents(
     relatedPeriods.flatMap((period) => getRelatedEvents({ periodId: period.id }))
   );
-  const people = listPeopleDetailed();
-  const relatedPeople = dedupePeople(
-    getPersonPeriodLinks(people.map((person) => person.id))
+  const person = listPersonDetailed();
+  const relatedPerson = dedupePerson(
+    getPersonPeriodLinks(person.map((person) => person.id))
       .filter((link) => relatedPeriods.some((period) => period.id === link.periodId))
-      .map((link) => people.find((person) => person.id === link.personId))
+      .map((link) => person.find((person) => person.id === link.personId))
       .filter((person): person is NonNullable<typeof person> => Boolean(person))
   );
 
@@ -47,7 +47,7 @@ export function getPeriodCategoryView(id: number) {
     category,
     relatedPeriods,
     relatedEvents,
-    relatedPeople
+    relatedPerson
   };
 }
 
@@ -55,14 +55,14 @@ type PeriodCategoryListFilters = {
   query?: string;
   hasPeriods?: boolean;
   hasEvents?: boolean;
-  hasPeople?: boolean;
+  hasPerson?: boolean;
 };
 
 export function getPeriodCategoryList(filters: PeriodCategoryListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const periods = listHistoricalPeriods();
-  const people = listPeopleDetailed();
-  const personPeriodLinks = getPersonPeriodLinks(people.map((person) => person.id));
+  const person = listPersonDetailed();
+  const personPeriodLinks = getPersonPeriodLinks(person.map((person) => person.id));
 
   return listPeriodCategories()
     .map((category) => ({
@@ -71,10 +71,10 @@ export function getPeriodCategoryList(filters: PeriodCategoryListFilters = {}) {
       eventCount: dedupeRelatedEvents(
         periods.filter((period) => period.categoryId === category.id).flatMap((period) => getRelatedEvents({ periodId: period.id }))
       ).length,
-      peopleCount: dedupePeople(
+      personCount: dedupePerson(
         personPeriodLinks
           .filter((link) => periods.some((period) => period.categoryId === category.id && period.id === link.periodId))
-          .map((link) => people.find((person) => person.id === link.personId))
+          .map((link) => person.find((person) => person.id === link.personId))
           .filter((person): person is NonNullable<typeof person> => Boolean(person))
       ).length
     }))
@@ -87,7 +87,7 @@ export function getPeriodCategoryList(filters: PeriodCategoryListFilters = {}) {
         return false;
       }
 
-      if (filters.hasPeople && category.peopleCount === 0) {
+      if (filters.hasPerson && category.personCount === 0) {
         return false;
       }
 
@@ -145,10 +145,10 @@ function dedupeRelatedEvents(
   });
 }
 
-function dedupePeople(people: Array<{ id: number; name: string }>) {
+function dedupePerson(person: Array<{ id: number; name: string }>) {
   const seen = new Set<number>();
 
-  return people.filter((person) => {
+  return person.filter((person) => {
     if (seen.has(person.id)) {
       return false;
     }

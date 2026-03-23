@@ -6,7 +6,7 @@ const navigation = [
   { href: "/timeline", label: "タイムライン" },
   { href: "/manage/data", label: "データ運用" },
   { href: "/bootstrap", label: "Bootstrap" },
-  { href: "/people", label: "人物" },
+  { href: "/person", label: "人物" },
   { href: "/polities", label: "国家" },
   { href: "/dynasties", label: "王朝" },
   { href: "/periods", label: "時代区分" },

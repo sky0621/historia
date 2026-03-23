@@ -1,6 +1,6 @@
 import { listEvents } from "@/server/repositories/events";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
-import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listReligions } from "@/server/repositories/religions";
 
@@ -16,7 +16,7 @@ export function getCitationTargetOptions() {
       { value: "religion", label: "宗教" }
     ] as Array<{ value: CitationTargetType; label: string }>,
     events: listEvents().map((item) => ({ id: item.id, name: item.title })),
-    people: listPeopleDetailed().map((item) => ({ id: item.id, name: item.name })),
+    person: listPersonDetailed().map((item) => ({ id: item.id, name: item.name })),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name }))
@@ -34,8 +34,8 @@ export function resolveCitationTarget(type: CitationTargetType, id: number) {
       };
     case "person":
       return {
-        label: options.people.find((item) => item.id === id)?.name ?? `人物 #${id}`,
-        href: `/people/${id}`
+        label: options.person.find((item) => item.id === id)?.name ?? `人物 #${id}`,
+        href: `/person/${id}`
       };
     case "polity":
       return {

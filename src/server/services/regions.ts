@@ -6,7 +6,7 @@ import {
   updateRegion
 } from "@/server/repositories/regions";
 import type { RegionInput } from "@/features/regions/schema";
-import { listPeopleDetailed, getPersonRegionLinks } from "@/server/repositories/people-detail";
+import { listPersonDetailed, getPersonRegionLinks } from "@/server/repositories/person-detail";
 import { listPolities, getPolityRegionIds } from "@/server/repositories/polities";
 import { listDynasties, getDynastyRegionIds } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods, getHistoricalPeriodRegionIds } from "@/server/repositories/historical-periods";
@@ -72,14 +72,14 @@ export function getRegionView(id: number) {
 
   const parent = region.parentRegionId ? getRegionById(region.parentRegionId) : null;
   const children = listRegions().filter((candidate) => candidate.parentRegionId === region.id);
-  const people = listPeopleDetailed();
+  const person = listPersonDetailed();
   const polities = listPolities();
   const dynasties = listDynasties();
   const periods = listHistoricalPeriods();
   const religions = listReligions();
   const sects = listSects();
 
-  const peopleLinks = getPersonRegionLinks(people.map((item) => item.id));
+  const personLinks = getPersonRegionLinks(person.map((item) => item.id));
   const polityLinks = getPolityRegionIds(polities.map((item) => item.id));
   const dynastyLinks = getDynastyRegionIds(dynasties.map((item) => item.id));
   const periodLinks = getHistoricalPeriodRegionIds(periods.map((item) => item.id));
@@ -91,7 +91,7 @@ export function getRegionView(id: number) {
     parent,
     children,
     relatedEvents: getRelatedEvents({ regionId: id }),
-    relatedPeople: people.filter((item) => peopleLinks.some((link) => link.personId === item.id && link.regionId === id)),
+    relatedPerson: person.filter((item) => personLinks.some((link) => link.personId === item.id && link.regionId === id)),
     relatedPolities: polities.filter((item) => polityLinks.some((link) => link.polityId === item.id && link.regionId === id)),
     relatedDynasties: dynasties.filter((item) => dynastyLinks.some((link) => link.dynastyId === item.id && link.regionId === id)),
     relatedPeriods: periods.filter((item) => periodLinks.some((link) => link.periodId === item.id && link.regionId === id)),

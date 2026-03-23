@@ -2,12 +2,12 @@ import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-exp
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { ReligionInput, SectInput } from "@/features/religions/schema";
-import { listPeople } from "@/server/repositories/people";
+import { listPerson } from "@/server/repositories/person";
 import {
   getPersonReligionLinks,
   getPersonSectLinks,
-  listPeopleDetailed
-} from "@/server/repositories/people-detail";
+  listPersonDetailed
+} from "@/server/repositories/person-detail";
 import { listRegions } from "@/server/repositories/regions";
 import {
   createReligion,
@@ -40,7 +40,7 @@ export function getRegionOptions() {
 }
 
 export function getFounderOptions() {
-  return listPeople().map((person) => ({ id: person.id, name: person.name }));
+  return listPerson().map((person) => ({ id: person.id, name: person.name }));
 }
 
 export function getParentSectOptions(excludeId?: number) {
@@ -64,11 +64,11 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const religions = listReligions();
   const regions = listRegions();
-  const people = listPeople();
+  const person = listPerson();
   const regionLinks = getReligionRegionIds(religions.map((religion) => religion.id));
   const founderLinks = getReligionFounderIds(religions.map((religion) => religion.id));
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
-  const personNameById = new Map(people.map((person) => [person.id, person.name]));
+  const personNameById = new Map(person.map((person) => [person.id, person.name]));
 
   return religions
     .map((religion) => ({
@@ -109,12 +109,12 @@ export function getSectListView(filters: SectListFilters = {}) {
   const sects = listSects();
   const religions = listReligions();
   const regions = listRegions();
-  const people = listPeople();
+  const person = listPerson();
   const regionLinks = getSectRegionIds(sects.map((sect) => sect.id));
   const founderLinks = getSectFounderIds(sects.map((sect) => sect.id));
   const religionNameById = new Map(religions.map((religion) => [religion.id, religion.name]));
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
-  const personNameById = new Map(people.map((person) => [person.id, person.name]));
+  const personNameById = new Map(person.map((person) => [person.id, person.name]));
   const parentSectNameById = new Map(sects.map((sect) => [sect.id, sect.name]));
 
   return sects
@@ -167,21 +167,21 @@ export function getReligionDetailView(id: number) {
 
   const sects = listSects().filter((sect) => sect.religionId === id);
   const regions = listRegions();
-  const people = listPeople();
-  const detailedPeople = listPeopleDetailed();
+  const person = listPerson();
+  const detailedPerson = listPersonDetailed();
   const regionIds = getReligionRegionIds([id]).map((link) => link.regionId);
   const founderIds = getReligionFounderIds([id]).map((link) => link.personId);
-  const religionPeople = getPersonReligionLinks(detailedPeople.map((person) => person.id))
+  const religionPerson = getPersonReligionLinks(detailedPerson.map((person) => person.id))
     .filter((link) => link.religionId === id)
-    .map((link) => detailedPeople.find((person) => person.id === link.personId))
+    .map((link) => detailedPerson.find((person) => person.id === link.personId))
     .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
   return {
     religion,
     sects,
     regions: regions.filter((region) => regionIds.includes(region.id)),
-    founders: people.filter((person) => founderIds.includes(person.id)),
-    relatedPeople: dedupePeople(religionPeople),
+    founders: person.filter((person) => founderIds.includes(person.id)),
+    relatedPerson: dedupePerson(religionPerson),
     relatedEvents: getRelatedEvents({ religionId: id }),
     timeLabel: formatStoredTime("time", religion),
     defaultTimeExpression: extractTimeExpression("time", religion),
@@ -197,13 +197,13 @@ export function getSectDetailView(id: number) {
 
   const religion = getReligionById(sect.religionId);
   const regions = listRegions();
-  const people = listPeople();
-  const detailedPeople = listPeopleDetailed();
+  const person = listPerson();
+  const detailedPerson = listPersonDetailed();
   const regionIds = getSectRegionIds([id]).map((link) => link.regionId);
   const founderIds = getSectFounderIds([id]).map((link) => link.personId);
-  const sectPeople = getPersonSectLinks(detailedPeople.map((person) => person.id))
+  const sectPerson = getPersonSectLinks(detailedPerson.map((person) => person.id))
     .filter((link) => link.sectId === id)
-    .map((link) => detailedPeople.find((person) => person.id === link.personId))
+    .map((link) => detailedPerson.find((person) => person.id === link.personId))
     .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
   const hierarchy = getSectHierarchyView(id);
@@ -214,8 +214,8 @@ export function getSectDetailView(id: number) {
     parentSect: hierarchy.parent,
     childSects: hierarchy.children,
     regions: regions.filter((region) => regionIds.includes(region.id)),
-    founders: people.filter((person) => founderIds.includes(person.id)),
-    relatedPeople: dedupePeople(sectPeople),
+    founders: person.filter((person) => founderIds.includes(person.id)),
+    relatedPerson: dedupePerson(sectPerson),
     relatedEvents: getRelatedEvents({ sectId: id }),
     timeLabel: formatStoredTime("time", sect),
     defaultTimeExpression: extractTimeExpression("time", sect)
@@ -341,10 +341,10 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
 }
 
-function dedupePeople(people: Array<{ id: number; name: string }>) {
+function dedupePerson(person: Array<{ id: number; name: string }>) {
   const seen = new Set<number>();
 
-  return people.filter((person) => {
+  return person.filter((person) => {
     if (seen.has(person.id)) {
       return false;
     }

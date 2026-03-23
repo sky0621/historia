@@ -24,7 +24,7 @@ type Props = {
   description: string;
   submitLabel: string;
   options: {
-    people: Option[];
+    person: Option[];
     polities: Option[];
     dynasties: Option[];
     periods: Option[];
@@ -152,7 +152,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           <TimeExpressionInputs prefix="endTime" label="終了年" defaultValue={defaultValues?.endTimeExpression} />
         </div>
 
-        <SelectionGroup name="personIds" label="人物" options={options.people} selectedIds={defaultValues?.personIds ?? []} />
+        <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
         <SelectionGroup name="polityIds" label="国家" options={options.polities} selectedIds={defaultValues?.polityIds ?? []} />
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
         <SelectionGroup name="periodIds" label="時代区分" options={options.periods} selectedIds={defaultValues?.periodIds ?? []} />
@@ -382,7 +382,7 @@ function getParticipantOptions(
 ) {
   switch (participantType) {
     case "person":
-      return options.people;
+      return options.person;
     case "religion":
       return options.religions;
     case "sect":

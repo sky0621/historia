@@ -59,7 +59,7 @@ function clearTables() {
     "sects",
     "religions",
     "historical_periods",
-    "people",
+    "persons",
     "dynasties",
     "polities",
     "period_categories",
@@ -316,7 +316,7 @@ function runSeed() {
   insert("dynasty_region_links", { dynasty_id: dynastyIds.bourbon, region_id: regionIds.europe });
 
   const personIds = {};
-  personIds.shaka = insert("people", {
+  personIds.shaka = insert("persons", {
     name: "釈迦",
     aliases: "ゴータマ・シッダールタ",
     note: "仏教の開祖。",
@@ -335,28 +335,28 @@ function runSeed() {
       displayLabel: "紀元前483年頃"
     })
   });
-  personIds.saicho = insert("people", {
+  personIds.saicho = insert("persons", {
     name: "最澄",
     aliases: "伝教大師",
     note: "日本天台宗の開祖。",
     ...timeColumns("birth", { calendarEra: "CE", startYear: 767, precision: "year", displayLabel: "767年" }),
     ...timeColumns("death", { calendarEra: "CE", startYear: 822, precision: "year", displayLabel: "822年" })
   });
-  personIds.kanmu = insert("people", {
+  personIds.kanmu = insert("persons", {
     name: "桓武天皇",
     aliases: null,
     note: "平安京遷都を行った天皇。",
     ...timeColumns("birth", { calendarEra: "CE", startYear: 737, precision: "year", displayLabel: "737年" }),
     ...timeColumns("death", { calendarEra: "CE", startYear: 806, precision: "year", displayLabel: "806年" })
   });
-  personIds.yoshimasa = insert("people", {
+  personIds.yoshimasa = insert("persons", {
     name: "足利義政",
     aliases: null,
     note: "応仁の乱期の室町幕府将軍。",
     ...timeColumns("birth", { calendarEra: "CE", startYear: 1436, precision: "year", displayLabel: "1436年" }),
     ...timeColumns("death", { calendarEra: "CE", startYear: 1490, precision: "year", displayLabel: "1490年" })
   });
-  personIds.jesus = insert("people", {
+  personIds.jesus = insert("persons", {
     name: "イエス・キリスト",
     aliases: null,
     note: "キリスト教の中心人物。",
@@ -375,7 +375,7 @@ function runSeed() {
       displayLabel: "30年頃"
     })
   });
-  personIds.urban = insert("people", {
+  personIds.urban = insert("persons", {
     name: "ウルバヌス2世",
     aliases: null,
     note: "第1回十字軍を呼びかけた教皇。",
@@ -388,14 +388,14 @@ function runSeed() {
     }),
     ...timeColumns("death", { calendarEra: "CE", startYear: 1099, precision: "year", displayLabel: "1099年" })
   });
-  personIds.lorenzo = insert("people", {
+  personIds.lorenzo = insert("persons", {
     name: "ロレンツォ・デ・メディチ",
     aliases: "ロレンツォ豪華王",
     note: "ルネサンス期フィレンツェの有力者。",
     ...timeColumns("birth", { calendarEra: "CE", startYear: 1449, precision: "year", displayLabel: "1449年" }),
     ...timeColumns("death", { calendarEra: "CE", startYear: 1492, precision: "year", displayLabel: "1492年" })
   });
-  personIds.leonardo = insert("people", {
+  personIds.leonardo = insert("persons", {
     name: "レオナルド・ダ・ヴィンチ",
     aliases: null,
     note: "ルネサンス期の芸術家・技術者。",

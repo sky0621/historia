@@ -59,7 +59,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     tagId ? { label: "タグ", value: findOptionLabel(options.tags, tagId), href: buildFilterRemovalHref(currentParams, "tagId") } : null,
     eventType ? { label: "種別", value: eventType, href: buildFilterRemovalHref(currentParams, "eventType") } : null,
     relationType ? { label: "関係種別", value: relationType, href: buildFilterRemovalHref(currentParams, "relationType") } : null,
-    personId ? { label: "関連人物", value: findOptionLabel(options.people, personId), href: buildFilterRemovalHref(currentParams, "personId") } : null,
+    personId ? { label: "関連人物", value: findOptionLabel(options.person, personId), href: buildFilterRemovalHref(currentParams, "personId") } : null,
     polityId ? { label: "関連国家", value: findOptionLabel(options.polities, polityId), href: buildFilterRemovalHref(currentParams, "polityId") } : null,
     dynastyId ? { label: "関連王朝", value: findOptionLabel(options.dynasties, dynastyId), href: buildFilterRemovalHref(currentParams, "dynastyId") } : null,
     religionId ? { label: "関連宗教", value: findOptionLabel(options.religions, religionId), href: buildFilterRemovalHref(currentParams, "religionId") } : null,
@@ -133,7 +133,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           <span className="font-medium text-[var(--muted)]">関連人物</span>
           <select name="personId" defaultValue={personId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
-            {options.people.map((person) => (
+            {options.person.map((person) => (
               <option key={person.id} value={person.id}>
                 {person.name}
               </option>

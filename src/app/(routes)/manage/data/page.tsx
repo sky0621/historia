@@ -26,7 +26,7 @@ export default function ManageDataPage() {
               <Link href="/api/export/events.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Event CSV をダウンロード
               </Link>
-              <Link href="/api/export/people.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+              <Link href="/api/export/person.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Person CSV をダウンロード
               </Link>
             </div>

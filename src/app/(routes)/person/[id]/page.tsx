@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { deletePersonAction } from "@/features/people/actions";
-import { getPersonDetailView } from "@/server/services/people";
+import { deletePersonAction } from "@/features/person/actions";
+import { getPersonDetailView } from "@/server/services/person";
 
 export default async function PersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +30,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           </p>
         </div>
         <div className="flex gap-3">
-          <Link href={`/people/${view.person.id}/edit`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+          <Link href={`/person/${view.person.id}/edit`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
             編集
           </Link>
           <form action={deletePersonAction}>

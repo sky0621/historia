@@ -15,7 +15,7 @@ const ID_TABLES = [
   "tags",
   "polities",
   "dynasties",
-  "people",
+  "persons",
   "role_assignments",
   "historical_periods",
   "religions",
@@ -91,11 +91,11 @@ export function buildEventsCsv() {
   return toCsv(rows, ["id", "title", "event_type", "time_display_label", "start_year", "end_year", "updated_at"]);
 }
 
-export function buildPeopleCsv() {
+export function buildPersonCsv() {
   const rows = sqlite
     .prepare(
       `SELECT id, name, aliases, birth_display_label, death_display_label
-       FROM people
+       FROM persons
        ORDER BY name`
     )
     .all() as Array<Record<string, unknown>>;
@@ -244,7 +244,7 @@ function findDuplicateEntity(table: string, row: Record<string, unknown>, import
 }
 
 function hasAliasMatch(table: string, aliases: string) {
-  if (!["regions", "polities", "dynasties", "people", "historical_periods", "religions", "sects"].includes(table)) {
+  if (!["regions", "polities", "dynasties", "persons", "historical_periods", "religions", "sects"].includes(table)) {
     return false;
   }
 
@@ -317,7 +317,7 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
 
   if (table === "role_assignments") {
     if (typeof row.person_id === "number") {
-      prepared.person_id = idMaps.get("people")?.get(row.person_id) ?? row.person_id;
+      prepared.person_id = idMaps.get("persons")?.get(row.person_id) ?? row.person_id;
     }
     if (typeof row.polity_id === "number") {
       prepared.polity_id = idMaps.get("polities")?.get(row.polity_id) ?? row.polity_id;
@@ -389,7 +389,7 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
 function mapLinkRow(table: string, row: Record<string, unknown>, idMaps: Map<string, Map<number, number>>) {
   const mapped = { ...row };
   const mappings: Record<string, string> = {
-    event_person_links: "events:people",
+    event_person_links: "events:persons",
     event_polity_links: "events:polities",
     event_dynasty_links: "events:dynasties",
     event_period_links: "events:historical_periods",
@@ -397,17 +397,17 @@ function mapLinkRow(table: string, row: Record<string, unknown>, idMaps: Map<str
     event_sect_links: "events:sects",
     event_region_links: "events:regions",
     event_tag_links: "events:tags",
-    person_region_links: "people:regions",
+    person_region_links: "persons:regions",
     polity_region_links: "polities:regions",
     dynasty_region_links: "dynasties:regions",
     period_region_links: "historical_periods:regions",
     religion_region_links: "religions:regions",
     sect_region_links: "sects:regions",
-    person_religion_links: "people:religions",
-    person_sect_links: "people:sects",
-    person_period_links: "people:historical_periods",
-    religion_founder_links: "religions:people",
-    sect_founder_links: "sects:people"
+    person_religion_links: "persons:religions",
+    person_sect_links: "persons:sects",
+    person_period_links: "persons:historical_periods",
+    religion_founder_links: "religions:persons",
+    sect_founder_links: "sects:persons"
   };
 
   const mapping = mappings[table];
@@ -471,7 +471,7 @@ function maybeRecordImportedHistories(rows: Array<Record<string, unknown>>, idMa
 function mapCitationTargetId(targetType: string, targetId: number, idMaps: Map<string, Map<number, number>>) {
   const mapping: Record<CitationTargetType, string> = {
     event: "events",
-    person: "people",
+    person: "persons",
     polity: "polities",
     historical_period: "historical_periods",
     religion: "religions"
@@ -484,7 +484,7 @@ function mapCitationTargetId(targetType: string, targetId: number, idMaps: Map<s
 function mapHistoryTargetId(targetType: string, targetId: number, idMaps: Map<string, Map<number, number>>) {
   const mapping: Record<string, string> = {
     event: "events",
-    person: "people",
+    person: "persons",
     polity: "polities",
     historical_period: "historical_periods"
   };
@@ -495,7 +495,7 @@ function mapHistoryTargetId(targetType: string, targetId: number, idMaps: Map<st
 
 function mapParticipantId(participantType: string, participantId: number, idMaps: Map<string, Map<number, number>>) {
   const mapping: Record<string, string> = {
-    person: "people",
+    person: "persons",
     polity: "polities",
     religion: "religions",
     sect: "sects"

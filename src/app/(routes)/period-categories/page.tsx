@@ -10,8 +10,8 @@ export default async function PeriodCategoriesPage({ searchParams }: PeriodCateg
   const query = getSingleParam(params.q);
   const hasPeriods = getSingleParam(params.hasPeriods) === "1";
   const hasEvents = getSingleParam(params.hasEvents) === "1";
-  const hasPeople = getSingleParam(params.hasPeople) === "1";
-  const categories = getPeriodCategoryList({ query, hasPeriods, hasEvents, hasPeople });
+  const hasPerson = getSingleParam(params.hasPerson) === "1";
+  const categories = getPeriodCategoryList({ query, hasPeriods, hasEvents, hasPerson });
 
   return (
     <section className="space-y-6">
@@ -51,7 +51,7 @@ export default async function PeriodCategoriesPage({ searchParams }: PeriodCateg
         </label>
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">関連人物</span>
-          <select name="hasPeople" defaultValue={hasPeople ? "1" : ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
+          <select name="hasPerson" defaultValue={hasPerson ? "1" : ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
             <option value="1">関連人物あり</option>
           </select>

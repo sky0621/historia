@@ -93,7 +93,7 @@ export async function importWorkspaceAction(previousState: ImportState, formData
         }
       });
       revalidatePath("/events");
-      revalidatePath("/people");
+      revalidatePath("/person");
       revalidatePath("/polities");
       revalidatePath("/periods");
       revalidatePath("/religions");
@@ -136,7 +136,7 @@ function targetPath(targetType: string, targetId: number) {
     case "event":
       return `/events/${targetId}`;
     case "person":
-      return `/people/${targetId}`;
+      return `/person/${targetId}`;
     case "polity":
       return `/polities/${targetId}`;
     case "historical_period":

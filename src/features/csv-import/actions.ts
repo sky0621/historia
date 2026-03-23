@@ -65,7 +65,7 @@ import {
   type TagCsvInput
 } from "@/server/services/csv-import";
 import type { EventInput } from "@/features/events/schema";
-import type { PersonInput } from "@/features/people/schema";
+import type { PersonInput } from "@/features/person/schema";
 
 export type CsvImportState = {
   error?: string;
@@ -233,13 +233,14 @@ export async function importCsvAction(previousState: CsvImportState, formData: F
         status: "ok",
         summary: {
           preview: preview.summary,
-          importedCount: result.importedCount,
-          mergedCount: result.mergedCount,
+          insertedCount: result.insertedCount,
+          updatedCount: result.updatedCount,
+          deletedCount: result.deletedCount,
           unknownHeaders: preview.unknownHeaders
         }
       });
       revalidatePath("/events");
-      revalidatePath("/people");
+      revalidatePath("/person");
       revalidatePath("/polities");
       revalidatePath("/dynasties");
       revalidatePath("/regions");

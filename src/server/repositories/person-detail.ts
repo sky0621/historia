@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
-  people,
+  persons,
   personPeriodLinks,
   personRegionLinks,
   personReligionLinks,
@@ -9,27 +9,27 @@ import {
   roleAssignments
 } from "@/db/schema";
 
-export type PersonInsert = typeof people.$inferInsert;
+export type PersonInsert = typeof persons.$inferInsert;
 
 export function getPersonById(id: number) {
-  return db.select().from(people).where(eq(people.id, id)).get();
+  return db.select().from(persons).where(eq(persons.id, id)).get();
 }
 
-export function listPeopleDetailed() {
-  return db.select().from(people).all();
+export function listPersonDetailed() {
+  return db.select().from(persons).all();
 }
 
 export function createPerson(input: PersonInsert) {
-  const result = db.insert(people).values(input).run();
+  const result = db.insert(persons).values(input).run();
   return Number(result.lastInsertRowid);
 }
 
 export function updatePerson(id: number, input: Omit<PersonInsert, "id">) {
-  db.update(people).set(input).where(eq(people.id, id)).run();
+  db.update(persons).set(input).where(eq(persons.id, id)).run();
 }
 
 export function deletePerson(id: number) {
-  db.delete(people).where(eq(people.id, id)).run();
+  db.delete(persons).where(eq(persons.id, id)).run();
 }
 
 export function replacePersonRegionLinks(personId: number, regionIds: number[]) {

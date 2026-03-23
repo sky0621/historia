@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { importCsvAction } from "@/features/csv-import/actions";
 import type { EventInput } from "@/features/events/schema";
-import type { PersonInput } from "@/features/people/schema";
+import type { PersonInput } from "@/features/person/schema";
 import type {
   CitationCsvInput,
   CsvPreviewResult,
@@ -42,8 +42,8 @@ export function CsvImportPanel() {
       <h2 className="text-lg font-semibold">CSV import</h2>
       <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
         `Sprint 10` では `Source / Citation / PolityTransition / DynastySuccession / RegionRelation / HistoricalPeriodRelation CSV`
-        も preview/import できます。まず preview し、`error` がないことを確認してから import します。`duplicate-candidate`
-        が 1 件だけの行は自動マージされます。
+        も preview/import できます。import は同期方式で、CSV にあるものは `INSERT / UPDATE`、CSV にない既存データは `DELETE`
+        します。まず preview し、`error` がないことを確認してから import します。`duplicate-candidate` が 1 件だけの行は更新対象として扱います。
       </p>
 
       <form action={action} className="mt-6 space-y-4">
@@ -250,7 +250,7 @@ export function CsvImportPanel() {
                                                 ? "from_region,to_region,relation_type\n日本,東アジア,cultural_sphere"
                                                 : targetType === "historical-period-relation"
                                                   ? "from_period,to_period,relation_type\n奈良時代,平安時代,succeeds"
-                : "title,event_type,time_start_year,people,polities\n平安京遷都,general,794,桓武天皇,日本"
+                : "title,event_type,time_start_year,person,polities\n平安京遷都,general,794,桓武天皇,日本"
             }
             required
           />
@@ -299,7 +299,7 @@ export function CsvImportPanel() {
 
           {state.preview.summary.duplicateCandidateCount > 0 ? (
             <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              重複候補があります。候補カードを確認して、必要なら CSV を修正してから import します。
+              重複候補があります。候補が 1 件の行は更新として同期され、複数候補の行は import を止めます。
             </p>
           ) : null}
 
@@ -413,7 +413,7 @@ export function CsvImportPanel() {
         <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
           <h3 className="text-sm font-semibold text-emerald-900">import 完了</h3>
           <p className="mt-2 text-sm text-emerald-900">
-            追加した
+            同期した
             {" "}
             {state.result.kind === "person"
               ? "Person"
@@ -430,7 +430,7 @@ export function CsvImportPanel() {
                         : state.result.kind === "period-category"
                           ? "PeriodCategory"
                             : state.result.kind === "polity"
-                              ? "Polity"
+                              ? "Polity_王朝"
                               : state.result.kind === "religion"
                                 ? "Religion"
                                 : state.result.kind === "dynasty"
@@ -455,9 +455,12 @@ export function CsvImportPanel() {
                                                     ? "HistoricalPeriodRelation"
                   : "Event"}
             {" "}
-            件数: {state.result.importedCount}
+            {" "}
+            insert: {state.result.insertedCount}
             {" / "}
-            merge: {state.result.mergedCount}
+            update: {state.result.updatedCount}
+            {" / "}
+            delete: {state.result.deletedCount}
           </p>
         </div>
       ) : null}
@@ -478,7 +481,7 @@ function renderEventRow(row: CsvPreviewRow<EventInput>) {
             {row.input.timeExpression?.startYear ? ` / year: ${row.input.timeExpression.startYear}` : ""}
           </p>
           <p>
-            links: people {row.input.personIds.length}, polities {row.input.polityIds.length}, periods {row.input.periodIds.length},
+            links: person {row.input.personIds.length}, polities {row.input.polityIds.length}, periods {row.input.periodIds.length},
             {" "}
             regions {row.input.regionIds.length}, tags {row.input.tags.length}
           </p>

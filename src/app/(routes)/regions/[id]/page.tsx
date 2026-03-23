@@ -33,9 +33,9 @@ export default async function RegionDetailPage({
               "子地域 0 件"
             )}{" "}
             /{" "}
-            {view.relatedPeople.length > 0 ? (
-              <Link href={`/people?regionId=${view.region.id}`} className="underline-offset-4 hover:underline">
-                関連人物 {view.relatedPeople.length} 件
+            {view.relatedPerson.length > 0 ? (
+              <Link href={`/person?regionId=${view.region.id}`} className="underline-offset-4 hover:underline">
+                関連人物 {view.relatedPerson.length} 件
               </Link>
             ) : (
               "関連人物 0 件"
@@ -123,10 +123,10 @@ export default async function RegionDetailPage({
             <div>
               <dt className="font-medium text-[var(--muted)]">人物</dt>
               <dd className="mt-1">
-                {view.relatedPeople.length === 0 ? "-" : view.relatedPeople.map((item, index) => (
+                {view.relatedPerson.length === 0 ? "-" : view.relatedPerson.map((item, index) => (
                   <span key={item.id}>
                     {index > 0 ? ", " : null}
-                    <Link href={`/people/${item.id}`} className="underline-offset-4 hover:underline">
+                    <Link href={`/person/${item.id}`} className="underline-offset-4 hover:underline">
                       {item.name}
                     </Link>
                   </span>

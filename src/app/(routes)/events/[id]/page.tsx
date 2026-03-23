@@ -13,7 +13,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   const relatedSubjectCount =
     view.linkedTags.length +
-    view.linkedPeople.length +
+    view.linkedPerson.length +
     view.linkedPolities.length +
     view.linkedDynasties.length +
     view.linkedPeriods.length +
@@ -88,7 +88,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">人物</dt>
-              <dd className="mt-1">{renderLinkedItems(view.linkedPeople, "people")}</dd>
+              <dd className="mt-1">{renderLinkedItems(view.linkedPerson, "person")}</dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--muted)]">国家</dt>
@@ -292,7 +292,7 @@ function formatDisplay(value: { displayLabel?: string; calendarEra: string; star
 
 function renderLinkedItems(
   items: Array<{ id: number; name: string }>,
-  route: "people" | "polities" | "dynasties" | "periods" | "religions" | "sects" | "regions"
+  route: "person" | "polities" | "dynasties" | "periods" | "religions" | "sects" | "regions"
 ) {
   if (items.length === 0) {
     return "-";
@@ -348,7 +348,7 @@ function renderParticipantLink(
   }
 ) {
   const routeByType = {
-    person: "people",
+    person: "person",
     polity: "polities",
     religion: "religions",
     sect: "sects"

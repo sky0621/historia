@@ -5,7 +5,7 @@ import {
   type EventInput
 } from "@/features/events/schema";
 import { periodCategorySchema, type PeriodCategoryInput } from "@/features/periods/schema";
-import { personSchema, roleAssignmentSchema, type PersonInput, type RoleAssignmentInput } from "@/features/people/schema";
+import { personSchema, roleAssignmentSchema, type PersonInput, type RoleAssignmentInput } from "@/features/person/schema";
 import { dynastySchema, politySchema, type DynastyInput, type PolityInput } from "@/features/polities/schema";
 import {
   dynastySuccessionSchema,
@@ -36,7 +36,7 @@ import {
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listHistoricalPeriodRelations } from "@/server/repositories/historical-period-relations";
 import { listPeriodCategories } from "@/server/repositories/period-categories";
-import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listPolityTransitions } from "@/server/repositories/polity-transitions";
 import { listRegionRelations } from "@/server/repositories/region-relations";
@@ -47,31 +47,69 @@ import { listSects } from "@/server/repositories/sects";
 import { listSources } from "@/server/repositories/sources";
 import { listTags } from "@/server/repositories/tags";
 import {
-  appendConflictOutcomeToEvent,
-  appendConflictParticipantsToEvent,
-  appendEventRelationsToEvent,
   createEventFromInput,
+  removeEvent,
+  replaceConflictParticipantsOnEvent,
   replaceConflictOutcomeOnEvent,
+  replaceEventRelationsOnEvent,
   updateEventFromInput
 } from "@/server/services/events";
-import { appendRoleAssignmentsToPerson, createPersonFromInput, updatePersonFromInput } from "@/server/services/people";
-import { createPeriodCategoryFromInput, updatePeriodCategoryFromInput } from "@/server/services/period-categories";
-import { createDynastyFromInput, createPolityFromInput, updateDynastyFromInput, updatePolityFromInput } from "@/server/services/polities";
+import {
+  createPersonFromInput,
+  removePerson,
+  replaceRoleAssignmentsOnPerson,
+  updatePersonFromInput
+} from "@/server/services/person";
+import {
+  createPeriodCategoryFromInput,
+  deletePeriodCategoryById,
+  updatePeriodCategoryFromInput
+} from "@/server/services/period-categories";
+import {
+  createDynastyFromInput,
+  createPolityFromInput,
+  removeDynasty,
+  removePolity,
+  updateDynastyFromInput,
+  updatePolityFromInput
+} from "@/server/services/polities";
 import {
   createDynastySuccessionFromInput,
   createHistoricalPeriodRelationFromInput,
   createPolityTransitionFromInput,
   createRegionRelationFromInput,
+  deleteDynastySuccessionById,
+  deleteHistoricalPeriodRelationById,
+  deletePolityTransitionById,
+  deleteRegionRelationById,
   updateDynastySuccessionFromInput,
   updateHistoricalPeriodRelationFromInput,
   updatePolityTransitionFromInput,
   updateRegionRelationFromInput
 } from "@/server/services/relations";
-import { createRegionFromInput, updateRegionFromInput } from "@/server/services/regions";
-import { createReligionFromInput, createSectFromInput, updateReligionFromInput, updateSectFromInput } from "@/server/services/religions";
-import { createHistoricalPeriodFromInput, updateHistoricalPeriodFromInput } from "@/server/services/historical-periods";
-import { createCitationFromInput, createSourceFromInput, updateCitationFromInput, updateSourceFromInput } from "@/server/services/sources";
-import { createTagFromInput, updateTagFromInput } from "@/server/services/tags";
+import { createRegionFromInput, deleteRegionById, updateRegionFromInput } from "@/server/services/regions";
+import {
+  createReligionFromInput,
+  createSectFromInput,
+  removeReligion,
+  removeSect,
+  updateReligionFromInput,
+  updateSectFromInput
+} from "@/server/services/religions";
+import {
+  createHistoricalPeriodFromInput,
+  removeHistoricalPeriod,
+  updateHistoricalPeriodFromInput
+} from "@/server/services/historical-periods";
+import {
+  createCitationFromInput,
+  createSourceFromInput,
+  removeCitation,
+  removeSource,
+  updateCitationFromInput,
+  updateSourceFromInput
+} from "@/server/services/sources";
+import { createTagFromInput, deleteTagById, updateTagFromInput } from "@/server/services/tags";
 
 const EVENT_HEADERS = [
   "title",
@@ -83,7 +121,7 @@ const EVENT_HEADERS = [
   "time_end_year",
   "time_is_approximate",
   "tags",
-  "people",
+  "person",
   "polities",
   "dynasties",
   "periods",
@@ -314,8 +352,9 @@ export type CsvPreviewResult<TInput> = {
 
 export type CsvImportResult = {
   kind: CsvImportKind;
-  importedCount: number;
-  mergedCount: number;
+  insertedCount: number;
+  updatedCount: number;
+  deletedCount: number;
 };
 
 export type RoleAssignmentCsvInput = {
@@ -382,7 +421,7 @@ type ParsedCsvDocument = {
   rows: ParsedCsvRow[];
 };
 
-type NameReferenceKey = "people" | "polities" | "dynasties" | "periods" | "religions" | "sects" | "regions";
+type NameReferenceKey = "person" | "polities" | "dynasties" | "periods" | "religions" | "sects" | "regions";
 
 type ReferenceMaps = Record<NameReferenceKey, Map<string, number>>;
 
@@ -416,7 +455,7 @@ export function previewEventCsvImport(rawCsv: string): CsvPreviewResult<EventInp
       timeExpression,
       startTimeExpression: undefined,
       endTimeExpression: undefined,
-      personIds: resolveReferences("people", cells.people, references.people, issues),
+      personIds: resolveReferences("person", cells.person, references.person, issues),
       polityIds: resolveReferences("polities", cells.polities, references.polities, issues),
       dynastyIds: resolveReferences("dynasties", cells.dynasties, references.dynasties, issues),
       periodIds: resolveReferences("periods", cells.periods, references.periods, issues),
@@ -480,7 +519,7 @@ export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonI
 
   const unknownHeaders = parsed.headers.filter((header) => !PERSON_HEADERS.includes(header as (typeof PERSON_HEADERS)[number]));
   const references = buildReferenceMaps();
-  const existingPeople = listPeopleDetailed();
+  const existingPerson = listPersonDetailed();
 
   const rows = parsed.rows.map((row) => {
     const issues: CsvPreviewIssue[] = [];
@@ -529,7 +568,7 @@ export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonI
 
     const duplicateCandidates =
       issues.length === 0 && parsedInput.success
-        ? findPersonDuplicateCandidates(existingPeople, parsedInput.data)
+        ? findPersonDuplicateCandidates(existingPerson, parsedInput.data)
         : [];
 
     const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
@@ -563,9 +602,9 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
     (header) => !ROLE_ASSIGNMENT_HEADERS.includes(header as (typeof ROLE_ASSIGNMENT_HEADERS)[number])
   );
   const references = buildReferenceMaps();
-  const people = listPeopleDetailed();
-  const peopleById = new Map(people.map((person) => [person.id, person.name]));
-  const roles = getRoleAssignmentsByPersonIds(people.map((person) => person.id));
+  const person = listPersonDetailed();
+  const personById = new Map(person.map((person) => [person.id, person.name]));
+  const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
   const polityById = new Map(listPolities().map((polity) => [polity.id, polity.name]));
   const dynastyById = new Map(listDynasties().map((dynasty) => [dynasty.id, dynasty.name]));
 
@@ -583,7 +622,7 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
     const cells = mapRowToCells(parsed.headers, row.values);
     const personName = cells.person.trim();
     const title = cells.title.trim();
-    const personId = resolveSingleReference("people", personName, references.people, issues);
+    const personId = resolveSingleReference("person", personName, references.person, issues);
     const polityId = resolveSingleReference("polities", normalizeOptionalString(cells.polity), references.polities, issues, false);
     const dynastyId = resolveSingleReference("dynasties", normalizeOptionalString(cells.dynasty), references.dynasties, issues, false);
     const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
@@ -618,7 +657,7 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
       issues.length === 0 && parsedInput.success && personId
         ? {
             personId,
-            personName: peopleById.get(personId) ?? personName,
+            personName: personById.get(personId) ?? personName,
             role: parsedInput.data
           }
         : undefined;
@@ -1081,7 +1120,7 @@ export function previewReligionCsvImport(rawCsv: string): CsvPreviewResult<Relig
       note: normalizeOptionalString(cells.note),
       timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
-      founderIds: resolveReferences("people", cells.founders, references.people, issues)
+      founderIds: resolveReferences("person", cells.founders, references.person, issues)
     };
 
     const parsedInput = religionSchema.safeParse(inputCandidate);
@@ -1220,7 +1259,7 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
       note: normalizeOptionalString(cells.note),
       timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
-      founderIds: resolveReferences("people", cells.founders, references.people, issues)
+      founderIds: resolveReferences("person", cells.founders, references.person, issues)
     };
     const parsedInput = sectSchema.safeParse(inputCandidate);
     if (!parsedInput.success) {
@@ -1278,189 +1317,141 @@ export function previewTagCsvImport(rawCsv: string): CsvPreviewResult<TagCsvInpu
 
 export function applyEventCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewEventCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
+  assertSyncableRows(preview.rows);
 
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listEvents(),
+      getExistingKey: (item) => item.title,
+      getInputKey: (input) => input.title,
+      createItem: createEventFromInput,
+      updateItem: updateEventFromInput,
+      deleteItem: removeEvent
+    })
+  )();
 
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-
-    for (const row of preview.rows) {
-      if (!row.input) {
-        continue;
-      }
-
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateEventFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-
-      createEventFromInput(row.input);
-      importedCount += 1;
-    }
-
-    return { importedCount, mergedCount };
-  })();
-
-  return {
-    kind: "event",
-    ...result
-  };
+  return { kind: "event", ...result };
 }
 
 export function applyPersonCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewPersonCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
+  assertSyncableRows(preview.rows);
 
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listPersonDetailed(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createPersonFromInput,
+      updateItem: updatePersonFromInput,
+      deleteItem: removePerson
+    })
+  )();
 
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-
-    for (const row of preview.rows) {
-      if (!row.input) {
-        continue;
-      }
-
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updatePersonFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-
-      createPersonFromInput(row.input);
-      importedCount += 1;
-    }
-
-    return { importedCount, mergedCount };
-  })();
-
-  return {
-    kind: "person",
-    ...result
-  };
+  return { kind: "person", ...result };
 }
 
 export function applyRoleAssignmentCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewRoleAssignmentCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
   const result = sqlite.transaction(() => {
+    const syncRows = collectSyncRows(preview.rows, (input) => buildRoleAssignmentSyncKey(input));
+    const allPerson = listPersonDetailed();
+    const existingRoles = getRoleAssignmentsByPersonIds(allPerson.map((person) => person.id));
+    const existingKeys = new Set(
+      existingRoles.map((role) => {
+        const record = role as Record<string, unknown>;
+
+        return [
+          role.personId,
+          role.title,
+          role.polityId ?? "",
+          role.dynastyId ?? "",
+          (record.timeCalendarEra as string | null) ?? "",
+          (record.timeStartYear as number | null) ?? "",
+          (record.timeEndYear as number | null) ?? ""
+        ].join(":");
+      })
+    );
+
+    const desiredKeys = new Set(syncRows.map((row) => row.key));
     const grouped = new Map<number, RoleAssignmentInput[]>();
-    let mergedCount = 0;
 
-    for (const row of preview.rows) {
-      if (!row.input) {
-        continue;
-      }
-
-      if (getSingleMergeCandidateId(row)) {
-        mergedCount += 1;
-        continue;
-      }
-
+    for (const row of syncRows) {
       const list = grouped.get(row.input.personId) ?? [];
       list.push(row.input.role);
       grouped.set(row.input.personId, list);
     }
 
-    for (const [personId, roles] of grouped) {
-      appendRoleAssignmentsToPerson(personId, roles);
+    for (const person of allPerson) {
+      replaceRoleAssignmentsOnPerson(person.id, grouped.get(person.id) ?? []);
     }
 
-    const importedCount = Array.from(grouped.values()).reduce((count, roles) => count + roles.length, 0);
-    return { importedCount, mergedCount };
+    return buildSyncCounts(existingKeys, desiredKeys);
   })();
 
-  return {
-    kind: "role-assignment",
-    ...result
-  };
+  return { kind: "role-assignment", ...result };
 }
 
 export function applyEventRelationCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewEventRelationCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
   const result = sqlite.transaction(() => {
+    const syncRows = collectSyncRows(preview.rows, buildEventRelationSyncKey);
+    const allEvents = listEvents();
+    const existingRelations = getEventRelationsByEventIds(allEvents.map((event) => event.id));
+    const existingKeys = new Set(existingRelations.map((relation) => `${relation.fromEventId}:${relation.toEventId}:${relation.relationType}`));
+    const desiredKeys = new Set(syncRows.map((row) => row.key));
     const grouped = new Map<number, Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>>();
-    let mergedCount = 0;
 
-    for (const row of preview.rows) {
-      if (!row.input) {
-        continue;
-      }
-
-      if (getSingleMergeCandidateId(row)) {
-        mergedCount += 1;
-        continue;
-      }
-
+    for (const row of syncRows) {
       const list = grouped.get(row.input.fromEventId) ?? [];
       list.push(row.input.relation);
       grouped.set(row.input.fromEventId, list);
     }
 
-    for (const [eventId, relations] of grouped) {
-      appendEventRelationsToEvent(eventId, relations);
+    for (const event of allEvents) {
+      replaceEventRelationsOnEvent(event.id, grouped.get(event.id) ?? []);
     }
 
-    const importedCount = Array.from(grouped.values()).reduce((count, relations) => count + relations.length, 0);
-    return { importedCount, mergedCount };
+    return buildSyncCounts(existingKeys, desiredKeys);
   })();
 
-  return {
-    kind: "event-relation",
-    ...result
-  };
+  return { kind: "event-relation", ...result };
 }
 
 export function applyConflictParticipantCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewConflictParticipantCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
   const result = sqlite.transaction(() => {
+    const syncRows = collectSyncRows(preview.rows, buildConflictParticipantSyncKey);
+    const conflictEvents = listEvents().filter((event) => isConflictEventType(event.eventType));
+    const existingParticipants = getConflictParticipantsByEventIds(conflictEvents.map((event) => event.id));
+    const existingKeys = new Set(
+      existingParticipants.map(
+        (participant) =>
+          `${participant.eventId}:${participant.participantType}:${participant.participantId}:${participant.role}`
+      )
+    );
+    const desiredKeys = new Set(syncRows.map((row) => row.key));
     const grouped = new Map<number, ConflictParticipantCsvInput["participant"][]>();
-    let mergedCount = 0;
 
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      if (getSingleMergeCandidateId(row)) {
-        mergedCount += 1;
-        continue;
-      }
+    for (const row of syncRows) {
       const list = grouped.get(row.input.eventId) ?? [];
       list.push(row.input.participant);
       grouped.set(row.input.eventId, list);
     }
 
-    for (const [eventId, participants] of grouped) {
-      appendConflictParticipantsToEvent(eventId, participants);
+    for (const event of conflictEvents) {
+      replaceConflictParticipantsOnEvent(event.id, grouped.get(event.id) ?? []);
     }
 
-    const importedCount = Array.from(grouped.values()).reduce((count, participants) => count + participants.length, 0);
-    return { importedCount, mergedCount };
+    return buildSyncCounts(existingKeys, desiredKeys);
   })();
 
   return { kind: "conflict-participant", ...result };
@@ -1468,27 +1459,21 @@ export function applyConflictParticipantCsvImport(rawCsv: string): CsvImportResu
 
 export function applyConflictOutcomeCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewConflictOutcomeCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
   const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      if (getSingleMergeCandidateId(row)) {
-        replaceConflictOutcomeOnEvent(row.input.eventId, row.input.outcome);
-        mergedCount += 1;
-        continue;
-      }
-      appendConflictOutcomeToEvent(row.input.eventId, row.input.outcome);
-      importedCount += 1;
+    const syncRows = collectSyncRows(preview.rows, (input) => String(input.eventId));
+    const conflictEvents = listEvents().filter((event) => isConflictEventType(event.eventType));
+    const existingOutcomes = getConflictOutcomesByEventIds(conflictEvents.map((event) => event.id));
+    const existingKeys = new Set(existingOutcomes.map((outcome) => String(outcome.eventId)));
+    const desiredKeys = new Set(syncRows.map((row) => row.key));
+    const desiredByEventId = new Map(syncRows.map((row) => [row.input.eventId, row.input.outcome]));
+
+    for (const event of conflictEvents) {
+      replaceConflictOutcomeOnEvent(event.id, desiredByEventId.get(event.id) ?? null);
     }
 
-    return { importedCount, mergedCount };
+    return buildSyncCounts(existingKeys, desiredKeys);
   })();
 
   return { kind: "conflict-outcome", ...result };
@@ -1496,201 +1481,153 @@ export function applyConflictOutcomeCsvImport(rawCsv: string): CsvImportResult {
 
 export function applyRegionCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewRegionCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateRegionFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createRegionFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listRegions(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createRegionFromInput,
+      updateItem: updateRegionFromInput,
+      deleteItem: deleteRegionById
+    })
+  )();
 
   return { kind: "region", ...result };
 }
 
 export function applyPeriodCategoryCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewPeriodCategoryCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updatePeriodCategoryFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createPeriodCategoryFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listPeriodCategories(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createPeriodCategoryFromInput,
+      updateItem: updatePeriodCategoryFromInput,
+      deleteItem: deletePeriodCategoryById
+    })
+  )();
 
   return { kind: "period-category", ...result };
 }
 
 export function applyPolityCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewPolityCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updatePolityFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createPolityFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listPolities(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createPolityFromInput,
+      updateItem: updatePolityFromInput,
+      deleteItem: removePolity
+    })
+  )();
 
   return { kind: "polity", ...result };
 }
 
 export function applyReligionCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewReligionCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) {
-    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  }
+  assertSyncableRows(preview.rows);
 
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateReligionFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createReligionFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listReligions(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createReligionFromInput,
+      updateItem: updateReligionFromInput,
+      deleteItem: removeReligion
+    })
+  )();
 
   return { kind: "religion", ...result };
 }
 
 export function applyDynastyCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewDynastyCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateDynastyFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createDynastyFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listDynasties(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createDynastyFromInput,
+      updateItem: updateDynastyFromInput,
+      deleteItem: removeDynasty
+    })
+  )();
+
   return { kind: "dynasty", ...result };
 }
 
 export function applyHistoricalPeriodCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewHistoricalPeriodCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateHistoricalPeriodFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createHistoricalPeriodFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listHistoricalPeriods(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createHistoricalPeriodFromInput,
+      updateItem: updateHistoricalPeriodFromInput,
+      deleteItem: removeHistoricalPeriod
+    })
+  )();
+
   return { kind: "historical-period", ...result };
 }
 
 export function applySectCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewSectCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateSectFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createSectFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listSects(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createSectFromInput,
+      updateItem: updateSectFromInput,
+      deleteItem: removeSect
+    })
+  )();
+
   return { kind: "sect", ...result };
 }
 
 export function applyTagCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewTagCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateTagFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createTagFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listTags(),
+      getExistingKey: (item) => item.name,
+      getInputKey: (input) => input.name,
+      createItem: createTagFromInput,
+      updateItem: updateTagFromInput,
+      deleteItem: deleteTagById
+    })
+  )();
+
   return { kind: "tag", ...result };
 }
 
@@ -1746,7 +1683,7 @@ export function previewCitationCsvImport(rawCsv: string): CsvPreviewResult<Citat
   const citations = listCitations();
   const targetMaps = {
     event: new Map(listEvents().map((item) => [item.title, item.id])),
-    person: new Map(listPeopleDetailed().map((item) => [item.name, item.id])),
+    person: new Map(listPersonDetailed().map((item) => [item.name, item.id])),
     polity: new Map(listPolities().map((item) => [item.name, item.id])),
     historical_period: new Map(listHistoricalPeriods().map((item) => [item.name, item.id])),
     religion: new Map(listReligions().map((item) => [item.name, item.id]))
@@ -2018,139 +1955,115 @@ export function previewHistoricalPeriodRelationCsvImport(rawCsv: string): CsvPre
 
 export function applySourceCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewSourceCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateSourceFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createSourceFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncNamedRows({
+      rows: preview.rows,
+      existingItems: listSources(),
+      getExistingKey: (item) => item.title,
+      getInputKey: (input) => input.title,
+      createItem: createSourceFromInput,
+      updateItem: updateSourceFromInput,
+      deleteItem: removeSource
+    })
+  )();
+
   return { kind: "source", ...result };
 }
 
 export function applyCitationCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewCitationCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateCitationFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createCitationFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncCompositeRows({
+      rows: preview.rows,
+      existingItems: listCitations(),
+      getExistingKey: buildCitationSyncKey,
+      getInputKey: buildCitationSyncKey,
+      createItem: createCitationFromInput,
+      updateItem: updateCitationFromInput,
+      deleteItem: removeCitation
+    })
+  )();
+
   return { kind: "citation", ...result };
 }
 
 export function applyPolityTransitionCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewPolityTransitionCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updatePolityTransitionFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createPolityTransitionFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncCompositeRows({
+      rows: preview.rows,
+      existingItems: listPolityTransitions(),
+      getExistingKey: buildPolityTransitionSyncKey,
+      getInputKey: buildPolityTransitionSyncKey,
+      createItem: createPolityTransitionFromInput,
+      updateItem: updatePolityTransitionFromInput,
+      deleteItem: deletePolityTransitionById
+    })
+  )();
+
   return { kind: "polity-transition", ...result };
 }
 
 export function applyDynastySuccessionCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewDynastySuccessionCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateDynastySuccessionFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createDynastySuccessionFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncCompositeRows({
+      rows: preview.rows,
+      existingItems: listDynastySuccessions(),
+      getExistingKey: buildDynastySuccessionSyncKey,
+      getInputKey: buildDynastySuccessionSyncKey,
+      createItem: createDynastySuccessionFromInput,
+      updateItem: updateDynastySuccessionFromInput,
+      deleteItem: deleteDynastySuccessionById
+    })
+  )();
+
   return { kind: "dynasty-succession", ...result };
 }
 
 export function applyRegionRelationCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewRegionRelationCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateRegionRelationFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createRegionRelationFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncCompositeRows({
+      rows: preview.rows,
+      existingItems: listRegionRelations(),
+      getExistingKey: buildRegionRelationSyncKey,
+      getInputKey: buildRegionRelationSyncKey,
+      createItem: createRegionRelationFromInput,
+      updateItem: updateRegionRelationFromInput,
+      deleteItem: deleteRegionRelationById
+    })
+  )();
+
   return { kind: "region-relation", ...result };
 }
 
 export function applyHistoricalPeriodRelationCsvImport(rawCsv: string): CsvImportResult {
   const preview = previewHistoricalPeriodRelationCsvImport(rawCsv);
-  const blockingRows = getAutoMergeBlockingRows(preview.rows);
-  if (blockingRows.length > 0) throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
-  const result = sqlite.transaction(() => {
-    let importedCount = 0;
-    let mergedCount = 0;
-    for (const row of preview.rows) {
-      if (!row.input) continue;
-      const mergeId = getSingleMergeCandidateId(row);
-      if (mergeId) {
-        updateHistoricalPeriodRelationFromInput(mergeId, row.input);
-        mergedCount += 1;
-        continue;
-      }
-      createHistoricalPeriodRelationFromInput(row.input);
-      importedCount += 1;
-    }
-    return { importedCount, mergedCount };
-  })();
+  assertSyncableRows(preview.rows);
+
+  const result = sqlite.transaction(() =>
+    syncCompositeRows({
+      rows: preview.rows,
+      existingItems: listHistoricalPeriodRelations(),
+      getExistingKey: buildHistoricalPeriodRelationSyncKey,
+      getInputKey: buildHistoricalPeriodRelationSyncKey,
+      createItem: createHistoricalPeriodRelationFromInput,
+      updateItem: updateHistoricalPeriodRelationFromInput,
+      deleteItem: deleteHistoricalPeriodRelationById
+    })
+  )();
+
   return { kind: "historical-period-relation", ...result };
 }
 
@@ -2193,7 +2106,7 @@ function summarizeRows<TInput>(rows: CsvPreviewRow<TInput>[]): CsvPreviewSummary
   };
 }
 
-function getAutoMergeBlockingRows<TInput>(rows: CsvPreviewRow<TInput>[]) {
+function getSyncBlockingRows<TInput>(rows: CsvPreviewRow<TInput>[]) {
   return rows.filter((row) => row.status === "error" || (row.status === "duplicate-candidate" && row.duplicateCandidates.length !== 1));
 }
 
@@ -2201,9 +2114,173 @@ function getSingleMergeCandidateId<TInput>(row: CsvPreviewRow<TInput>) {
   return row.status === "duplicate-candidate" && row.duplicateCandidates.length === 1 ? row.duplicateCandidates[0]?.id ?? null : null;
 }
 
+function assertSyncableRows<TInput>(rows: CsvPreviewRow<TInput>[]) {
+  const blockingRows = getSyncBlockingRows(rows);
+  if (blockingRows.length > 0) {
+    throw new Error("error または複数候補の duplicate-candidate を含むため import を実行できません");
+  }
+}
+
+function collectSyncRows<TInput>(rows: CsvPreviewRow<TInput>[], getKey: (input: TInput) => string) {
+  const seen = new Map<string, number>();
+
+  return rows
+    .filter((row): row is CsvPreviewRow<TInput> & { input: TInput } => Boolean(row.input))
+    .map((row) => {
+      const key = getKey(row.input);
+      const previous = seen.get(key);
+      if (previous) {
+        throw new Error(`CSV 内で同じ同期キーが重複しています: ${row.label} (row ${previous} / ${row.rowNumber})`);
+      }
+
+      seen.set(key, row.rowNumber);
+      return {
+        row,
+        input: row.input,
+        key,
+        updateId: getSingleMergeCandidateId(row)
+      };
+    });
+}
+
+function syncNamedRows<TInput, TExisting extends { id: number }>(args: {
+  rows: CsvPreviewRow<TInput>[];
+  existingItems: TExisting[];
+  getExistingKey: (item: TExisting) => string;
+  getInputKey: (input: TInput) => string;
+  createItem: (input: TInput) => number | void;
+  updateItem: (id: number, input: TInput) => void;
+  deleteItem: (id: number) => void;
+}) {
+  const syncRows = collectSyncRows(args.rows, args.getInputKey);
+  const existingByKey = new Map<string, TExisting[]>();
+
+  for (const item of args.existingItems) {
+    const key = args.getExistingKey(item);
+    const current = existingByKey.get(key) ?? [];
+    current.push(item);
+    existingByKey.set(key, current);
+  }
+
+  const desiredKeys = new Set<string>();
+  let insertedCount = 0;
+  let updatedCount = 0;
+
+  for (const row of syncRows) {
+    desiredKeys.add(row.key);
+    const exactMatches = existingByKey.get(row.key) ?? [];
+    const updateId = row.updateId ?? (exactMatches.length === 1 ? exactMatches[0]?.id ?? null : null);
+
+    if (updateId !== null) {
+      args.updateItem(updateId, row.input);
+      updatedCount += 1;
+      continue;
+    }
+
+    if (exactMatches.length > 1) {
+      throw new Error(`既存データに同じ同期キーが複数あります: ${row.key}`);
+    }
+
+    args.createItem(row.input);
+    insertedCount += 1;
+  }
+
+  let deletedCount = 0;
+  for (const item of args.existingItems) {
+    if (!desiredKeys.has(args.getExistingKey(item))) {
+      args.deleteItem(item.id);
+      deletedCount += 1;
+    }
+  }
+
+  return { insertedCount, updatedCount, deletedCount };
+}
+
+function syncCompositeRows<TInput, TExisting extends { id: number }>(args: {
+  rows: CsvPreviewRow<TInput>[];
+  existingItems: TExisting[];
+  getExistingKey: (item: TExisting) => string;
+  getInputKey: (input: TInput) => string;
+  createItem: (input: TInput) => number | void;
+  updateItem: (id: number, input: TInput) => void;
+  deleteItem: (id: number) => void;
+}) {
+  return syncNamedRows(args);
+}
+
+function buildSyncCounts(existingKeys: Set<string>, desiredKeys: Set<string>) {
+  let insertedCount = 0;
+  let updatedCount = 0;
+  let deletedCount = 0;
+
+  for (const key of desiredKeys) {
+    if (existingKeys.has(key)) {
+      updatedCount += 1;
+    } else {
+      insertedCount += 1;
+    }
+  }
+
+  for (const key of existingKeys) {
+    if (!desiredKeys.has(key)) {
+      deletedCount += 1;
+    }
+  }
+
+  return { insertedCount, updatedCount, deletedCount };
+}
+
+function buildRoleAssignmentSyncKey(input: RoleAssignmentCsvInput) {
+  return [
+    input.personId,
+    input.role.title,
+    input.role.polityId ?? "",
+    input.role.dynastyId ?? "",
+    input.role.timeExpression?.calendarEra ?? "",
+    input.role.timeExpression?.startYear ?? "",
+    input.role.timeExpression?.endYear ?? ""
+  ].join(":");
+}
+
+function buildEventRelationSyncKey(input: EventRelationCsvInput) {
+  return `${input.fromEventId}:${input.relation.toEventId}:${input.relation.relationType}`;
+}
+
+function buildConflictParticipantSyncKey(input: ConflictParticipantCsvInput) {
+  return `${input.eventId}:${input.participant.participantType}:${input.participant.participantId}:${input.participant.role}`;
+}
+
+function buildCitationSyncKey(input: CitationCsvInput | { sourceId: number; targetType: string; targetId: number; locator: string | null }) {
+  return `${input.sourceId}:${input.targetType}:${input.targetId}:${input.locator ?? ""}`;
+}
+
+function buildPolityTransitionSyncKey(
+  input: PolityTransitionCsvInput | { predecessorPolityId: number; successorPolityId: number; transitionType: string }
+) {
+  return `${input.predecessorPolityId}:${input.successorPolityId}:${input.transitionType}`;
+}
+
+function buildDynastySuccessionSyncKey(
+  input: DynastySuccessionCsvInput | { polityId: number; predecessorDynastyId: number; successorDynastyId: number }
+) {
+  return `${input.polityId}:${input.predecessorDynastyId}:${input.successorDynastyId}`;
+}
+
+function buildRegionRelationSyncKey(
+  input: RegionRelationCsvInput | { fromRegionId: number; toRegionId: number; relationType: string }
+) {
+  return `${input.fromRegionId}:${input.toRegionId}:${input.relationType}`;
+}
+
+function buildHistoricalPeriodRelationSyncKey(
+  input: HistoricalPeriodRelationCsvInput | { fromPeriodId: number; toPeriodId: number; relationType: string }
+) {
+  return `${input.fromPeriodId}:${input.toPeriodId}:${input.relationType}`;
+}
+
 function buildReferenceMaps(): ReferenceMaps {
   return {
-    people: new Map(listPeopleDetailed().map((item) => [item.name, item.id])),
+    person: new Map(listPersonDetailed().map((item) => [item.name, item.id])),
     polities: new Map(listPolities().map((item) => [item.name, item.id])),
     dynasties: new Map(listDynasties().map((item) => [item.name, item.id])),
     periods: new Map(listHistoricalPeriods().map((item) => [item.name, item.id])),
@@ -2471,11 +2548,11 @@ function findEventDuplicateCandidates(existingEvents: ReturnType<typeof listEven
     }));
 }
 
-function findPersonDuplicateCandidates(existingPeople: ReturnType<typeof listPeopleDetailed>, input: PersonInput): CsvDuplicateCandidate[] {
+function findPersonDuplicateCandidates(existingPerson: ReturnType<typeof listPersonDetailed>, input: PersonInput): CsvDuplicateCandidate[] {
   const birthYear = input.birthTimeExpression?.startYear;
   const deathYear = input.deathTimeExpression?.startYear;
 
-  return existingPeople
+  return existingPerson
     .filter((person) => {
       const personRecord = person as Record<string, unknown>;
       const aliases = String(person.aliases ?? "")
@@ -2584,7 +2661,7 @@ function findEventRelationDuplicateCandidates(
 
 function buildParticipantReferenceMaps() {
   return {
-    person: new Map(listPeopleDetailed().map((item) => [item.name, item.id])),
+    person: new Map(listPersonDetailed().map((item) => [item.name, item.id])),
     polity: new Map(listPolities().map((item) => [item.name, item.id])),
     religion: new Map(listReligions().map((item) => [item.name, item.id])),
     sect: new Map(listSects().map((item) => [item.name, item.id]))

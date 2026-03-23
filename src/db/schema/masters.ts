@@ -48,7 +48,7 @@ export const dynasties = sqliteTable("dynasties", {
   ...timeColumns("time")
 });
 
-export const people = sqliteTable("people", {
+export const persons = sqliteTable("persons", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   aliases: text("aliases"),

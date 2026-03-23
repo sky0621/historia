@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
-import { createPersonAction, updatePersonAction } from "@/features/people/actions";
+import { createPersonAction, updatePersonAction } from "@/features/person/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Option = { id: number; name: string };

@@ -107,7 +107,7 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
                   <td className="px-5 py-4">{sect.timeLabel}</td>
                   <td className="px-5 py-4">
                     {renderLinkedNames(
-                      sect.founderIds.map((id, index) => ({ id, name: sect.founderNames[index], route: "people" as const }))
+                      sect.founderIds.map((id, index) => ({ id, name: sect.founderNames[index], route: "person" as const }))
                     )}
                   </td>
                   <td className="px-5 py-4 text-[var(--muted)]">
@@ -143,10 +143,10 @@ function renderLinkedNames(
   items: Array<{
     id: number;
     name: string | undefined;
-    route: "people" | "regions";
+    route: "person" | "regions";
   }>
 ) {
-  const filtered = items.filter((item): item is { id: number; name: string; route: "people" | "regions" } => Boolean(item.name));
+  const filtered = items.filter((item): item is { id: number; name: string; route: "person" | "regions" } => Boolean(item.name));
 
   if (filtered.length === 0) {
     return "-";

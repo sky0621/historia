@@ -27,7 +27,7 @@ import {
 } from "@/server/repositories/events";
 import { listDynasties } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
-import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
@@ -55,7 +55,7 @@ type EventListFilters = {
 
 export function getEventFormOptions() {
   return {
-    people: listPeopleDetailed().map((item) => ({ id: item.id, name: item.name })),
+    person: listPersonDetailed().map((item) => ({ id: item.id, name: item.name })),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name })),
     periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name })),
@@ -73,7 +73,7 @@ export function getEventsListView(filters: EventListFilters = {}) {
   const links = getEventLinks(events.map((event) => event.id));
   const relations = getEventRelationsByEventIds(events.map((event) => event.id));
 
-  const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
+  const personById = new Map(listPersonDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const dynastiesById = new Map(listDynasties().map((item) => [item.id, item.name]));
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
@@ -87,8 +87,8 @@ export function getEventsListView(filters: EventListFilters = {}) {
       const relationSummaryItems = [
         ...links.personLinks
           .filter((link) => link.eventId === event.id)
-          .map((link) => ({ type: "people" as const, id: link.personId, name: peopleById.get(link.personId) }))
-          .filter((item): item is { type: "people"; id: number; name: string } => Boolean(item.name)),
+          .map((link) => ({ type: "person" as const, id: link.personId, name: personById.get(link.personId) }))
+          .filter((item): item is { type: "person"; id: number; name: string } => Boolean(item.name)),
         ...links.polityLinks
           .filter((link) => link.eventId === event.id)
           .map((link) => ({ type: "polities" as const, id: link.polityId, name: politiesById.get(link.polityId) }))
@@ -208,7 +208,7 @@ export function getEventDetailView(id: number) {
   const linkedTags = getTagsByIds(tagLinks.map((link) => link.tagId));
   const eventById = new Map(allEvents.map((item) => [item.id, item]));
   const participantNameByType = {
-    person: new Map(options.people.map((item) => [item.id, item.name])),
+    person: new Map(options.person.map((item) => [item.id, item.name])),
     polity: new Map(options.polities.map((item) => [item.id, item.name])),
     religion: new Map(options.religions.map((item) => [item.id, item.name])),
     sect: new Map(options.sects.map((item) => [item.id, item.name]))
@@ -216,7 +216,7 @@ export function getEventDetailView(id: number) {
 
   return {
     event,
-    linkedPeople: options.people.filter((item) => links.personLinks.some((link) => link.eventId === id && link.personId === item.id)),
+    linkedPerson: options.person.filter((item) => links.personLinks.some((link) => link.eventId === id && link.personId === item.id)),
     linkedPolities: options.polities.filter((item) => links.polityLinks.some((link) => link.eventId === id && link.polityId === item.id)),
     linkedDynasties: options.dynasties.filter((item) => links.dynastyLinks.some((link) => link.eventId === id && link.dynastyId === item.id)),
     linkedPeriods: options.periods.filter((item) => links.periodLinks.some((link) => link.eventId === id && link.periodId === item.id)),
@@ -484,6 +484,33 @@ export function appendEventRelationsToEvent(
   });
 }
 
+export function replaceEventRelationsOnEvent(
+  id: number,
+  relations: Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>
+) {
+  const event = getEventById(id);
+  if (!event) {
+    throw new Error(`イベントが見つかりません: ${id}`);
+  }
+
+  const before = buildEventHistorySnapshot(id);
+  replaceEventRelations(
+    id,
+    relations.map((relation) => ({
+      fromEventId: id,
+      toEventId: relation.toEventId,
+      relationType: relation.relationType
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "event",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
+}
+
 export function appendConflictParticipantsToEvent(
   id: number,
   participants: Array<{
@@ -500,6 +527,40 @@ export function appendConflictParticipantsToEvent(
 
   const before = buildEventHistorySnapshot(id);
   insertConflictParticipants(
+    participants.map((participant) => ({
+      eventId: id,
+      participantType: participant.participantType,
+      participantId: participant.participantId,
+      role: participant.role,
+      note: nullable(participant.note)
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "event",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
+}
+
+export function replaceConflictParticipantsOnEvent(
+  id: number,
+  participants: Array<{
+    participantType: "polity" | "person" | "religion" | "sect";
+    participantId: number;
+    role: "attacker" | "defender" | "leader" | "ally" | "other";
+    note?: string;
+  }>
+) {
+  const event = getEventById(id);
+  if (!event) {
+    throw new Error(`イベントが見つかりません: ${id}`);
+  }
+
+  const before = buildEventHistorySnapshot(id);
+  replaceConflictParticipants(
+    id,
     participants.map((participant) => ({
       eventId: id,
       participantType: participant.participantType,
@@ -567,7 +628,7 @@ export function replaceConflictOutcomeOnEvent(
     loserSummary?: string;
     settlementSummary?: string;
     note?: string;
-  }
+  } | null
 ) {
   const event = getEventById(id);
   if (!event) {
@@ -575,21 +636,28 @@ export function replaceConflictOutcomeOnEvent(
   }
 
   const before = buildEventHistorySnapshot(id);
-  replaceConflictOutcome(id, {
-    eventId: id,
-    winnerSummary: nullable(outcome.winnerSummary),
-    loserSummary: nullable(outcome.loserSummary),
-    settlementSummary: nullable(outcome.settlementSummary),
-    note: nullable(outcome.note)
-  });
+  replaceConflictOutcome(
+    id,
+    outcome
+      ? {
+          eventId: id,
+          winnerSummary: nullable(outcome.winnerSummary),
+          loserSummary: nullable(outcome.loserSummary),
+          settlementSummary: nullable(outcome.settlementSummary),
+          note: nullable(outcome.note)
+        }
+      : null
+  );
   replaceConflictOutcomeParticipants(
     id,
-    [...outcome.winnerParticipants, ...outcome.loserParticipants].map((participant) => ({
-      eventId: id,
-      side: participant.side,
-      participantType: participant.participantType,
-      participantId: participant.participantId
-    }))
+    outcome
+      ? [...outcome.winnerParticipants, ...outcome.loserParticipants].map((participant) => ({
+          eventId: id,
+          side: participant.side,
+          participantType: participant.participantType,
+          participantId: participant.participantId
+        }))
+      : []
   );
 
   recordChangeHistory({

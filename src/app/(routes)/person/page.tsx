@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { getPeopleListView, getPersonFormOptions } from "@/server/services/people";
+import { getPersonListView, getPersonFormOptions } from "@/server/services/person";
 
-type PeoplePageProps = {
+type PersonPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function PeoplePage({ searchParams }: PeoplePageProps) {
+export default async function PersonPage({ searchParams }: PersonPageProps) {
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
   const regionId = getNumericParam(params.regionId);
@@ -15,7 +15,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
   const polityId = getNumericParam(params.polityId);
   const dynastyId = getNumericParam(params.dynastyId);
   const hasRoles = getSingleParam(params.hasRoles) === "1";
-  const people = getPeopleListView({ query, regionId, religionId, sectId, periodId, polityId, dynastyId, hasRoles });
+  const person = getPersonListView({ query, regionId, religionId, sectId, periodId, polityId, dynastyId, hasRoles });
   const options = getPersonFormOptions();
 
   return (
@@ -27,7 +27,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
             生没年、役職履歴、関連地域、宗教、時代区分を管理します。
           </p>
         </div>
-        <Link href="/people/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+        <Link href="/person/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
           新規人物
         </Link>
       </div>
@@ -114,7 +114,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
           <button type="submit" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
             検索
           </button>
-          <Link href="/people" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
+          <Link href="/person" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
             リセット
           </Link>
         </div>
@@ -132,17 +132,17 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
             </tr>
           </thead>
           <tbody>
-            {people.length === 0 ? (
+            {person.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-5 py-6 text-[var(--muted)]">
                   まだ人物はありません。
                 </td>
               </tr>
             ) : (
-              people.map((person) => (
+              person.map((person) => (
                 <tr key={person.id} className="border-t border-[var(--border)]">
                   <td className="px-5 py-4">
-                    <Link href={`/people/${person.id}`} className="font-medium underline-offset-4 hover:underline">
+                    <Link href={`/person/${person.id}`} className="font-medium underline-offset-4 hover:underline">
                       {person.name}
                     </Link>
                   </td>

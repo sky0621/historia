@@ -1,5 +1,5 @@
-import { PersonForm } from "@/features/people/components/person-form";
-import { getPersonFormOptions } from "@/server/services/people";
+import { PersonForm } from "@/features/person/components/person-form";
+import { getPersonFormOptions } from "@/server/services/person";
 
 export default function NewPersonPage() {
   return (

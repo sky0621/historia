@@ -88,7 +88,7 @@ export default async function ReligionsPage({ searchParams }: ReligionsPageProps
                   <td className="px-5 py-4">{religion.timeLabel}</td>
                   <td className="px-5 py-4">
                     {renderLinkedNames(
-                      religion.founderIds.map((id, index) => ({ id, name: religion.founderNames[index], route: "people" as const }))
+                      religion.founderIds.map((id, index) => ({ id, name: religion.founderNames[index], route: "person" as const }))
                     )}
                   </td>
                   <td className="px-5 py-4 text-[var(--muted)]">
@@ -124,10 +124,10 @@ function renderLinkedNames(
   items: Array<{
     id: number;
     name: string | undefined;
-    route: "people" | "regions";
+    route: "person" | "regions";
   }>
 ) {
-  const filtered = items.filter((item): item is { id: number; name: string; route: "people" | "regions" } => Boolean(item.name));
+  const filtered = items.filter((item): item is { id: number; name: string; route: "person" | "regions" } => Boolean(item.name));
 
   if (filtered.length === 0) {
     return "-";

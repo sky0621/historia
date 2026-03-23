@@ -2,7 +2,7 @@ import { db } from "@/db/client";
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
-import type { PersonInput, RoleAssignmentInput } from "@/features/people/schema";
+import type { PersonInput, RoleAssignmentInput } from "@/features/person/schema";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listDynasties } from "@/server/repositories/dynasties";
 import {
@@ -13,14 +13,14 @@ import {
   getPersonRegionLinks,
   getPersonReligionLinks,
   getPersonSectLinks,
-  listPeopleDetailed,
+  listPersonDetailed,
   replacePersonPeriodLinks,
   replacePersonRegionLinks,
   replacePersonReligionLinks,
   replacePersonSectLinks,
   replaceRoleAssignments,
   updatePerson
-} from "@/server/repositories/people-detail";
+} from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
@@ -31,7 +31,7 @@ import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPersonOptions() {
-  return listPeopleDetailed().map((person) => ({ id: person.id, name: person.name }));
+  return listPersonDetailed().map((person) => ({ id: person.id, name: person.name }));
 }
 
 export function getPersonFormOptions() {
@@ -45,7 +45,7 @@ export function getPersonFormOptions() {
   };
 }
 
-type PeopleListFilters = {
+type PersonListFilters = {
   query?: string;
   regionId?: number;
   religionId?: number;
@@ -56,16 +56,16 @@ type PeopleListFilters = {
   hasRoles?: boolean;
 };
 
-export function getPeopleListView(filters: PeopleListFilters = {}) {
+export function getPersonListView(filters: PersonListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
-  const people = listPeopleDetailed();
+  const person = listPersonDetailed();
   const regions = listRegions();
   const regionById = new Map(regions.map((region) => [region.id, region.name]));
-  const regionLinks = getPersonRegionLinks(people.map((person) => person.id));
-  const religionLinks = getPersonReligionLinks(people.map((person) => person.id));
-  const sectLinks = getPersonSectLinks(people.map((person) => person.id));
-  const periodLinks = getPersonPeriodLinks(people.map((person) => person.id));
-  const roles = getRoleAssignmentsByPersonIds(people.map((person) => person.id));
+  const regionLinks = getPersonRegionLinks(person.map((person) => person.id));
+  const religionLinks = getPersonReligionLinks(person.map((person) => person.id));
+  const sectLinks = getPersonSectLinks(person.map((person) => person.id));
+  const periodLinks = getPersonPeriodLinks(person.map((person) => person.id));
+  const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
   const polities = listPolities();
   const dynasties = listDynasties();
   const religions = listReligions();
@@ -77,7 +77,7 @@ export function getPeopleListView(filters: PeopleListFilters = {}) {
   const sectById = new Map(sects.map((sect) => [sect.id, sect.name]));
   const periodById = new Map(periods.map((period) => [period.id, period.name]));
 
-  return people
+  return person
     .map((person) => ({
       ...person,
       birthLabel: formatStoredTime("birth", person),
@@ -112,7 +112,7 @@ export function getPeopleListView(filters: PeopleListFilters = {}) {
       }))
     }))
     .filter((person) =>
-      matchesPeopleFilters(person, normalizedQuery, filters)
+      matchesPersonFilters(person, normalizedQuery, filters)
     );
 }
 
@@ -272,6 +272,34 @@ export function appendRoleAssignmentsToPerson(id: number, roles: RoleAssignmentI
   });
 }
 
+export function replaceRoleAssignmentsOnPerson(id: number, roles: RoleAssignmentInput[]) {
+  const person = getPersonById(id);
+  if (!person) {
+    throw new Error(`人物が見つかりません: ${id}`);
+  }
+
+  const before = buildPersonHistorySnapshot(id);
+  replaceRoleAssignments(
+    id,
+    roles.map((role) => ({
+      personId: id,
+      title: role.title,
+      polityId: role.polityId ?? null,
+      dynastyId: role.dynastyId ?? null,
+      note: nullable(role.note),
+      isIncumbent: role.isIncumbent,
+      ...toStoredTime("time", role.timeExpression)
+    }))
+  );
+
+  recordChangeHistory({
+    targetType: "person",
+    targetId: id,
+    action: "update",
+    snapshot: before
+  });
+}
+
 function joinAliases(aliases: string[]) {
   return aliases.length > 0 ? aliases.join(", ") : null;
 }
@@ -337,7 +365,7 @@ function buildPersonHistorySnapshot(id: number) {
   };
 }
 
-function matchesPeopleFilters(
+function matchesPersonFilters(
   person: {
     name: string;
     aliases: string | null;
@@ -354,7 +382,7 @@ function matchesPeopleFilters(
     id: number;
   },
   query: string,
-  filters: PeopleListFilters
+  filters: PersonListFilters
 ) {
   if (
     !matchesQuery(

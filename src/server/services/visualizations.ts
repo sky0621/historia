@@ -1,6 +1,6 @@
 import { listDynasties } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
-import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
@@ -10,7 +10,7 @@ import { getEventsListView } from "@/server/services/events";
 
 type EventType = "general" | "war" | "rebellion" | "civil_war";
 type RelationType = "before" | "after" | "cause" | "related";
-type SubjectType = "people" | "polities" | "religions" | "regions";
+type SubjectType = "person" | "polities" | "religions" | "regions";
 
 export type GraphFilters = {
   query?: string;
@@ -116,11 +116,11 @@ export function getEventGraphView(filters: GraphFilters = {}): EventGraphView {
   }
 
   const links = getEventLinks(eventIds);
-  const subjectTypes = filters.subjectTypes ?? ["people", "polities", "religions", "regions"];
+  const subjectTypes = filters.subjectTypes ?? ["person", "polities", "religions", "regions"];
   const subjectNodes = new Map<string, GraphNode>();
   const subjectEdges: GraphEdge[] = [];
 
-  const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
+  const personById = new Map(listPersonDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
   const regionsById = new Map(listRegions().map((item) => [item.id, item.name]));
@@ -136,13 +136,13 @@ export function getEventGraphView(filters: GraphFilters = {}): EventGraphView {
     }
 
     const kindByType = {
-      people: "person",
+      person: "person",
       polities: "polity",
       religions: "religion",
       regions: "region"
     } as const;
     const routeByType = {
-      people: "people",
+      person: "person",
       polities: "polities",
       religions: "religions",
       regions: "regions"
@@ -171,9 +171,9 @@ export function getEventGraphView(filters: GraphFilters = {}): EventGraphView {
     });
   };
 
-  if (subjectTypes.includes("people")) {
+  if (subjectTypes.includes("person")) {
     for (const link of links.personLinks) {
-      registerSubject("people", link.personId, link.eventId, peopleById.get(link.personId));
+      registerSubject("person", link.personId, link.eventId, personById.get(link.personId));
     }
   }
 

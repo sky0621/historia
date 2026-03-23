@@ -2,7 +2,7 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import { listDynasties } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
-import { listPeopleDetailed } from "@/server/repositories/people-detail";
+import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
@@ -33,7 +33,7 @@ export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSumma
   const events = listEvents();
   const eventIds = events.map((event) => event.id);
   const links = getEventLinks(eventIds);
-  const peopleById = new Map(listPeopleDetailed().map((item) => [item.id, item.name]));
+  const personById = new Map(listPersonDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const dynastiesById = new Map(listDynasties().map((item) => [item.id, item.name]));
   const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
@@ -50,7 +50,7 @@ export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSumma
       eventType: event.eventType,
       timeLabel: formatEventTime(event),
       relationSummary: summarizeEventLinks(event.id, links, {
-        peopleById,
+        personById,
         politiesById,
         dynastiesById,
         periodsById,
@@ -149,7 +149,7 @@ function summarizeEventLinks(
   eventId: number,
   links: ReturnType<typeof getEventLinks>,
   dictionaries: {
-    peopleById: Map<number, string>;
+    personById: Map<number, string>;
     politiesById: Map<number, string>;
     dynastiesById: Map<number, string>;
     periodsById: Map<number, string>;
@@ -162,7 +162,7 @@ function summarizeEventLinks(
   const names = [
     ...links.personLinks
       .filter((link) => link.eventId === eventId)
-      .map((link) => dictionaries.peopleById.get(link.personId)),
+      .map((link) => dictionaries.personById.get(link.personId)),
     ...links.polityLinks
       .filter((link) => link.eventId === eventId)
       .map((link) => dictionaries.politiesById.get(link.polityId)),

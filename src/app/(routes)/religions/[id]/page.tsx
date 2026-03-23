@@ -19,9 +19,9 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
           <h1 className="mt-2 text-3xl font-semibold">{view.religion.name}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">期間: {view.timeLabel}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {view.relatedPeople.length > 0 ? (
-              <Link href={`/people?religionId=${view.religion.id}`} className="underline-offset-4 hover:underline">
-                関連人物 {view.relatedPeople.length} 件
+            {view.relatedPerson.length > 0 ? (
+              <Link href={`/person?religionId=${view.religion.id}`} className="underline-offset-4 hover:underline">
+                関連人物 {view.relatedPerson.length} 件
               </Link>
             ) : (
               "関連人物 0 件"
@@ -63,7 +63,7 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
                 {view.founders.length === 0 ? "-" : view.founders.map((founder, index) => (
                   <span key={founder.id}>
                     {index > 0 ? ", " : null}
-                    <Link href={`/people/${founder.id}`} className="underline-offset-4 hover:underline">
+                    <Link href={`/person/${founder.id}`} className="underline-offset-4 hover:underline">
                       {founder.name}
                     </Link>
                   </span>
@@ -113,12 +113,12 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
       <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
         <h2 className="text-lg font-semibold">関連人物</h2>
         <div className="mt-4 space-y-3">
-          {view.relatedPeople.length === 0 ? (
+          {view.relatedPerson.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">この宗教に関連付けられた人物はまだありません。</p>
           ) : (
-            view.relatedPeople.map((person) => (
+            view.relatedPerson.map((person) => (
               <div key={person.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                <Link href={`/people/${person.id}`} className="font-medium underline-offset-4 hover:underline">
+                <Link href={`/person/${person.id}`} className="font-medium underline-offset-4 hover:underline">
                   {person.name}
                 </Link>
               </div>

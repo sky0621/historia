@@ -2,25 +2,25 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { parsePersonFormData } from "@/features/people/schema";
-import { createPersonFromInput, removePerson, updatePersonFromInput } from "@/server/services/people";
+import { parsePersonFormData } from "@/features/person/schema";
+import { createPersonFromInput, removePerson, updatePersonFromInput } from "@/server/services/person";
 
 export async function createPersonAction(formData: FormData) {
   const id = createPersonFromInput(parsePersonFormData(formData));
-  revalidatePath("/people");
-  redirect(`/people/${id}`);
+  revalidatePath("/person");
+  redirect(`/person/${id}`);
 }
 
 export async function updatePersonAction(formData: FormData) {
   const id = Number(formData.get("id"));
   updatePersonFromInput(id, parsePersonFormData(formData));
-  revalidatePath("/people");
-  revalidatePath(`/people/${id}`);
-  redirect(`/people/${id}`);
+  revalidatePath("/person");
+  revalidatePath(`/person/${id}`);
+  redirect(`/person/${id}`);
 }
 
 export async function deletePersonAction(formData: FormData) {
   removePerson(Number(formData.get("id")));
-  revalidatePath("/people");
-  redirect("/people");
+  revalidatePath("/person");
+  redirect("/person");
 }
