@@ -7,6 +7,7 @@ export const sources = sqliteTable("sources", {
   publisher: text("publisher"),
   publishedAtLabel: text("published_at_label"),
   url: text("url"),
+  description: text("description"),
   note: text("note"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
@@ -19,6 +20,7 @@ export const citations = sqliteTable("citations", {
   targetId: integer("target_id").notNull(),
   locator: text("locator"),
   quote: text("quote"),
+  description: text("description"),
   note: text("note"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()

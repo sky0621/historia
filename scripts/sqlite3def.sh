@@ -16,6 +16,8 @@ MODE="${1:-apply}"
 DATABASE_URL="${DATABASE_URL:-./.data/historia.db}"
 SCHEMA_FILE="src/db/schema.sql"
 
+node ./scripts/generate-schema-sql.mjs
+
 mkdir -p "$(dirname "$DATABASE_URL")"
 
 normalize_legacy_import_runs() {

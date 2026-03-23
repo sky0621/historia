@@ -54,7 +54,7 @@ function clearTables() {
     "dynasty_region_links",
     "polity_region_links",
     "person_region_links",
-    "role_assignments",
+    "role",
     "sects",
     "religions",
     "historical_periods",

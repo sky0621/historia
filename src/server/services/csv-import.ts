@@ -454,9 +454,25 @@ export function previewEventCsvImport(rawCsv: string): CsvPreviewResult<EventInp
       description: normalizeOptionalString(cells.description),
       tags: parseDelimitedNames(cells.tags),
       eventType: cells.event_type.trim(),
-      timeExpression,
-      startTimeExpression: undefined,
-      endTimeExpression: undefined,
+      fromTimeExpression: timeExpression
+        ? {
+            calendarEra: timeExpression.calendarEra,
+            startYear: timeExpression.startYear,
+            isApproximate: timeExpression.isApproximate,
+            precision: "year",
+            displayLabel: ""
+          }
+        : undefined,
+      toTimeExpression:
+        timeExpression && timeExpression.endYear !== undefined
+          ? {
+              calendarEra: timeExpression.calendarEra,
+              startYear: timeExpression.endYear,
+              isApproximate: timeExpression.isApproximate,
+              precision: "year",
+              displayLabel: ""
+            }
+          : undefined,
       personIds: resolveReferences("person", cells.person, references.person, issues),
       polityIds: resolveReferences("polities", cells.polities, references.polities, issues),
       dynastyIds: resolveReferences("dynasties", cells.dynasties, references.dynasties, issues),
@@ -1374,9 +1390,9 @@ export function applyRoleAssignmentCsvImport(rawCsv: string): CsvImportResult {
           role.title,
           role.polityId ?? "",
           role.dynastyId ?? "",
-          (record.timeCalendarEra as string | null) ?? "",
-          (record.timeStartYear as number | null) ?? "",
-          (record.timeEndYear as number | null) ?? ""
+          (record.fromCalendarEra as string | null) ?? (record.timeCalendarEra as string | null) ?? "",
+          (record.fromYear as number | null) ?? (record.timeStartYear as number | null) ?? "",
+          (record.toYear as number | null) ?? (record.timeEndYear as number | null) ?? ""
         ].join(":");
       })
     );
@@ -2561,7 +2577,7 @@ function normalizeOptionalString(value: string | undefined) {
 }
 
 function findEventDuplicateCandidates(existingEvents: ReturnType<typeof listEvents>, input: EventInput): CsvDuplicateCandidate[] {
-  const importedYear = input.timeExpression?.startYear;
+  const importedYear = input.fromTimeExpression?.startYear;
 
   return existingEvents
     .filter((event) => {
@@ -2569,7 +2585,7 @@ function findEventDuplicateCandidates(existingEvents: ReturnType<typeof listEven
         return false;
       }
 
-      const existingYear = event.timeStartYear ?? event.startYear ?? null;
+      const existingYear = event.fromYear ?? null;
       if (importedYear === undefined || existingYear === null) {
         return true;
       }
@@ -2581,7 +2597,7 @@ function findEventDuplicateCandidates(existingEvents: ReturnType<typeof listEven
       id: event.id,
       label: event.title,
       reason:
-        importedYear !== undefined && (event.timeStartYear ?? event.startYear ?? null) !== null
+        importedYear !== undefined && event.fromYear !== null
           ? "タイトルと年代が近接しています"
           : "タイトルが一致しています"
     }));
@@ -2646,12 +2662,22 @@ function findRoleAssignmentDuplicateCandidates(
         return false;
       }
 
-      const existingStartYear = typeof roleRecord.timeStartYear === "number" ? roleRecord.timeStartYear : null;
+      const existingStartYear =
+        typeof roleRecord.fromYear === "number"
+          ? roleRecord.fromYear
+          : typeof roleRecord.timeStartYear === "number"
+            ? roleRecord.timeStartYear
+            : null;
       if (existingStartYear !== (input.role.timeExpression?.startYear ?? null)) {
         return false;
       }
 
-      const existingEndYear = typeof roleRecord.timeEndYear === "number" ? roleRecord.timeEndYear : null;
+      const existingEndYear =
+        typeof roleRecord.toYear === "number"
+          ? roleRecord.toYear
+          : typeof roleRecord.timeEndYear === "number"
+            ? roleRecord.timeEndYear
+            : null;
       if (existingEndYear !== (input.role.timeExpression?.endYear ?? null)) {
         return false;
       }

@@ -360,21 +360,11 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
 }
 
 function getEventRange(event: Record<string, unknown>) {
-  const standalone = getStandaloneRange(
-    (event.startCalendarEra as string | null) ?? null,
-    (event.startYear as number | null) ?? null,
-    (event.endCalendarEra as string | null) ?? null,
-    (event.endYear as number | null) ?? null
-  );
-
-  if (standalone) {
-    return standalone;
-  }
-
-  return getEmbeddedRange(
-    (event.timeCalendarEra as string | null) ?? null,
-    (event.timeStartYear as number | null) ?? null,
-    (event.timeEndYear as number | null) ?? null
+  return getStandaloneRange(
+    (event.fromCalendarEra as string | null) ?? null,
+    (event.fromYear as number | null) ?? null,
+    (event.toCalendarEra as string | null) ?? null,
+    (event.toYear as number | null) ?? null
   );
 }
 
@@ -403,9 +393,9 @@ function getEmbeddedRange(era: string | null, startYear: number | null, endYear:
 
 function getEmbeddedRangeFromRecord(value: Record<string, unknown>) {
   return getEmbeddedRange(
-    (value.timeCalendarEra as string | null) ?? null,
-    (value.timeStartYear as number | null) ?? null,
-    (value.timeEndYear as number | null) ?? null
+    (value.fromCalendarEra as string | null) ?? null,
+    (value.fromYear as number | null) ?? null,
+    (value.toYear as number | null) ?? null
   );
 }
 
@@ -431,10 +421,10 @@ function formatEmbeddedRange(
 
 function formatEmbeddedRangeFromRecord(value: Record<string, unknown>) {
   return formatEmbeddedRange(
-    (value.timeCalendarEra as string | null) ?? null,
-    (value.timeStartYear as number | null) ?? null,
-    (value.timeEndYear as number | null) ?? null,
-    (value.timeDisplayLabel as string | null) ?? null
+    (value.fromCalendarEra as string | null) ?? null,
+    (value.fromYear as number | null) ?? null,
+    (value.toYear as number | null) ?? null,
+    null
   );
 }
 

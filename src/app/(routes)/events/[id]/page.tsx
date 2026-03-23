@@ -30,14 +30,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Event</p>
           <h1 className="mt-2 text-3xl font-semibold">{view.event.title}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            種別: {view.event.eventType} / 時点: {view.defaultTimeExpression ? formatDisplay(view.defaultTimeExpression) : "年未詳"}
+            種別: {view.event.eventType} / 期間: {view.defaultFromTimeExpression ? formatDisplay(view.defaultFromTimeExpression) : "未設定"} -{" "}
+            {view.defaultToTimeExpression ? formatDisplay(view.defaultToTimeExpression) : "未設定"}
           </p>
-          {view.defaultStartTimeExpression || view.defaultEndTimeExpression ? (
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              期間: {view.defaultStartTimeExpression ? formatDisplay(view.defaultStartTimeExpression) : "未設定"} -{" "}
-              {view.defaultEndTimeExpression ? formatDisplay(view.defaultEndTimeExpression) : "未設定"}
-            </p>
-          ) : null}
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
             <Link href="#basic-info" className="rounded-full border border-[var(--border)] px-4 py-2 text-[var(--muted)] transition hover:text-[var(--foreground)]">
               関連主体 {relatedSubjectCount} 件

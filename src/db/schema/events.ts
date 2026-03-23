@@ -5,16 +5,12 @@ export const events = sqliteTable("events", {
   title: text("title").notNull(),
   eventType: text("event_type").notNull(),
   description: text("description"),
-  timeCalendarEra: text("time_calendar_era"),
-  timeStartYear: integer("time_start_year"),
-  timeEndYear: integer("time_end_year"),
-  timeIsApproximate: integer("time_is_approximate", { mode: "boolean" }).default(false),
-  timePrecision: text("time_precision"),
-  timeDisplayLabel: text("time_display_label"),
-  startCalendarEra: text("start_calendar_era"),
-  startYear: integer("start_year"),
-  endCalendarEra: text("end_calendar_era"),
-  endYear: integer("end_year"),
+  fromCalendarEra: text("from_calendar_era"),
+  fromYear: integer("from_year"),
+  fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
+  toCalendarEra: text("to_calendar_era"),
+  toYear: integer("to_year"),
+  toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
 });
@@ -32,6 +28,7 @@ export const conflictParticipants = sqliteTable("conflict_participants", {
   participantType: text("participant_type").notNull(),
   participantId: integer("participant_id").notNull(),
   role: text("role").notNull(),
+  description: text("description"),
   note: text("note")
 });
 
@@ -41,6 +38,7 @@ export const conflictOutcomes = sqliteTable("conflict_outcomes", {
   winnerSummary: text("winner_summary"),
   loserSummary: text("loser_summary"),
   settlementSummary: text("settlement_summary"),
+  description: text("description"),
   note: text("note")
 });
 

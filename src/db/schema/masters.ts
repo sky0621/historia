@@ -1,13 +1,13 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-function timeColumns(prefix: string) {
+function rangeTimeColumns() {
   return {
-    [`${prefix}CalendarEra`]: text(`${prefix}_calendar_era`),
-    [`${prefix}StartYear`]: integer(`${prefix}_start_year`),
-    [`${prefix}EndYear`]: integer(`${prefix}_end_year`),
-    [`${prefix}IsApproximate`]: integer(`${prefix}_is_approximate`, { mode: "boolean" }).default(false),
-    [`${prefix}Precision`]: text(`${prefix}_precision`),
-    [`${prefix}DisplayLabel`]: text(`${prefix}_display_label`)
+    fromCalendarEra: text("from_calendar_era"),
+    fromYear: integer("from_year"),
+    fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
+    toCalendarEra: text("to_calendar_era"),
+    toYear: integer("to_year"),
+    toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
   };
 }
 
@@ -38,6 +38,7 @@ export const polities = sqliteTable("polities", {
   name: text("name").notNull(),
   reading: text("reading"),
   aliases: text("aliases"),
+  description: text("description"),
   note: text("note"),
   fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
   fromYear: integer("from_year"),
@@ -52,8 +53,9 @@ export const dynasties = sqliteTable("dynasties", {
   name: text("name").notNull(),
   reading: text("reading"),
   aliases: text("aliases"),
+  description: text("description"),
   note: text("note"),
-  ...timeColumns("time")
+  ...rangeTimeColumns()
 });
 
 export const persons = sqliteTable("persons", {
@@ -61,6 +63,7 @@ export const persons = sqliteTable("persons", {
   name: text("name").notNull(),
   reading: text("reading"),
   aliases: text("aliases"),
+  description: text("description"),
   note: text("note"),
   fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
   fromYear: integer("from_year"),
@@ -70,13 +73,14 @@ export const persons = sqliteTable("persons", {
   toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
-export const roleAssignments = sqliteTable("role_assignments", {
+export const role = sqliteTable("role", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   reading: text("reading"),
+  description: text("description"),
   note: text("note"),
   isIncumbent: integer("is_incumbent", { mode: "boolean" }).default(false),
-  ...timeColumns("time")
+  ...rangeTimeColumns()
 });
 
 export const historicalPeriods = sqliteTable("historical_periods", {
@@ -87,7 +91,7 @@ export const historicalPeriods = sqliteTable("historical_periods", {
   aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
-  ...timeColumns("time")
+  ...rangeTimeColumns()
 });
 
 export const religions = sqliteTable("religions", {
@@ -97,7 +101,7 @@ export const religions = sqliteTable("religions", {
   aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
-  ...timeColumns("time")
+  ...rangeTimeColumns()
 });
 
 export const sects = sqliteTable("sects", {
@@ -107,5 +111,5 @@ export const sects = sqliteTable("sects", {
   aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
-  ...timeColumns("time")
+  ...rangeTimeColumns()
 });

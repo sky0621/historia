@@ -117,7 +117,7 @@ export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
       aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime("time", input.timeExpression)
+      ...toStoredTime(input.timeExpression)
     },
     input.categoryId,
     input.polityId ?? null,
@@ -142,7 +142,7 @@ export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPer
       aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime("time", input.timeExpression)
+      ...toStoredTime(input.timeExpression)
     },
     input.categoryId,
     input.polityId ?? null,
@@ -175,27 +175,27 @@ function nullable(value: string | undefined) {
   return value && value.length > 0 ? value : null;
 }
 
-function toStoredTime(prefix: string, value: TimeExpressionInput | undefined) {
+function toStoredTime(value: TimeExpressionInput | undefined) {
   const record = toTimeExpressionRecord(value);
 
   return {
-    [`${prefix}CalendarEra`]: record?.calendarEra ?? null,
-    [`${prefix}StartYear`]: record?.startYear ?? null,
-    [`${prefix}EndYear`]: record?.endYear ?? null,
-    [`${prefix}IsApproximate`]: record?.isApproximate ?? false,
-    [`${prefix}Precision`]: record?.precision ?? null,
-    [`${prefix}DisplayLabel`]: record?.displayLabel ?? null
+    fromCalendarEra: record?.calendarEra ?? null,
+    fromYear: record?.startYear ?? null,
+    fromIsApproximate: record?.isApproximate ?? false,
+    toCalendarEra: record?.endYear != null ? (record?.calendarEra ?? null) : null,
+    toYear: record?.endYear ?? null,
+    toIsApproximate: record?.endYear != null ? (record?.isApproximate ?? false) : false
   };
 }
 
-function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
+function extractTimeExpression(_prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
-    calendarEra: (value[`${prefix}CalendarEra`] as "BCE" | "CE" | null) ?? "CE",
-    startYear: (value[`${prefix}StartYear`] as number | null) ?? null,
-    endYear: (value[`${prefix}EndYear`] as number | null) ?? null,
-    isApproximate: Boolean(value[`${prefix}IsApproximate`]),
-    precision: (value[`${prefix}Precision`] as string | null) ?? "year",
-    displayLabel: (value[`${prefix}DisplayLabel`] as string | null) ?? null
+    calendarEra: (value.fromCalendarEra as "BCE" | "CE" | null) ?? "CE",
+    startYear: (value.fromYear as number | null) ?? null,
+    endYear: (value.toYear as number | null) ?? null,
+    isApproximate: Boolean(value.fromIsApproximate || value.toIsApproximate),
+    precision: "year",
+    displayLabel: null
   });
 }
 

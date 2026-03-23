@@ -9,7 +9,7 @@ import {
   roleAssignmentDynastyLinks,
   roleAssignmentPersonLinks,
   roleAssignmentPolityLinks,
-  roleAssignments
+  role
 } from "@/db/schema";
 
 export type PersonInsert = typeof persons.$inferInsert;
@@ -65,7 +65,7 @@ export function replacePersonPeriodLinks(personId: number, periodIds: number[]) 
 
 export function replaceRoleAssignments(
   personId: number,
-  roles: Array<(typeof roleAssignments.$inferInsert) & { personId: number; polityId: number | null; dynastyId: number | null }>
+  roles: Array<(typeof role.$inferInsert) & { personId: number; polityId: number | null; dynastyId: number | null }>
 ) {
   const existingRoleAssignmentIds = db
     .select()
@@ -78,16 +78,16 @@ export function replaceRoleAssignments(
   if (existingRoleAssignmentIds.length > 0) {
     db.delete(roleAssignmentPolityLinks).where(inArray(roleAssignmentPolityLinks.roleAssignmentId, existingRoleAssignmentIds)).run();
     db.delete(roleAssignmentDynastyLinks).where(inArray(roleAssignmentDynastyLinks.roleAssignmentId, existingRoleAssignmentIds)).run();
-    db.delete(roleAssignments).where(inArray(roleAssignments.id, existingRoleAssignmentIds)).run();
+    db.delete(role).where(inArray(role.id, existingRoleAssignmentIds)).run();
   }
 
   if (roles.length === 0) {
     return;
   }
 
-  for (const role of roles) {
-    const { personId: rolePersonId, polityId, dynastyId, ...roleInput } = role;
-    const result = db.insert(roleAssignments).values(roleInput).run();
+  for (const roleItem of roles) {
+    const { personId: rolePersonId, polityId, dynastyId, ...roleInput } = roleItem;
+    const result = db.insert(role).values(roleInput).run();
     const roleAssignmentId = Number(result.lastInsertRowid);
     db.insert(roleAssignmentPersonLinks).values({ roleAssignmentId, personId: rolePersonId }).run();
 

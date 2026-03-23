@@ -1,6 +1,4 @@
 import { db } from "@/db/client";
-import { formatTimeExpression } from "@/lib/time-expression/format";
-import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { EventInput } from "@/features/events/schema";
 import {
@@ -275,9 +273,8 @@ export function getEventDetailView(id: number) {
       : null,
     citations: getCitationListForTarget("event", id),
     changeHistory: getHistoryView("event", id),
-    defaultTimeExpression: extractTimeExpression("time", event),
-    defaultStartTimeExpression: extractStandaloneTime("start", event),
-    defaultEndTimeExpression: extractStandaloneTime("end", event),
+    defaultFromTimeExpression: extractBoundaryTime("from", event),
+    defaultToTimeExpression: extractBoundaryTime("to", event),
     formOptions: {
       ...options,
       events: options.events.filter((item) => item.id !== id)
@@ -292,9 +289,7 @@ export function createEventFromInput(input: EventInput) {
       title: input.title,
       eventType: input.eventType,
       description: nullable(input.description),
-      ...toStoredTime("time", input.timeExpression),
-      ...toStandaloneTime("start", input.startTimeExpression),
-      ...toStandaloneTime("end", input.endTimeExpression),
+      ...toStoredEventRange(input.fromTimeExpression, input.toTimeExpression),
       createdAt: now,
       updatedAt: now
     });
@@ -373,9 +368,7 @@ export function updateEventFromInput(id: number, input: EventInput) {
       title: input.title,
       eventType: input.eventType,
       description: nullable(input.description),
-      ...toStoredTime("time", input.timeExpression),
-      ...toStandaloneTime("start", input.startTimeExpression),
-      ...toStandaloneTime("end", input.endTimeExpression),
+      ...toStoredEventRange(input.fromTimeExpression, input.toTimeExpression),
       updatedAt: new Date()
     });
 
@@ -672,39 +665,23 @@ function nullable(value: string | undefined) {
   return value && value.length > 0 ? value : null;
 }
 
-function toStoredTime(prefix: string, value: TimeExpressionInput | undefined) {
-  const record = toTimeExpressionRecord(value);
+function toStoredEventRange(from: TimeExpressionInput | undefined, to: TimeExpressionInput | undefined) {
   return {
-    [`${prefix}CalendarEra`]: record?.calendarEra ?? null,
-    [`${prefix}StartYear`]: record?.startYear ?? null,
-    [`${prefix}EndYear`]: record?.endYear ?? null,
-    [`${prefix}IsApproximate`]: record?.isApproximate ?? false,
-    [`${prefix}Precision`]: record?.precision ?? null,
-    [`${prefix}DisplayLabel`]: record?.displayLabel ?? null
+    fromCalendarEra: from?.calendarEra ?? null,
+    fromYear: from?.startYear ?? null,
+    fromIsApproximate: from?.isApproximate ?? false,
+    toCalendarEra: to?.calendarEra ?? null,
+    toYear: to?.startYear ?? null,
+    toIsApproximate: to?.isApproximate ?? false
   };
 }
 
-function toStandaloneTime(prefix: string, value: TimeExpressionInput | undefined) {
-  return {
-    [`${prefix}CalendarEra`]: value?.calendarEra ?? null,
-    [`${prefix}Year`]: value?.startYear ?? null
-  };
-}
-
-function extractTimeExpression(prefix: string, value: Record<string, unknown>) {
-  return fromTimeExpressionRecord({
-    calendarEra: (value[`${prefix}CalendarEra`] as "BCE" | "CE" | null) ?? "CE",
-    startYear: (value[`${prefix}StartYear`] as number | null) ?? null,
-    endYear: (value[`${prefix}EndYear`] as number | null) ?? null,
-    isApproximate: Boolean(value[`${prefix}IsApproximate`]),
-    precision: (value[`${prefix}Precision`] as string | null) ?? "year",
-    displayLabel: (value[`${prefix}DisplayLabel`] as string | null) ?? null
-  });
-}
-
-function extractStandaloneTime(prefix: string, value: Record<string, unknown>) {
-  const year = value[`${prefix}Year`] as number | null;
-  const era = value[`${prefix}CalendarEra`] as "BCE" | "CE" | null;
+function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknown>) {
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const eraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+  const year = value[yearKey] as number | null;
+  const era = value[eraKey] as "BCE" | "CE" | null;
   if (year === null || year === undefined) {
     return undefined;
   }
@@ -712,30 +689,21 @@ function extractStandaloneTime(prefix: string, value: Record<string, unknown>) {
   return {
     calendarEra: era ?? "CE",
     startYear: year,
-    isApproximate: false,
+    isApproximate: Boolean(value[approximateKey]),
     precision: "year",
     displayLabel: ""
   } satisfies TimeExpressionInput;
 }
 
-function formatStoredTime(prefix: string, value: Record<string, unknown>) {
-  const extracted = extractTimeExpression(prefix, value);
-  return extracted ? formatTimeExpression(extracted) : "年未詳";
-}
-
 function formatEventTime(value: Record<string, unknown>) {
-  const conflictRange = toStandaloneYearLabel(
-    (value.startCalendarEra as "BCE" | "CE" | null) ?? null,
-    (value.startYear as number | null) ?? null,
-    (value.endCalendarEra as "BCE" | "CE" | null) ?? null,
-    (value.endYear as number | null) ?? null
+  const rangeLabel = toStandaloneYearLabel(
+    (value.fromCalendarEra as "BCE" | "CE" | null) ?? null,
+    (value.fromYear as number | null) ?? null,
+    (value.toCalendarEra as "BCE" | "CE" | null) ?? null,
+    (value.toYear as number | null) ?? null
   );
 
-  if (conflictRange) {
-    return conflictRange;
-  }
-
-  return formatStoredTime("time", value);
+  return rangeLabel ?? "年未詳";
 }
 
 function normalizeQuery(value?: string) {
@@ -752,13 +720,10 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
 
 function matchesYearRange(
   event: {
-    timeCalendarEra: string | null;
-    timeStartYear: number | null;
-    timeEndYear: number | null;
-    startCalendarEra: string | null;
-    startYear: number | null;
-    endCalendarEra: string | null;
-    endYear: number | null;
+    fromCalendarEra: string | null;
+    fromYear: number | null;
+    toCalendarEra: string | null;
+    toYear: number | null;
   },
   fromYear?: number,
   toYear?: number
@@ -767,14 +732,7 @@ function matchesYearRange(
     return true;
   }
 
-  const timeRange = getComparableRange(event.timeCalendarEra, event.timeStartYear, event.timeEndYear);
-  const conflictRange = getComparableRangeFromStandalone(
-    event.startCalendarEra,
-    event.startYear,
-    event.endCalendarEra,
-    event.endYear
-  );
-  const range = conflictRange ?? timeRange;
+  const range = getComparableRangeFromStandalone(event.fromCalendarEra, event.fromYear, event.toCalendarEra, event.toYear);
   if (!range) {
     return false;
   }
@@ -789,24 +747,18 @@ function compareEventListItems(
   left: {
     title: string;
     updatedAt: Date;
-    timeCalendarEra: string | null;
-    timeStartYear: number | null;
-    timeEndYear: number | null;
-    startCalendarEra: string | null;
-    startYear: number | null;
-    endCalendarEra: string | null;
-    endYear: number | null;
+    fromCalendarEra: string | null;
+    fromYear: number | null;
+    toCalendarEra: string | null;
+    toYear: number | null;
   },
   right: {
     title: string;
     updatedAt: Date;
-    timeCalendarEra: string | null;
-    timeStartYear: number | null;
-    timeEndYear: number | null;
-    startCalendarEra: string | null;
-    startYear: number | null;
-    endCalendarEra: string | null;
-    endYear: number | null;
+    fromCalendarEra: string | null;
+    fromYear: number | null;
+    toCalendarEra: string | null;
+    toYear: number | null;
   },
   sortBy: EventListFilters["sortBy"] = "timeAsc"
 ) {
@@ -818,12 +770,8 @@ function compareEventListItems(
     return right.updatedAt.getTime() - left.updatedAt.getTime();
   }
 
-  const leftRange =
-    getComparableRangeFromStandalone(left.startCalendarEra, left.startYear, left.endCalendarEra, left.endYear) ??
-    getComparableRange(left.timeCalendarEra, left.timeStartYear, left.timeEndYear);
-  const rightRange =
-    getComparableRangeFromStandalone(right.startCalendarEra, right.startYear, right.endCalendarEra, right.endYear) ??
-    getComparableRange(right.timeCalendarEra, right.timeStartYear, right.timeEndYear);
+  const leftRange = getComparableRangeFromStandalone(left.fromCalendarEra, left.fromYear, left.toCalendarEra, left.toYear);
+  const rightRange = getComparableRangeFromStandalone(right.fromCalendarEra, right.fromYear, right.toCalendarEra, right.toYear);
 
   const leftStart = leftRange?.start ?? Number.POSITIVE_INFINITY;
   const rightStart = rightRange?.start ?? Number.POSITIVE_INFINITY;
@@ -858,20 +806,6 @@ function buildEventHistorySnapshot(id: number) {
     conflictParticipants: getConflictParticipantsByEventIds([id]),
     conflictOutcome: getConflictOutcomesByEventIds([id])[0] ?? null,
     conflictOutcomeParticipants: getConflictOutcomeParticipantsByEventIds([id])
-  };
-}
-
-function getComparableRange(era: string | null, startYear: number | null, endYear: number | null) {
-  if (startYear == null) {
-    return null;
-  }
-
-  const start = toComparableYear(era, startYear);
-  const end = toComparableYear(era, endYear ?? startYear);
-
-  return {
-    start: Math.min(start, end),
-    end: Math.max(start, end)
   };
 }
 

@@ -103,25 +103,25 @@ function matchesEventFilter(
 }
 
 function formatEventTime(event: Record<string, unknown>) {
-  const conflictRange =
+  const range =
     toStandaloneYearLabel(
-      (event.startCalendarEra as "BCE" | "CE" | null) ?? null,
-      (event.startYear as number | null) ?? null,
-      (event.endCalendarEra as "BCE" | "CE" | null) ?? null,
-      (event.endYear as number | null) ?? null
+      (event.fromCalendarEra as "BCE" | "CE" | null) ?? null,
+      (event.fromYear as number | null) ?? null,
+      (event.toCalendarEra as "BCE" | "CE" | null) ?? null,
+      (event.toYear as number | null) ?? null
     ) ?? null;
 
-  if (conflictRange) {
-    return conflictRange;
+  if (range) {
+    return range;
   }
 
   const timeExpression = fromTimeExpressionRecord({
-    calendarEra: (event.timeCalendarEra as "BCE" | "CE" | null) ?? "CE",
-    startYear: (event.timeStartYear as number | null) ?? null,
-    endYear: (event.timeEndYear as number | null) ?? null,
-    isApproximate: Boolean(event.timeIsApproximate),
-    precision: (event.timePrecision as string | null) ?? "year",
-    displayLabel: (event.timeDisplayLabel as string | null) ?? null
+    calendarEra: (event.fromCalendarEra as "BCE" | "CE" | null) ?? "CE",
+    startYear: (event.fromYear as number | null) ?? null,
+    endYear: (event.toYear as number | null) ?? null,
+    isApproximate: Boolean(event.fromIsApproximate || event.toIsApproximate),
+    precision: "year",
+    displayLabel: null
   });
 
   return timeExpression ? formatTimeExpression(timeExpression) : "年未詳";

@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
+    "db:schema:generate": "node ./scripts/generate-schema-sql.mjs",
     "db:dry-run": "./scripts/sqlite3def.sh dry-run",
     "db:migrate": "./scripts/sqlite3def.sh apply",
     "db:seed": "node src/db/seed.mjs"

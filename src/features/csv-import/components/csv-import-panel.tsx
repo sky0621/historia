@@ -478,7 +478,8 @@ function renderEventRow(row: CsvPreviewRow<EventInput>) {
         <div className="mt-3 text-xs text-[var(--muted)]">
           <p>
             eventType: {row.input.eventType}
-            {row.input.timeExpression?.startYear ? ` / year: ${row.input.timeExpression.startYear}` : ""}
+            {row.input.fromTimeExpression?.startYear ? ` / from: ${row.input.fromTimeExpression.startYear}` : ""}
+            {row.input.toTimeExpression?.startYear ? ` / to: ${row.input.toTimeExpression.startYear}` : ""}
           </p>
           <p>
             links: person {row.input.personIds.length}, polities {row.input.polityIds.length}, periods {row.input.periodIds.length},

@@ -4,11 +4,11 @@ import {
   roleAssignmentDynastyLinks,
   roleAssignmentPersonLinks,
   roleAssignmentPolityLinks,
-  roleAssignments
+  role
 } from "@/db/schema";
 
-export type RoleAssignmentInsert = typeof roleAssignments.$inferInsert;
-export type RoleAssignmentRecord = typeof roleAssignments.$inferSelect & {
+export type RoleAssignmentInsert = typeof role.$inferInsert;
+export type RoleAssignmentRecord = typeof role.$inferSelect & {
   personId: number;
   polityId: number | null;
   dynastyId: number | null;
@@ -30,7 +30,7 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
     return [];
   }
 
-  const items = db.select().from(roleAssignments).where(inArray(roleAssignments.id, roleAssignmentIds)).all();
+  const items = db.select().from(role).where(inArray(role.id, roleAssignmentIds)).all();
   const polityLinks = db
     .select()
     .from(roleAssignmentPolityLinks)
@@ -72,5 +72,5 @@ export function deleteRoleAssignmentsByPersonId(personId: number) {
   db.delete(roleAssignmentPersonLinks).where(eq(roleAssignmentPersonLinks.personId, personId)).run();
   db.delete(roleAssignmentPolityLinks).where(inArray(roleAssignmentPolityLinks.roleAssignmentId, roleAssignmentIds)).run();
   db.delete(roleAssignmentDynastyLinks).where(inArray(roleAssignmentDynastyLinks.roleAssignmentId, roleAssignmentIds)).run();
-  db.delete(roleAssignments).where(inArray(roleAssignments.id, roleAssignmentIds)).run();
+  db.delete(role).where(inArray(role.id, roleAssignmentIds)).run();
 }

@@ -40,9 +40,8 @@ type Props = {
     description: string;
     tags: string[];
     eventType: "general" | "war" | "rebellion" | "civil_war";
-    timeExpression?: TimeExpressionInput;
-    startTimeExpression?: TimeExpressionInput;
-    endTimeExpression?: TimeExpressionInput;
+    fromTimeExpression?: TimeExpressionInput;
+    toTimeExpression?: TimeExpressionInput;
     personIds: number[];
     polityIds: number[];
     dynastyIds: number[];
@@ -145,11 +144,9 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           </label>
         </div>
 
-        <TimeExpressionInputs prefix="time" label="時点または全体期間" defaultValue={defaultValues?.timeExpression} />
-
         <div className="grid gap-6 lg:grid-cols-2">
-          <TimeExpressionInputs prefix="startTime" label="開始年" defaultValue={defaultValues?.startTimeExpression} />
-          <TimeExpressionInputs prefix="endTime" label="終了年" defaultValue={defaultValues?.endTimeExpression} />
+          <TimeExpressionInputs prefix="fromTime" label="開始年" defaultValue={defaultValues?.fromTimeExpression} includeEndYear={false} />
+          <TimeExpressionInputs prefix="toTime" label="終了年" defaultValue={defaultValues?.toTimeExpression} includeEndYear={false} />
         </div>
 
         <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />

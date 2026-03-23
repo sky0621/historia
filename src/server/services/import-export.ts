@@ -16,7 +16,7 @@ const ID_TABLES = [
   "polities",
   "dynasties",
   "persons",
-  "role_assignments",
+  "role",
   "historical_periods",
   "religions",
   "sects",
@@ -328,7 +328,7 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
     }
   }
 
-  if (table === "role_assignments") {
+  if (table === "role") {
     if (typeof row.person_id === "number") {
       prepared.person_id = idMaps.get("persons")?.get(row.person_id) ?? row.person_id;
     }
