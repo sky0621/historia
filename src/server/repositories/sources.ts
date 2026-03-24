@@ -34,5 +34,5 @@ export function deleteSource(id: number) {
 }
 
 export function listRecentSources(limit = 20) {
-  return db.select().from(sources).orderBy(desc(sources.updatedAt)).limit(limit).all();
+  return db.select().from(sources).orderBy(desc(sources.id)).limit(limit).all();
 }

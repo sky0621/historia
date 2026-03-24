@@ -36,16 +36,13 @@ export function getSourceFormOptions() {
 }
 
 export function createSourceFromInput(input: SourceInput) {
-  const now = new Date();
   return createSource({
     title: input.title,
     author: nullable(input.author),
     publisher: nullable(input.publisher),
     publishedAtLabel: nullable(input.publishedAtLabel),
     url: nullable(input.url),
-    note: nullable(input.note),
-    createdAt: now,
-    updatedAt: now
+    note: nullable(input.note)
   });
 }
 
@@ -56,8 +53,7 @@ export function updateSourceFromInput(id: number, input: SourceInput) {
     publisher: nullable(input.publisher),
     publishedAtLabel: nullable(input.publishedAtLabel),
     url: nullable(input.url),
-    note: nullable(input.note),
-    updatedAt: new Date()
+    note: nullable(input.note)
   });
 }
 
@@ -85,16 +81,13 @@ export function getCitationFormView(id?: number, defaults?: { targetType?: strin
 }
 
 export function createCitationFromInput(input: CitationInput) {
-  const now = new Date();
   return createCitation({
     sourceId: input.sourceId,
     targetType: input.targetType,
     targetId: input.targetId,
     locator: nullable(input.locator),
     quote: nullable(input.quote),
-    note: nullable(input.note),
-    createdAt: now,
-    updatedAt: now
+    note: nullable(input.note)
   });
 }
 
@@ -105,8 +98,7 @@ export function updateCitationFromInput(id: number, input: CitationInput) {
     targetId: input.targetId,
     locator: nullable(input.locator),
     quote: nullable(input.quote),
-    note: nullable(input.note),
-    updatedAt: new Date()
+    note: nullable(input.note)
   });
 }
 

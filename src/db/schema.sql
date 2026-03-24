@@ -26,9 +26,7 @@ CREATE TABLE `events` (
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
   `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
-  `to_is_approximate` integer DEFAULT false, -- 終了年がおおよそか
-  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
-  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
 
 -- 出来事間の関連: 出来事どうしの因果・前後関係
@@ -277,9 +275,7 @@ CREATE TABLE `sources` (
   `published_at_label` text, -- 出典の刊行日（表示用文字列）
   `url` text, -- 参照URL
   `description` text, -- 出典の説明
-  `note` text, -- 編集メモ・注釈
-  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
-  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+  `note` text -- 編集メモ・注釈
 );
 
 -- 引用: 出典を各エンティティへ紐づける参照記録
@@ -291,9 +287,7 @@ CREATE TABLE `citations` (
   `locator` text, -- ページ・巻・章などの参照位置
   `quote` text, -- 引用文
   `description` text, -- 引用の説明
-  `note` text, -- 編集メモ・注釈
-  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
-  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+  `note` text -- 編集メモ・注釈
 );
 
 -- タグ: 出来事などへ付与する分類タグ
@@ -321,14 +315,55 @@ CREATE TABLE `import_runs` (
   `action` text NOT NULL, -- 実行種別: preview / apply など
   `file_name` text, -- 入力ファイル名
   `status` text NOT NULL, -- 実行結果ステータス
-  `summary_json` text NOT NULL, -- 実行結果サマリのJSON
-  `created_at` integer NOT NULL -- 実行日時のUnixタイムスタンプ
+  `summary_json` text NOT NULL -- 実行結果サマリのJSON
 );
 
 -- 出来事と人物の関連
 CREATE TABLE `event_person_links` (
   `event_id` integer NOT NULL, -- 出来事ID
   `person_id` integer NOT NULL -- 人物ID
+);
+
+-- 出来事と国家の関連
+CREATE TABLE `event_polity_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `polity_id` integer NOT NULL -- 国家ID
+);
+
+-- 出来事と王朝の関連
+CREATE TABLE `event_dynasty_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `dynasty_id` integer NOT NULL -- 王朝ID
+);
+
+-- 出来事と時代区分の関連
+CREATE TABLE `event_period_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `period_id` integer NOT NULL -- 時代区分ID
+);
+
+-- 出来事と宗教の関連
+CREATE TABLE `event_religion_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `religion_id` integer NOT NULL -- 宗教ID
+);
+
+-- 出来事と宗派の関連
+CREATE TABLE `event_sect_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `sect_id` integer NOT NULL -- 宗派ID
+);
+
+-- 出来事と地域の関連
+CREATE TABLE `event_region_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `region_id` integer NOT NULL -- 地域ID
+);
+
+-- 出来事とタグの関連
+CREATE TABLE `event_tag_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `tag_id` integer NOT NULL -- タグID
 );
 
 -- 地域の親子関係
@@ -383,48 +418,6 @@ CREATE TABLE `sect_religion_links` (
 CREATE TABLE `sect_parent_links` (
   `sect_id` integer NOT NULL, -- 子宗派ID
   `parent_sect_id` integer NOT NULL -- 親宗派ID
-);
-
--- 出来事と国家の関連
-CREATE TABLE `event_polity_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `polity_id` integer NOT NULL -- 国家ID
-);
-
--- 出来事と王朝の関連
-CREATE TABLE `event_dynasty_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `dynasty_id` integer NOT NULL -- 王朝ID
-);
-
--- 出来事と時代区分の関連
-CREATE TABLE `event_period_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `period_id` integer NOT NULL -- 時代区分ID
-);
-
--- 出来事と宗教の関連
-CREATE TABLE `event_religion_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `religion_id` integer NOT NULL -- 宗教ID
-);
-
--- 出来事と宗派の関連
-CREATE TABLE `event_sect_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `sect_id` integer NOT NULL -- 宗派ID
-);
-
--- 出来事と地域の関連
-CREATE TABLE `event_region_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `region_id` integer NOT NULL -- 地域ID
-);
-
--- 出来事とタグの関連
-CREATE TABLE `event_tag_links` (
-  `event_id` integer NOT NULL, -- 出来事ID
-  `tag_id` integer NOT NULL -- タグID
 );
 
 -- 国家と地域の関連

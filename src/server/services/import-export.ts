@@ -82,13 +82,13 @@ export function buildExportPayload() {
 export function buildEventsCsv() {
   const rows = sqlite
     .prepare(
-      `SELECT id, title, event_type, time_display_label, start_year, end_year, updated_at
+      `SELECT id, title, event_type, time_display_label, start_year, end_year
        FROM events
        ORDER BY title`
     )
     .all() as Array<Record<string, unknown>>;
 
-  return toCsv(rows, ["id", "title", "event_type", "time_display_label", "start_year", "end_year", "updated_at"]);
+  return toCsv(rows, ["id", "title", "event_type", "time_display_label", "start_year", "end_year"]);
 }
 
 export function buildPersonCsv() {
@@ -359,15 +359,6 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
     prepared.participant_id = mapParticipantId(String(row.participant_type ?? ""), row.participant_id, idMaps);
   }
 
-  if (table === "sources") {
-    if (!prepared.created_at) {
-      prepared.created_at = Date.now();
-    }
-    if (!prepared.updated_at) {
-      prepared.updated_at = Date.now();
-    }
-  }
-
   if (table === "citations") {
     if (typeof row.source_id === "number") {
       prepared.source_id = idMaps.get("sources")?.get(row.source_id) ?? row.source_id;
@@ -377,12 +368,6 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
       typeof row.target_id === "number" ? row.target_id : 0,
       idMaps
     );
-    if (!prepared.created_at) {
-      prepared.created_at = Date.now();
-    }
-    if (!prepared.updated_at) {
-      prepared.updated_at = Date.now();
-    }
   }
 
   if (table === "change_histories") {

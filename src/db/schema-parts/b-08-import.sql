@@ -6,6 +6,5 @@ CREATE TABLE `import_runs` (
   `action` text NOT NULL, -- 実行種別: preview / apply など
   `file_name` text, -- 入力ファイル名
   `status` text NOT NULL, -- 実行結果ステータス
-  `summary_json` text NOT NULL, -- 実行結果サマリのJSON
-  `created_at` integer NOT NULL -- 実行日時のUnixタイムスタンプ
+  `summary_json` text NOT NULL -- 実行結果サマリのJSON
 );

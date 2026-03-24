@@ -284,14 +284,11 @@ export function getEventDetailView(id: number) {
 
 export function createEventFromInput(input: EventInput) {
   return db.transaction(() => {
-    const now = new Date();
     const eventId = createEvent({
       title: input.title,
       eventType: input.eventType,
       description: nullable(input.description),
-      ...toStoredEventRange(input.fromTimeExpression, input.toTimeExpression),
-      createdAt: now,
-      updatedAt: now
+      ...toStoredEventRange(input.fromTimeExpression, input.toTimeExpression)
     });
 
     replaceEventLinks(eventId, {
@@ -368,8 +365,7 @@ export function updateEventFromInput(id: number, input: EventInput) {
       title: input.title,
       eventType: input.eventType,
       description: nullable(input.description),
-      ...toStoredEventRange(input.fromTimeExpression, input.toTimeExpression),
-      updatedAt: new Date()
+      ...toStoredEventRange(input.fromTimeExpression, input.toTimeExpression)
     });
 
     replaceEventLinks(id, {
@@ -746,7 +742,7 @@ function matchesYearRange(
 function compareEventListItems(
   left: {
     title: string;
-    updatedAt: Date;
+    id: number;
     fromCalendarEra: string | null;
     fromYear: number | null;
     toCalendarEra: string | null;
@@ -754,7 +750,7 @@ function compareEventListItems(
   },
   right: {
     title: string;
-    updatedAt: Date;
+    id: number;
     fromCalendarEra: string | null;
     fromYear: number | null;
     toCalendarEra: string | null;
@@ -767,7 +763,7 @@ function compareEventListItems(
   }
 
   if (sortBy === "updatedDesc") {
-    return right.updatedAt.getTime() - left.updatedAt.getTime();
+    return right.id - left.id;
   }
 
   const leftRange = getComparableRangeFromStandalone(left.fromCalendarEra, left.fromYear, left.toCalendarEra, left.toYear);

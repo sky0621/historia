@@ -19,9 +19,7 @@ export const events = sqliteTable("events", {
   fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
   toCalendarEra: text("to_calendar_era").references(() => era.code),
   toYear: integer("to_year"),
-  toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
+  toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
 export const eventRelations = sqliteTable("event_relations", {

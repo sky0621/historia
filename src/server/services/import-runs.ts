@@ -17,15 +17,14 @@ type ImportRunRow = {
   file_name: string | null;
   status: string;
   summary_json: string;
-  created_at: number;
 };
 
 export function recordImportRun(input: ImportRunRecordInput) {
   ensureImportRunsTable();
   sqlite
     .prepare(
-      `INSERT INTO import_runs (source_format, target_type, "action", file_name, status, summary_json, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO import_runs (source_format, target_type, "action", file_name, status, summary_json)
+       VALUES (?, ?, ?, ?, ?, ?)`
     )
     .run(
       input.sourceFormat,
@@ -33,8 +32,7 @@ export function recordImportRun(input: ImportRunRecordInput) {
       input.action,
       input.fileName ?? null,
       input.status,
-      JSON.stringify(input.summary),
-      Date.now()
+      JSON.stringify(input.summary)
     );
 }
 
@@ -42,9 +40,9 @@ export function getRecentImportRuns(limit = 20) {
   ensureImportRunsTable();
   const rows = sqlite
     .prepare(
-      `SELECT id, source_format, target_type, "action", file_name, status, summary_json, created_at
+      `SELECT id, source_format, target_type, "action", file_name, status, summary_json
        FROM import_runs
-       ORDER BY created_at DESC
+       ORDER BY id DESC
        LIMIT ?`
     )
     .all(limit) as ImportRunRow[];
@@ -56,8 +54,7 @@ export function getRecentImportRuns(limit = 20) {
     action: row.action,
     fileName: row.file_name,
     status: row.status,
-    summary: safeParseSummary(row.summary_json),
-    createdAt: new Date(row.created_at)
+    summary: safeParseSummary(row.summary_json)
   }));
 }
 
@@ -70,8 +67,7 @@ function ensureImportRunsTable() {
       "action" TEXT NOT NULL,
       "file_name" TEXT,
       "status" TEXT NOT NULL,
-      "summary_json" TEXT NOT NULL,
-      "created_at" INTEGER NOT NULL
+      "summary_json" TEXT NOT NULL
     )
   `);
 }

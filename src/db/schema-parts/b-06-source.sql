@@ -7,9 +7,7 @@ CREATE TABLE `sources` (
   `published_at_label` text, -- 出典の刊行日（表示用文字列）
   `url` text, -- 参照URL
   `description` text, -- 出典の説明
-  `note` text, -- 編集メモ・注釈
-  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
-  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+  `note` text -- 編集メモ・注釈
 );
 
 -- 引用: 出典を各エンティティへ紐づける参照記録
@@ -21,7 +19,5 @@ CREATE TABLE `citations` (
   `locator` text, -- ページ・巻・章などの参照位置
   `quote` text, -- 引用文
   `description` text, -- 引用の説明
-  `note` text, -- 編集メモ・注釈
-  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
-  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+  `note` text -- 編集メモ・注釈
 );

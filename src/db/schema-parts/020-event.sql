@@ -10,9 +10,7 @@ CREATE TABLE `events` (
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
   `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
-  `to_is_approximate` integer DEFAULT false, -- 終了年がおおよそか
-  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
-  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
 
 -- 出来事間の関連: 出来事どうしの因果・前後関係

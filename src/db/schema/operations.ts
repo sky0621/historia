@@ -8,9 +8,7 @@ export const sources = sqliteTable("sources", {
   publishedAtLabel: text("published_at_label"),
   url: text("url"),
   description: text("description"),
-  note: text("note"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
+  note: text("note")
 });
 
 export const citations = sqliteTable("citations", {
@@ -21,9 +19,7 @@ export const citations = sqliteTable("citations", {
   locator: text("locator"),
   quote: text("quote"),
   description: text("description"),
-  note: text("note"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
+  note: text("note")
 });
 
 export const changeHistories = sqliteTable("change_histories", {
@@ -42,6 +38,5 @@ export const importRuns = sqliteTable("import_runs", {
   action: text("action").notNull(),
   fileName: text("file_name"),
   status: text("status").notNull(),
-  summaryJson: text("summary_json").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull()
+  summaryJson: text("summary_json").notNull()
 });

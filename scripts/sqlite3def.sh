@@ -43,11 +43,10 @@ CREATE TABLE `import_runs` (
   `action` text NOT NULL,
   `file_name` text,
   `status` text NOT NULL,
-  `summary_json` text NOT NULL,
-  `created_at` integer NOT NULL
+  `summary_json` text NOT NULL
 );
-INSERT INTO `import_runs` (`id`, `source_format`, `target_type`, `action`, `file_name`, `status`, `summary_json`, `created_at`)
-SELECT `id`, `source_format`, `target_type`, `action`, `file_name`, `status`, `summary_json`, `created_at`
+INSERT INTO `import_runs` (`id`, `source_format`, `target_type`, `action`, `file_name`, `status`, `summary_json`)
+SELECT `id`, `source_format`, `target_type`, `action`, `file_name`, `status`, `summary_json`
 FROM `__legacy_import_runs`;
 DROP TABLE `__legacy_import_runs`;
 COMMIT;

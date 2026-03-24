@@ -77,7 +77,7 @@ export default function ManageDataPage() {
                     </div>
                     <div className="mt-2 text-xs text-[var(--muted)]">
                       {item.fileName ? <p>file: {item.fileName}</p> : null}
-                      <p>at: {item.createdAt.toLocaleString("ja-JP")}</p>
+                      <p>run id: {item.id}</p>
                     </div>
                     <pre className="mt-3 overflow-x-auto rounded-2xl bg-[var(--surface)] px-3 py-3 text-xs text-[var(--muted)]">
                       {JSON.stringify(item.summary, null, 2)}

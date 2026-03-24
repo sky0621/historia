@@ -7,7 +7,7 @@ const outputPath = path.join(rootDir, "src/db/schema.sql");
 
 const partFiles = [
   "000-master.sql",
-  "b-00-event.sql",
+  "020-event.sql",
   "010-person.sql",
   "010-person-link.sql",
   "b-02-period.sql",
@@ -17,7 +17,7 @@ const partFiles = [
   "b-06-source.sql",
   "b-07-other.sql",
   "b-08-import.sql",
-  "l-00-event.sql",
+  "020-event-link.sql",
   "l-03-region.sql",
   "l-99-links.sql"
 ];
