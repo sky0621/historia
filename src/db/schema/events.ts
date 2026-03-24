@@ -1,9 +1,17 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+export const eventTypes = sqliteTable("event_types", {
+  code: text("code").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description")
+});
+
 export const events = sqliteTable("events", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
-  eventType: text("event_type").notNull(),
+  eventType: text("event_type")
+    .notNull()
+    .references(() => eventTypes.code),
   description: text("description"),
   fromCalendarEra: text("from_calendar_era"),
   fromYear: integer("from_year"),

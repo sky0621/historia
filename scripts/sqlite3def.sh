@@ -58,6 +58,27 @@ SQL
 
 normalize_legacy_import_runs
 
+ensure_event_types_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `event_types` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `event_types` (`code`, `label`, `description`)
+VALUES
+  ('general', '一般', '通常の出来事'),
+  ('war', '戦争', '国家や勢力間の戦争'),
+  ('rebellion', '反乱', '支配体制への反乱'),
+  ('civil_war', '内戦', '同一国家・勢力内部の武力衝突')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
+ensure_event_types_seed_data
+
 case "$MODE" in
   dry-run)
     exec sqlite3def --dry-run --enable-drop-table "$DATABASE_URL" --file "$SCHEMA_FILE"

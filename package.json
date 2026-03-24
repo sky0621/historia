@@ -13,7 +13,7 @@
     "db:schema:generate": "node ./scripts/generate-schema-sql.mjs",
     "db:dry-run": "./scripts/sqlite3def.sh dry-run",
     "db:migrate": "./scripts/sqlite3def.sh apply",
-    "db:seed": "node src/db/seed.mjs"
+    "db:seed": "pnpm db:migrate && node src/db/seed.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",

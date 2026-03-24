@@ -1,8 +1,15 @@
+-- 出来事種別マスタ: events.event_type が参照する種別一覧
+CREATE TABLE `event_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 種別コード: general / war / rebellion / civil_war
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 種別の説明
+);
+
 -- 出来事: 歴史上の事件・出来事の基本情報
 CREATE TABLE `events` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 出来事ID
   `title` text NOT NULL, -- 出来事名
-  `event_type` text NOT NULL, -- 出来事の種別: general / war / rebellion / civil_war
+  `event_type` text NOT NULL REFERENCES `event_types`(`code`), -- 出来事種別コード
   `description` text, -- 出来事の説明
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text, -- 開始年の紀元区分: BCE / CE
