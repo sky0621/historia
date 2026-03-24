@@ -91,6 +91,14 @@ clearTables();
 
 sqlite
   .prepare(
+    `INSERT INTO era (code, label, description) VALUES
+      ('BCE', '紀元前', 'Before Common Era'),
+      ('CE', '西暦', 'Common Era')`
+  )
+  .run();
+
+sqlite
+  .prepare(
     `INSERT INTO event_types (code, label, description) VALUES
       ('general', '一般', '通常の出来事'),
       ('war', '戦争', '国家や勢力間の戦争'),

@@ -1,10 +1,3 @@
--- 出来事種別マスタ: events.event_type が参照する種別一覧
-CREATE TABLE `event_types` (
-  `code` text PRIMARY KEY NOT NULL, -- 種別コード: general / war / rebellion / civil_war
-  `label` text NOT NULL, -- 表示名
-  `description` text -- 種別の説明
-);
-
 -- 出来事: 歴史上の事件・出来事の基本情報
 CREATE TABLE `events` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 出来事ID
@@ -12,10 +5,10 @@ CREATE TABLE `events` (
   `event_type` text NOT NULL REFERENCES `event_types`(`code`), -- 出来事種別コード
   `description` text, -- 出来事の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text, -- 開始年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
   `from_year` integer, -- 開始年
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
-  `to_calendar_era` text, -- 終了年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false, -- 終了年がおおよそか
   `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ

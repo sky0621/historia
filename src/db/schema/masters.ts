@@ -1,11 +1,17 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+export const era = sqliteTable("era", {
+  code: text("code").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description")
+});
+
 function rangeTimeColumns() {
   return {
-    fromCalendarEra: text("from_calendar_era"),
+    fromCalendarEra: text("from_calendar_era").references(() => era.code),
     fromYear: integer("from_year"),
     fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
-    toCalendarEra: text("to_calendar_era"),
+    toCalendarEra: text("to_calendar_era").references(() => era.code),
     toYear: integer("to_year"),
     toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
   };
@@ -38,10 +44,10 @@ export const polities = sqliteTable("polities", {
   reading: text("reading"),
   description: text("description"),
   note: text("note"),
-  fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
+  fromCalendarEra: text("from_calendar_era").references(() => era.code),
   fromYear: integer("from_year"),
   fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
-  toCalendarEra: integer("to_calendar_era", { mode: "boolean" }).default(false),
+  toCalendarEra: text("to_calendar_era").references(() => era.code),
   toYear: integer("to_year"),
   toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
@@ -62,10 +68,10 @@ export const persons = sqliteTable("persons", {
   aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
-  fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
+  fromCalendarEra: text("from_calendar_era").references(() => era.code),
   fromYear: integer("from_year"),
   fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
-  toCalendarEra: integer("to_calendar_era", { mode: "boolean" }).default(false),
+  toCalendarEra: text("to_calendar_era").references(() => era.code),
   toYear: integer("to_year"),
   toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });

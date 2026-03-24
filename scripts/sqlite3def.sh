@@ -77,6 +77,24 @@ ON CONFLICT(`code`) DO UPDATE SET
 SQL
 }
 
+ensure_era_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `era` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `era` (`code`, `label`, `description`)
+VALUES
+  ('BCE', '紀元前', 'Before Common Era'),
+  ('CE', '西暦', 'Common Era')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
+ensure_era_seed_data
 ensure_event_types_seed_data
 
 case "$MODE" in

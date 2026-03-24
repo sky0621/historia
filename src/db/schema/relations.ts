@@ -1,11 +1,12 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { era } from "./masters";
 
 function rangeTimeColumns() {
   return {
-    fromCalendarEra: text("from_calendar_era"),
+    fromCalendarEra: text("from_calendar_era").references(() => era.code),
     fromYear: integer("from_year"),
     fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
-    toCalendarEra: text("to_calendar_era"),
+    toCalendarEra: text("to_calendar_era").references(() => era.code),
     toYear: integer("to_year"),
     toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
   };

@@ -278,7 +278,7 @@ function toStoredPolityTime(prefix: "from" | "to", value: TimeExpressionInput | 
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
 
   return {
-    [calendarEraKey]: value ? value.calendarEra === "BCE" : null,
+    [calendarEraKey]: value?.calendarEra ?? null,
     [yearKey]: value?.startYear ?? null,
     [approximateKey]: value?.isApproximate ?? false
   };
@@ -299,17 +299,16 @@ function extractPolityTimeExpression(prefix: "from" | "to", value: Record<string
   const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
-  const isBce = value[calendarEraKey] as boolean | null | undefined;
+  const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
   const startYear = (value[yearKey] as number | null) ?? null;
   const isApproximate = Boolean(value[approximateKey]);
-  const calendarEra = isBce ? "BCE" : "CE";
 
-  if (startYear === null && !isApproximate && isBce == null) {
+  if (startYear === null && !isApproximate && calendarEra == null) {
     return undefined;
   }
 
   return {
-    calendarEra,
+    calendarEra: calendarEra ?? "CE",
     startYear: startYear ?? undefined,
     isApproximate,
     precision: "year",

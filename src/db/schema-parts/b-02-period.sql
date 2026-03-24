@@ -15,10 +15,10 @@ CREATE TABLE `historical_periods` (
   `aliases` text, -- 別名のカンマ区切り文字列
   `description` text, -- 時代区分の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text, -- 開始年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
   `from_year` integer, -- 開始年
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
-  `to_calendar_era` text, -- 終了年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );

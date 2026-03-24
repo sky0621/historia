@@ -329,7 +329,7 @@ function toStoredPersonTime(prefix: "birth" | "death", value: TimeExpressionInpu
   const approximateKey = prefix === "birth" ? "fromIsApproximate" : "toIsApproximate";
 
   return {
-    [calendarEraKey]: value ? value.calendarEra === "BCE" : null,
+    [calendarEraKey]: value?.calendarEra ?? null,
     [yearKey]: value?.startYear ?? null,
     [approximateKey]: value?.isApproximate ?? false
   };
@@ -350,17 +350,16 @@ function extractPersonTimeExpression(prefix: "birth" | "death", value: Record<st
   const calendarEraKey = prefix === "birth" ? "fromCalendarEra" : "toCalendarEra";
   const yearKey = prefix === "birth" ? "fromYear" : "toYear";
   const approximateKey = prefix === "birth" ? "fromIsApproximate" : "toIsApproximate";
-  const isBce = value[calendarEraKey] as boolean | null | undefined;
+  const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
   const startYear = (value[yearKey] as number | null) ?? null;
   const isApproximate = Boolean(value[approximateKey]);
-  const calendarEra = isBce ? "BCE" : "CE";
 
-  if (startYear === null && !isApproximate && isBce == null) {
+  if (startYear === null && !isApproximate && calendarEra == null) {
     return undefined;
   }
 
   return {
-    calendarEra,
+    calendarEra: calendarEra ?? "CE",
     startYear: startYear ?? undefined,
     isApproximate,
     precision: "year",

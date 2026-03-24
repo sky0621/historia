@@ -567,10 +567,10 @@ describe("csv import service", () => {
         reading: "さいちょう",
         aliases: "伝教大師",
         note: null,
-        fromCalendarEra: false,
+        fromCalendarEra: "CE",
         fromYear: 767,
         fromIsApproximate: false,
-        toCalendarEra: false,
+        toCalendarEra: "CE",
         toYear: 822,
         toIsApproximate: false
       }
@@ -656,10 +656,10 @@ describe("csv import service", () => {
         reading: "さいちょう",
         aliases: "伝教大師",
         note: null,
-        fromCalendarEra: false,
+        fromCalendarEra: "CE",
         fromYear: 767,
         fromIsApproximate: false,
-        toCalendarEra: false,
+        toCalendarEra: "CE",
         toYear: 822,
         toIsApproximate: false
       }

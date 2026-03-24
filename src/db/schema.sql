@@ -2,9 +2,16 @@
 -- Edit files under src/db/schema-parts/ instead.
 -- 出来事種別マスタ: events.event_type が参照する種別一覧
 CREATE TABLE `event_types` (
-  `code` text PRIMARY KEY NOT NULL, -- 種別コード: general / war / rebellion / civil_war
+  `code` text PRIMARY KEY NOT NULL, -- 種別コード
   `label` text NOT NULL, -- 表示名
   `description` text -- 種別の説明
+);
+
+-- 紀元マスタ: from_calendar_era / to_calendar_era が参照する紀元区分
+CREATE TABLE `era` (
+  `code` text PRIMARY KEY NOT NULL, -- 紀元コード: BCE / CE
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 紀元区分の説明
 );
 
 -- 出来事: 歴史上の事件・出来事の基本情報
@@ -14,10 +21,10 @@ CREATE TABLE `events` (
   `event_type` text NOT NULL REFERENCES `event_types`(`code`), -- 出来事種別コード
   `description` text, -- 出来事の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text, -- 開始年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
   `from_year` integer, -- 開始年
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
-  `to_calendar_era` text, -- 終了年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false, -- 終了年がおおよそか
   `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
@@ -61,6 +68,62 @@ CREATE TABLE `event_conflict_outcome_participants` (
   `participant_id` integer NOT NULL -- 参加主体のID
 );
 
+-- 人物: 人物の基本情報
+CREATE TABLE `persons` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 人物ID
+  `name` text NOT NULL, -- 人物名
+  `reading` text, -- 読み方
+  `aliases` text, -- 別名のカンマ区切り文字列
+  `description` text, -- 人物の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 生年の紀元区分コード
+  `from_year` integer, -- 生年
+  `from_is_approximate` integer DEFAULT false, -- 生年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 没年の紀元区分コード
+  `to_year` integer, -- 没年
+  `to_is_approximate` integer DEFAULT false -- 没年がおおよそか
+);
+
+-- 役職: 人物が持った役職・地位の記録
+CREATE TABLE `role` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 役職記録ID
+  `title` text NOT NULL, -- 役職名
+  `reading` text, -- 読み方
+  `description` text, -- 役職記録の説明
+  `note` text, -- 編集メモ・注釈
+  `is_incumbent` integer DEFAULT false, -- 現職かどうか
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 就任年の紀元区分コード
+  `from_year` integer, -- 就任年
+  `from_is_approximate` integer DEFAULT false, -- 就任年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 離任年の紀元区分コード
+  `to_year` integer, -- 離任年
+  `to_is_approximate` integer DEFAULT false -- 離任年がおおよそか
+);
+
+-- 人物と地域の関連
+CREATE TABLE `person_region_links` (
+  `person_id` integer NOT NULL, -- 人物ID
+  `region_id` integer NOT NULL -- 地域ID
+);
+
+-- 人物と時代区分の関連
+CREATE TABLE `person_period_links` (
+  `person_id` integer NOT NULL, -- 人物ID
+  `period_id` integer NOT NULL -- 時代区分ID
+);
+
+-- 人物と宗教の関連
+CREATE TABLE `person_religion_links` (
+  `person_id` integer NOT NULL, -- 人物ID
+  `religion_id` integer NOT NULL -- 宗教ID
+);
+
+-- 人物と宗派の関連
+CREATE TABLE `person_sect_links` (
+  `person_id` integer NOT NULL, -- 人物ID
+  `sect_id` integer NOT NULL -- 宗派ID
+);
+
 -- 時代区分カテゴリ: 時代区分の分類軸
 CREATE TABLE `period_categories` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- カテゴリID
@@ -78,10 +141,10 @@ CREATE TABLE `historical_periods` (
   `aliases` text, -- 別名のカンマ区切り文字列
   `description` text, -- 時代区分の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text, -- 開始年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
   `from_year` integer, -- 開始年
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
-  `to_calendar_era` text, -- 終了年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
@@ -94,6 +157,184 @@ CREATE TABLE `historical_period_relations` (
   `relation_type` text NOT NULL, -- 関係種別
   `description` text, -- 関係の説明
   `note` text -- 編集メモ・注釈
+);
+
+-- 地域: 地理的な分類単位
+CREATE TABLE `regions` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 地域ID
+  `name` text NOT NULL, -- 地域名
+  `reading` text, -- 読み方
+  `description` text, -- 地域の説明
+  `note` text -- 編集メモ・注釈
+);
+
+-- 地域間の関連: 親子関係以外の地域どうしの関係
+CREATE TABLE `region_relations` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 地域関係ID
+  `from_region_id` integer NOT NULL, -- 起点となる地域ID
+  `to_region_id` integer NOT NULL, -- 終点となる地域ID
+  `relation_type` text NOT NULL -- 関係種別
+);
+
+-- 国家: 国家・政体の基本情報
+CREATE TABLE `polities` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 国家ID
+  `name` text NOT NULL, -- 国家名
+  `reading` text, -- 読み方
+  `description` text, -- 国家の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 成立年の紀元区分コード
+  `from_year` integer, -- 成立年
+  `from_is_approximate` integer DEFAULT false, -- 成立年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
+  `to_year` integer, -- 終了年
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
+);
+
+-- 国家変遷: 前身国家と後継国家の関係
+CREATE TABLE `polity_transitions` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 国家変遷ID
+  `predecessor_polity_id` integer NOT NULL, -- 前身国家ID
+  `successor_polity_id` integer NOT NULL, -- 後継国家ID
+  `transition_type` text NOT NULL, -- 変遷種別
+  `description` text, -- 変遷の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 変遷開始年の紀元区分コード
+  `from_year` integer, -- 変遷開始年
+  `from_is_approximate` integer DEFAULT false, -- 変遷開始年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 変遷終了年の紀元区分コード
+  `to_year` integer, -- 変遷終了年
+  `to_is_approximate` integer DEFAULT false -- 変遷終了年がおおよそか
+);
+
+-- 王朝: 国家に属する王朝の基本情報
+CREATE TABLE `dynasties` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 王朝ID
+  `name` text NOT NULL, -- 王朝名
+  `reading` text, -- 読み方
+  `description` text, -- 王朝の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
+  `from_year` integer, -- 開始年
+  `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
+  `to_year` integer, -- 終了年
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
+);
+
+-- 王朝継承: 同一国家内での王朝交代
+CREATE TABLE `dynasty_successions` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 王朝継承ID
+  `polity_id` integer NOT NULL, -- 対象国家ID
+  `predecessor_dynasty_id` integer NOT NULL, -- 先行王朝ID
+  `successor_dynasty_id` integer NOT NULL, -- 後継王朝ID
+  `description` text, -- 継承の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 継承開始年の紀元区分コード
+  `from_year` integer, -- 継承開始年
+  `from_is_approximate` integer DEFAULT false, -- 継承開始年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 継承終了年の紀元区分コード
+  `to_year` integer, -- 継承終了年
+  `to_is_approximate` integer DEFAULT false -- 継承終了年がおおよそか
+);
+
+-- 宗教: 宗教本体の基本情報
+CREATE TABLE `religions` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 宗教ID
+  `name` text NOT NULL, -- 宗教名
+  `reading` text, -- 読み方
+  `description` text, -- 宗教の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 成立年の紀元区分コード
+  `from_year` integer, -- 成立年
+  `from_is_approximate` integer DEFAULT false, -- 成立年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
+  `to_year` integer, -- 終了年
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
+);
+
+-- 宗派: 宗教に属する宗派・分派の基本情報
+CREATE TABLE `sects` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 宗派ID
+  `name` text NOT NULL, -- 宗派名
+  `reading` text, -- 読み方
+  `description` text, -- 宗派の説明
+  `note` text, -- 編集メモ・注釈
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 成立年の紀元区分コード
+  `from_year` integer, -- 成立年
+  `from_is_approximate` integer DEFAULT false, -- 成立年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
+  `to_year` integer, -- 終了年
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
+);
+
+-- 出典: 書誌情報のマスタ
+CREATE TABLE `sources` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 出典ID
+  `title` text NOT NULL, -- 出典タイトル
+  `author` text, -- 著者・編者
+  `publisher` text, -- 出版者・発行主体
+  `published_at_label` text, -- 出典の刊行日（表示用文字列）
+  `url` text, -- 参照URL
+  `description` text, -- 出典の説明
+  `note` text, -- 編集メモ・注釈
+  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
+  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+);
+
+-- 引用: 出典を各エンティティへ紐づける参照記録
+CREATE TABLE `citations` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 引用ID
+  `source_id` integer NOT NULL, -- 出典ID
+  `target_type` text NOT NULL, -- 参照先のエンティティ種別
+  `target_id` integer NOT NULL, -- 参照先のエンティティID
+  `locator` text, -- ページ・巻・章などの参照位置
+  `quote` text, -- 引用文
+  `description` text, -- 引用の説明
+  `note` text, -- 編集メモ・注釈
+  `created_at` integer NOT NULL, -- 作成日時のUnixタイムスタンプ
+  `updated_at` integer NOT NULL -- 更新日時のUnixタイムスタンプ
+);
+
+-- タグ: 出来事などへ付与する分類タグ
+CREATE TABLE `tags` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- タグID
+  `name` text NOT NULL, -- タグ名
+  `reading` text -- 読み方
+);
+
+-- 変更履歴: 各エンティティの変更前スナップショット
+CREATE TABLE `change_histories` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 変更履歴ID
+  `target_type` text NOT NULL, -- 対象エンティティ種別
+  `target_id` integer NOT NULL, -- 対象エンティティID
+  `action` text NOT NULL, -- 操作種別: create / update / delete
+  `snapshot_json` text NOT NULL, -- 変更前後比較用のJSONスナップショット
+  `changed_at` integer NOT NULL -- 変更日時のUnixタイムスタンプ
+);
+
+-- インポート実行履歴: CSVなどの取り込み実行記録
+CREATE TABLE `import_runs` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- インポート実行ID
+  `source_format` text NOT NULL, -- 入力形式: csv など
+  `target_type` text NOT NULL, -- 取り込み対象の種別
+  `action` text NOT NULL, -- 実行種別: preview / apply など
+  `file_name` text, -- 入力ファイル名
+  `status` text NOT NULL, -- 実行結果ステータス
+  `summary_json` text NOT NULL, -- 実行結果サマリのJSON
+  `created_at` integer NOT NULL -- 実行日時のUnixタイムスタンプ
+);
+
+-- 出来事と人物の関連
+CREATE TABLE `event_person_links` (
+  `event_id` integer NOT NULL, -- 出来事ID
+  `person_id` integer NOT NULL -- 人物ID
+);
+
+-- 地域の親子関係
+CREATE TABLE `region_parent_links` (
+  `region_id` integer NOT NULL, -- 子地域ID
+  `parent_region_id` integer NOT NULL -- 親地域ID
 );
 
 -- 王朝と国家の所属関係

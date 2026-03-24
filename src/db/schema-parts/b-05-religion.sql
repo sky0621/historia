@@ -5,10 +5,10 @@ CREATE TABLE `religions` (
   `reading` text, -- 読み方
   `description` text, -- 宗教の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text, -- 成立年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 成立年の紀元区分コード
   `from_year` integer, -- 成立年
   `from_is_approximate` integer DEFAULT false, -- 成立年がおおよそか
-  `to_calendar_era` text, -- 終了年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
@@ -20,10 +20,10 @@ CREATE TABLE `sects` (
   `reading` text, -- 読み方
   `description` text, -- 宗派の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text, -- 成立年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 成立年の紀元区分コード
   `from_year` integer, -- 成立年
   `from_is_approximate` integer DEFAULT false, -- 成立年がおおよそか
-  `to_calendar_era` text, -- 終了年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );

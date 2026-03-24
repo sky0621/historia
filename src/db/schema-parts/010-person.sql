@@ -6,10 +6,10 @@ CREATE TABLE `persons` (
   `aliases` text, -- 別名のカンマ区切り文字列
   `description` text, -- 人物の説明
   `note` text, -- 編集メモ・注釈
-  `from_calendar_era` integer DEFAULT false, -- 生年の紀元区分: false=CE / true=BCE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 生年の紀元区分コード
   `from_year` integer, -- 生年
   `from_is_approximate` integer DEFAULT false, -- 生年がおおよそか
-  `to_calendar_era` integer DEFAULT false, -- 没年の紀元区分: false=CE / true=BCE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 没年の紀元区分コード
   `to_year` integer, -- 没年
   `to_is_approximate` integer DEFAULT false -- 没年がおおよそか
 );
@@ -22,10 +22,10 @@ CREATE TABLE `role` (
   `description` text, -- 役職記録の説明
   `note` text, -- 編集メモ・注釈
   `is_incumbent` integer DEFAULT false, -- 現職かどうか
-  `from_calendar_era` text, -- 就任年の紀元区分: BCE / CE
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 就任年の紀元区分コード
   `from_year` integer, -- 就任年
   `from_is_approximate` integer DEFAULT false, -- 就任年がおおよそか
-  `to_calendar_era` text, -- 離任年の紀元区分: BCE / CE
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 離任年の紀元区分コード
   `to_year` integer, -- 離任年
   `to_is_approximate` integer DEFAULT false -- 離任年がおおよそか
 );
