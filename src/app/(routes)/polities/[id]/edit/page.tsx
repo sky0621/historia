@@ -19,7 +19,6 @@ export default async function EditPolityPage({ params }: { params: Promise<{ id:
       defaultValues={{
         id: view.polity.id,
         name: view.polity.name,
-        aliases: view.polity.aliases ?? "",
         note: view.polity.note ?? "",
         regionIds: view.regions.map((region) => region.id),
         fromTimeExpression: view.defaultFromTimeExpression,

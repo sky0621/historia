@@ -72,10 +72,6 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-[var(--muted)]">別名</dt>
-              <dd className="mt-1">{view.dynasty.aliases ?? "-"}</dd>
-            </div>
-            <div>
               <dt className="font-medium text-[var(--muted)]">関連地域</dt>
               <dd className="mt-1">
                 {view.regions.length === 0 ? "-" : view.regions.map((region, index) => (

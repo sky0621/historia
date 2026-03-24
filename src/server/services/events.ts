@@ -332,7 +332,7 @@ export function createEventFromInput(input: EventInput) {
             eventId,
             winnerSummary: nullable(input.conflictOutcome.winnerSummary),
             loserSummary: nullable(input.conflictOutcome.loserSummary),
-            settlementSummary: nullable(input.conflictOutcome.settlementSummary),
+            resolutionSummary: nullable(input.conflictOutcome.resolutionSummary),
             note: nullable(input.conflictOutcome.note)
           }
         : null
@@ -410,7 +410,7 @@ export function updateEventFromInput(id: number, input: EventInput) {
             eventId: id,
             winnerSummary: nullable(input.conflictOutcome.winnerSummary),
             loserSummary: nullable(input.conflictOutcome.loserSummary),
-            settlementSummary: nullable(input.conflictOutcome.settlementSummary),
+            resolutionSummary: nullable(input.conflictOutcome.resolutionSummary),
             note: nullable(input.conflictOutcome.note)
           }
         : null
@@ -578,7 +578,7 @@ export function appendConflictOutcomeToEvent(
     loserParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
     winnerSummary?: string;
     loserSummary?: string;
-    settlementSummary?: string;
+    resolutionSummary?: string;
     note?: string;
   }
 ) {
@@ -592,7 +592,7 @@ export function appendConflictOutcomeToEvent(
     eventId: id,
     winnerSummary: nullable(outcome.winnerSummary),
     loserSummary: nullable(outcome.loserSummary),
-    settlementSummary: nullable(outcome.settlementSummary),
+    resolutionSummary: nullable(outcome.resolutionSummary),
     note: nullable(outcome.note)
   });
   insertConflictOutcomeParticipants(
@@ -619,7 +619,7 @@ export function replaceConflictOutcomeOnEvent(
     loserParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
     winnerSummary?: string;
     loserSummary?: string;
-    settlementSummary?: string;
+    resolutionSummary?: string;
     note?: string;
   } | null
 ) {
@@ -636,7 +636,7 @@ export function replaceConflictOutcomeOnEvent(
           eventId: id,
           winnerSummary: nullable(outcome.winnerSummary),
           loserSummary: nullable(outcome.loserSummary),
-          settlementSummary: nullable(outcome.settlementSummary),
+          resolutionSummary: nullable(outcome.resolutionSummary),
           note: nullable(outcome.note)
         }
       : null

@@ -21,7 +21,6 @@ export default async function NewSectPage({ searchParams }: NewSectPageProps) {
         religionId: params.religionId ? Number(params.religionId) : 0,
         parentSectId: params.parentSectId ? Number(params.parentSectId) : null,
         name: "",
-        aliases: "",
         description: "",
         note: "",
         regionIds: [],

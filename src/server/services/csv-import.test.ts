@@ -1002,7 +1002,7 @@ describe("csv import service", () => {
     repositoryMocks.getConflictOutcomesByEventIds.mockReturnValue([{ eventId: 1 }]);
 
     const preview = previewConflictOutcomeCsvImport(
-      "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
+      "event,winner_participants,loser_participants,resolution_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
     );
 
     expect(preview.summary).toEqual({
@@ -1020,7 +1020,7 @@ describe("csv import service", () => {
     repositoryMocks.listPolities.mockReturnValue([{ id: 20, name: "セルジューク朝" }]);
 
     const result = applyConflictOutcomeCsvImport(
-      "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
+      "event,winner_participants,loser_participants,resolution_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
     );
 
     expect(result).toEqual({
@@ -1032,7 +1032,7 @@ describe("csv import service", () => {
     expect(repositoryMocks.replaceConflictOutcomeOnEvent).toHaveBeenCalledWith(
       1,
       expect.objectContaining({
-        settlementSummary: "エルサレム占領",
+        resolutionSummary: "エルサレム占領",
         winnerParticipants: [expect.objectContaining({ participantType: "person", participantId: 10, side: "winner" })],
         loserParticipants: [expect.objectContaining({ participantType: "polity", participantId: 20, side: "loser" })]
       })
@@ -1046,7 +1046,7 @@ describe("csv import service", () => {
     repositoryMocks.getConflictOutcomesByEventIds.mockReturnValue([{ eventId: 1 }]);
 
     const result = applyConflictOutcomeCsvImport(
-      "event,winner_participants,loser_participants,settlement_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
+      "event,winner_participants,loser_participants,resolution_summary\n第1回十字軍,person:教皇ウルバヌス2世,polity:セルジューク朝,エルサレム占領"
     );
 
     expect(result).toEqual({
@@ -1057,22 +1057,22 @@ describe("csv import service", () => {
     });
     expect(repositoryMocks.replaceConflictOutcomeOnEvent).toHaveBeenCalledWith(
       1,
-      expect.objectContaining({ settlementSummary: "エルサレム占領" })
+      expect.objectContaining({ resolutionSummary: "エルサレム占領" })
     );
   });
 
   it("previews and imports regions", () => {
     repositoryMocks.listRegions.mockReturnValue([{ id: 1, name: "日本" }]);
-    const preview = previewRegionCsvImport("name,parent_region,aliases\n近畿,日本,畿内");
+    const preview = previewRegionCsvImport("name,parent_region,description\n近畿,日本,古代からの中核地域");
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
-      input: { name: "近畿", parentRegionId: 1, aliases: ["畿内"] }
+      input: { name: "近畿", parentRegionId: 1, description: "古代からの中核地域" }
     });
 
-    const result = applyRegionCsvImport("name,parent_region,aliases\n近畿,日本,畿内");
+    const result = applyRegionCsvImport("name,parent_region,description\n近畿,日本,古代からの中核地域");
     expect(result).toEqual({ kind: "region", insertedCount: 1, updatedCount: 0, deletedCount: 1 });
     expect(repositoryMocks.createRegionFromInput).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "近畿", parentRegionId: 1, aliases: ["畿内"] })
+      expect.objectContaining({ name: "近畿", parentRegionId: 1, description: "古代からの中核地域" })
     );
   });
 

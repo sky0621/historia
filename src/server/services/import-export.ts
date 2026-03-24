@@ -26,9 +26,9 @@ const ID_TABLES = [
   "historical_period_relations",
   "events",
   "event_relations",
-  "conflict_participants",
-  "conflict_outcomes",
-  "conflict_outcome_participants",
+  "event_conflict_participants",
+  "event_conflict_outcomes",
+  "event_conflict_outcome_participants",
   "sources",
   "citations",
   "change_histories"
@@ -349,13 +349,13 @@ function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps:
     }
   }
 
-  if (table === "conflict_participants" || table === "conflict_outcomes" || table === "conflict_outcome_participants") {
+  if (table === "event_conflict_participants" || table === "event_conflict_outcomes" || table === "event_conflict_outcome_participants") {
     if (typeof row.event_id === "number") {
       prepared.event_id = idMaps.get("events")?.get(row.event_id) ?? row.event_id;
     }
   }
 
-  if ((table === "conflict_participants" || table === "conflict_outcome_participants") && typeof row.participant_id === "number") {
+  if ((table === "event_conflict_participants" || table === "event_conflict_outcome_participants") && typeof row.participant_id === "number") {
     prepared.participant_id = mapParticipantId(String(row.participant_type ?? ""), row.participant_id, idMaps);
   }
 

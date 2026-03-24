@@ -86,10 +86,6 @@ export default async function RegionDetailPage({
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-[var(--muted)]">別名</dt>
-              <dd className="mt-1">{view.region.aliases ?? "-"}</dd>
-            </div>
-            <div>
               <dt className="font-medium text-[var(--muted)]">メモ</dt>
               <dd className="mt-1 whitespace-pre-wrap">{view.region.note ?? "-"}</dd>
             </div>

@@ -44,7 +44,7 @@ export const eventSchema = z.object({
       loserParticipants: z.array(conflictOutcomeParticipantSchema).default([]),
       winnerSummary: z.string().trim().optional(),
       loserSummary: z.string().trim().optional(),
-      settlementSummary: z.string().trim().optional(),
+      resolutionSummary: z.string().trim().optional(),
       note: z.string().trim().optional()
     })
     .optional()
@@ -134,7 +134,7 @@ function parseConflictParticipants(formData: FormData) {
 }
 
 function parseConflictOutcome(formData: FormData) {
-  const settlementSummary = formData.get("conflictOutcome.settlementSummary");
+  const resolutionSummary = formData.get("conflictOutcome.resolutionSummary");
   const winnerSummary = formData.get("conflictOutcome.winnerSummary");
   const loserSummary = formData.get("conflictOutcome.loserSummary");
   const note = formData.get("conflictOutcome.note");
@@ -142,7 +142,7 @@ function parseConflictOutcome(formData: FormData) {
   const loserParticipants = parseConflictOutcomeParticipants(formData.getAll("conflictOutcome.loserParticipants"), "loser");
   const normalizedWinner = typeof winnerSummary === "string" ? winnerSummary.trim() : "";
   const normalizedLoser = typeof loserSummary === "string" ? loserSummary.trim() : "";
-  const normalizedSettlement = typeof settlementSummary === "string" ? settlementSummary.trim() : "";
+  const normalizedResolution = typeof resolutionSummary === "string" ? resolutionSummary.trim() : "";
   const normalizedNote = typeof note === "string" ? note.trim() : "";
 
   if (
@@ -150,7 +150,7 @@ function parseConflictOutcome(formData: FormData) {
     loserParticipants.length === 0 &&
     !normalizedWinner &&
     !normalizedLoser &&
-    !normalizedSettlement &&
+    !normalizedResolution &&
     !normalizedNote
   ) {
     return undefined;
@@ -161,7 +161,7 @@ function parseConflictOutcome(formData: FormData) {
     loserParticipants,
     winnerSummary: normalizedWinner || undefined,
     loserSummary: normalizedLoser || undefined,
-    settlementSummary: normalizedSettlement || undefined,
+    resolutionSummary: normalizedResolution || undefined,
     note: normalizedNote || undefined
   };
 }

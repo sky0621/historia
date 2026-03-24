@@ -174,17 +174,16 @@ const CONFLICT_OUTCOME_HEADERS = [
   "loser_participants",
   "winner_summary",
   "loser_summary",
-  "settlement_summary",
+  "resolution_summary",
   "note"
 ] as const;
 const REQUIRED_CONFLICT_OUTCOME_HEADERS = ["event"] as const;
-const REGION_HEADERS = ["name", "parent_region", "aliases", "description", "note"] as const;
+const REGION_HEADERS = ["name", "parent_region", "description", "note"] as const;
 const REQUIRED_REGION_HEADERS = ["name"] as const;
 const PERIOD_CATEGORY_HEADERS = ["name", "description"] as const;
 const REQUIRED_PERIOD_CATEGORY_HEADERS = ["name"] as const;
 const POLITY_HEADERS = [
   "name",
-  "aliases",
   "note",
   "from_label",
   "from_calendar_era",
@@ -199,7 +198,6 @@ const POLITY_HEADERS = [
 const REQUIRED_POLITY_HEADERS = ["name"] as const;
 const RELIGION_HEADERS = [
   "name",
-  "aliases",
   "description",
   "note",
   "time_label",
@@ -214,7 +212,6 @@ const REQUIRED_RELIGION_HEADERS = ["name"] as const;
 const DYNASTY_HEADERS = [
   "name",
   "polity",
-  "aliases",
   "note",
   "time_label",
   "time_calendar_era",
@@ -244,7 +241,6 @@ const SECT_HEADERS = [
   "name",
   "religion",
   "parent_sect",
-  "aliases",
   "description",
   "note",
   "time_label",
@@ -393,7 +389,7 @@ export type ConflictOutcomeCsvInput = {
     loserParticipants: Array<{ side: "winner" | "loser"; participantType: "polity" | "person" | "religion" | "sect"; participantId: number }>;
     winnerSummary?: string;
     loserSummary?: string;
-    settlementSummary?: string;
+    resolutionSummary?: string;
     note?: string;
   };
 };
@@ -937,7 +933,7 @@ export function previewConflictOutcomeCsvImport(rawCsv: string): CsvPreviewResul
               loserParticipants,
               winnerSummary: normalizeOptionalString(cells.winner_summary),
               loserSummary: normalizeOptionalString(cells.loser_summary),
-              settlementSummary: normalizeOptionalString(cells.settlement_summary),
+              resolutionSummary: normalizeOptionalString(cells.resolution_summary),
               note: normalizeOptionalString(cells.note)
             }
           }
@@ -982,7 +978,6 @@ export function previewRegionCsvImport(rawCsv: string): CsvPreviewResult<RegionC
     const inputCandidate = {
       name: cells.name.trim(),
       parentRegionId: resolveNamedEntityOptional("parent_region", cells.parent_region, regionNameMap, issues),
-      aliases: parseCommaSeparatedNames(cells.aliases),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note)
     };
@@ -1083,7 +1078,6 @@ export function previewPolityCsvImport(rawCsv: string): CsvPreviewResult<PolityC
     const cells = mapRowToCells(parsed.headers, row.values);
     const inputCandidate = {
       name: cells.name.trim(),
-      aliases: parseCommaSeparatedNames(cells.aliases),
       note: normalizeOptionalString(cells.note),
       fromTimeExpression: parsePersonTimeExpressionFromCsv(cells, "from", issues),
       toTimeExpression: parsePersonTimeExpressionFromCsv(cells, "to", issues),
@@ -1135,7 +1129,6 @@ export function previewReligionCsvImport(rawCsv: string): CsvPreviewResult<Relig
     const cells = mapRowToCells(parsed.headers, row.values);
     const inputCandidate = {
       name: cells.name.trim(),
-      aliases: parseCommaSeparatedNames(cells.aliases),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
       timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
@@ -1188,7 +1181,6 @@ export function previewDynastyCsvImport(rawCsv: string): CsvPreviewResult<Dynast
     const inputCandidate = {
       polityId: resolveSingleReference("polities", cells.polity, references.polities, issues),
       name: cells.name.trim(),
-      aliases: parseCommaSeparatedNames(cells.aliases),
       note: normalizeOptionalString(cells.note),
       timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues)
@@ -1274,7 +1266,6 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
       religionId: resolveSingleReference("religions", cells.religion, references.religions, issues),
       parentSectId: resolveNamedEntityOptional("parent_sect", cells.parent_sect, sectNameMap, issues),
       name: cells.name.trim(),
-      aliases: parseCommaSeparatedNames(cells.aliases),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
       timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),

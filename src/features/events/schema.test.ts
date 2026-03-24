@@ -21,7 +21,7 @@ describe("parseEventFormData", () => {
     formData.append("conflictOutcome.loserParticipants", "polity:1");
     formData.set("conflictOutcome.winnerSummary", "将軍家");
     formData.set("conflictOutcome.loserSummary", "幕府秩序");
-    formData.set("conflictOutcome.settlementSummary", "権威が低下した");
+    formData.set("conflictOutcome.resolutionSummary", "権威が低下した");
 
     const parsed = parseEventFormData(formData);
 
@@ -45,7 +45,7 @@ describe("parseEventFormData", () => {
       loserParticipants: [{ side: "loser", participantType: "polity", participantId: 1 }],
       winnerSummary: "将軍家",
       loserSummary: "幕府秩序",
-      settlementSummary: "権威が低下した",
+      resolutionSummary: "権威が低下した",
       note: undefined
     });
   });
@@ -57,7 +57,7 @@ describe("parseEventFormData", () => {
     formData.set("participantCount", "0");
     formData.append("conflictOutcome.winnerParticipants", "religion:not-a-number");
     formData.append("conflictOutcome.winnerParticipants", "invalid:5");
-    formData.set("conflictOutcome.settlementSummary", "エルサレムを占領");
+    formData.set("conflictOutcome.resolutionSummary", "エルサレムを占領");
 
     const parsed = parseEventFormData(formData);
 
@@ -66,7 +66,7 @@ describe("parseEventFormData", () => {
       loserParticipants: [],
       winnerSummary: undefined,
       loserSummary: undefined,
-      settlementSummary: "エルサレムを占領",
+      resolutionSummary: "エルサレムを占領",
       note: undefined
     });
   });

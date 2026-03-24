@@ -98,7 +98,7 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
     })
     .filter((religion) =>
       matchesQuery(
-        [religion.name, religion.aliases, religion.description, religion.note, religion.regionNames.join(", "), religion.founderNames.join(", ")],
+        [religion.name, religion.description, religion.note, religion.regionNames.join(", "), religion.founderNames.join(", ")],
         normalizedQuery
       )
     );
@@ -153,7 +153,7 @@ export function getSectListView(filters: SectListFilters = {}) {
     })
     .filter((sect) =>
       matchesQuery(
-        [sect.name, sect.aliases, sect.description, sect.note, sect.religionName, sect.parentSectName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
+        [sect.name, sect.description, sect.note, sect.religionName, sect.parentSectName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
         normalizedQuery
       )
     );
@@ -226,7 +226,6 @@ export function createReligionFromInput(input: ReligionInput) {
   return createReligion(
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
@@ -241,7 +240,6 @@ export function updateReligionFromInput(id: number, input: ReligionInput) {
     id,
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
@@ -259,7 +257,6 @@ export function createSectFromInput(input: SectInput) {
   return createSect(
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
@@ -276,7 +273,6 @@ export function updateSectFromInput(id: number, input: SectInput) {
     id,
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
@@ -290,10 +286,6 @@ export function updateSectFromInput(id: number, input: SectInput) {
 
 export function removeSect(id: number) {
   deleteSect(id);
-}
-
-function joinAliases(aliases: string[]) {
-  return aliases.length > 0 ? aliases.join(", ") : null;
 }
 
 function nullable(value: string | undefined) {

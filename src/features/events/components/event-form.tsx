@@ -56,7 +56,7 @@ type Props = {
       loserParticipants: OutcomeParticipantDefault[];
       winnerSummary: string;
       loserSummary: string;
-      settlementSummary: string;
+      resolutionSummary: string;
       note: string;
     };
   };
@@ -342,10 +342,10 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                     />
                   </label>
                   <label className="grid gap-2 text-sm">
-                    <span>講和・停戦要約</span>
+                    <span>決着要約</span>
                     <textarea
-                      name="conflictOutcome.settlementSummary"
-                      defaultValue={defaultValues?.conflictOutcome?.settlementSummary ?? ""}
+                      name="conflictOutcome.resolutionSummary"
+                      defaultValue={defaultValues?.conflictOutcome?.resolutionSummary ?? ""}
                       className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
                     />
                   </label>

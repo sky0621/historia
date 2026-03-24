@@ -6,7 +6,6 @@ const idsSchema = z.array(z.number().int().positive()).default([]);
 
 export const religionSchema = z.object({
   name: z.string().trim().min(1, "名称は必須です"),
-  aliases: z.array(z.string().trim()).default([]),
   description: z.string().trim().optional(),
   note: z.string().trim().optional(),
   timeExpression: timeExpressionSchema.optional(),
@@ -25,7 +24,6 @@ export type SectInput = z.infer<typeof sectSchema>;
 export function parseReligionFormData(formData: FormData): ReligionInput {
   return religionSchema.parse({
     name: formData.get("name"),
-    aliases: normalizeAliases(formData.get("aliases")),
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
     timeExpression: parseTimeExpressionFormData(formData, "time"),
@@ -39,21 +37,12 @@ export function parseSectFormData(formData: FormData): SectInput {
     religionId: Number(formData.get("religionId")),
     parentSectId: normalizeId(formData.get("parentSectId")),
     name: formData.get("name"),
-    aliases: normalizeAliases(formData.get("aliases")),
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
     timeExpression: parseTimeExpressionFormData(formData, "time"),
     regionIds: normalizeIds(formData.getAll("regionIds")),
     founderIds: normalizeIds(formData.getAll("founderIds"))
   });
-}
-
-function normalizeAliases(value: FormDataEntryValue | null) {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    return [];
-  }
-
-  return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 function normalizeIds(values: FormDataEntryValue[]) {

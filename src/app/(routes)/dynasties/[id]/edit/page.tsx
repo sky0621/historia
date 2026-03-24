@@ -21,7 +21,6 @@ export default async function EditDynastyPage({ params }: { params: Promise<{ id
         id: view.dynasty.id,
         polityId: view.dynasty.polityId,
         name: view.dynasty.name,
-        aliases: view.dynasty.aliases ?? "",
         note: view.dynasty.note ?? "",
         regionIds: view.regions.map((region) => region.id),
         timeExpression: view.defaultTimeExpression

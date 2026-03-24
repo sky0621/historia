@@ -55,7 +55,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
               })),
               winnerSummary: view.conflictOutcome.winnerSummary ?? "",
               loserSummary: view.conflictOutcome.loserSummary ?? "",
-              settlementSummary: view.conflictOutcome.settlementSummary ?? "",
+              resolutionSummary: view.conflictOutcome.resolutionSummary ?? "",
               note: view.conflictOutcome.note ?? ""
             }
           : undefined

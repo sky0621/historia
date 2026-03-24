@@ -261,7 +261,7 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
 
   if (filters.includePolities ?? true) {
     for (const polity of listPolities()) {
-      if (!matchesTimelineQuery([polity.name, polity.aliases, polity.note], query)) {
+      if (!matchesTimelineQuery([polity.name, polity.note], query)) {
         continue;
       }
       const range = getEmbeddedRangeFromRecord(polity);
@@ -286,7 +286,7 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
       if (filters.polityId && dynasty.polityId !== filters.polityId) {
         continue;
       }
-      if (!matchesTimelineQuery([dynasty.name, dynasty.aliases, dynasty.note], query)) {
+      if (!matchesTimelineQuery([dynasty.name, dynasty.note], query)) {
         continue;
       }
       const range = getEmbeddedRangeFromRecord(dynasty);
@@ -308,7 +308,7 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
 
   if (filters.includeReligions ?? true) {
     for (const religion of listReligions()) {
-      if (!matchesTimelineQuery([religion.name, religion.aliases, religion.description, religion.note], query)) {
+      if (!matchesTimelineQuery([religion.name, religion.description, religion.note], query)) {
         continue;
       }
       const range = getEmbeddedRangeFromRecord(religion);
@@ -328,7 +328,7 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
     }
 
     for (const sect of listSects()) {
-      if (!matchesTimelineQuery([sect.name, sect.aliases, sect.description, sect.note], query)) {
+      if (!matchesTimelineQuery([sect.name, sect.description, sect.note], query)) {
         continue;
       }
       const range = getEmbeddedRangeFromRecord(sect);

@@ -60,7 +60,7 @@ export function getRegionListView(filters: RegionListFilters = {}) {
       return true;
     })
     .filter((region) =>
-      matchesQuery([region.name, region.aliases, region.description, region.note, region.parentName ?? ""], normalizedQuery)
+      matchesQuery([region.name, region.description, region.note, region.parentName ?? ""], normalizedQuery)
     );
 }
 
@@ -105,7 +105,6 @@ export function createRegionFromInput(input: RegionInput) {
   return createRegion(
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note)
     },
@@ -118,7 +117,6 @@ export function updateRegionFromInput(id: number, input: RegionInput) {
     id,
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note)
     },
@@ -128,10 +126,6 @@ export function updateRegionFromInput(id: number, input: RegionInput) {
 
 export function deleteRegionById(id: number) {
   deleteRegion(id);
-}
-
-function joinAliases(value: string[]) {
-  return value.length > 0 ? value.join(", ") : null;
 }
 
 function nullable(value: string | undefined) {

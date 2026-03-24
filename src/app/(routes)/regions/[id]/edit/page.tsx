@@ -24,7 +24,6 @@ export default async function EditRegionPage({
         id: view.region.id,
         name: view.region.name,
         parentRegionId: view.region.parentRegionId,
-        aliases: view.region.aliases ?? "",
         description: view.region.description ?? "",
         note: view.region.note ?? ""
       }}

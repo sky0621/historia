@@ -20,7 +20,6 @@ export default async function EditReligionPage({ params }: { params: Promise<{ i
       defaultValues={{
         id: view.religion.id,
         name: view.religion.name,
-        aliases: view.religion.aliases ?? "",
         description: view.religion.description ?? "",
         note: view.religion.note ?? "",
         regionIds: view.regions.map((region) => region.id),

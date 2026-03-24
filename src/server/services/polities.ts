@@ -70,7 +70,7 @@ export function getPolityListView(filters: PolityListFilters = {}) {
 
       return true;
     })
-    .filter((polity) => matchesQuery([polity.name, polity.aliases, polity.note, polity.regionNames.join(", ")], normalizedQuery));
+    .filter((polity) => matchesQuery([polity.name, polity.note, polity.regionNames.join(", ")], normalizedQuery));
 }
 
 export function getDynastyListView(filters: DynastyListFilters = {}) {
@@ -105,7 +105,7 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
       return true;
     })
     .filter((dynasty) =>
-      matchesQuery([dynasty.name, dynasty.aliases, dynasty.note, dynasty.polityName, dynasty.regionNames.join(", ")], normalizedQuery)
+      matchesQuery([dynasty.name, dynasty.note, dynasty.polityName, dynasty.regionNames.join(", ")], normalizedQuery)
     );
 }
 
@@ -180,7 +180,6 @@ export function createPolityFromInput(input: PolityInput) {
   const id = createPolity(
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredPolityTime("from", input.fromTimeExpression),
       ...toStoredPolityTime("to", input.toTimeExpression)
@@ -202,7 +201,6 @@ export function updatePolityFromInput(id: number, input: PolityInput) {
     id,
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredPolityTime("from", input.fromTimeExpression),
       ...toStoredPolityTime("to", input.toTimeExpression)
@@ -232,7 +230,6 @@ export function createDynastyFromInput(input: DynastyInput) {
   return createDynasty(
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
     },
@@ -246,7 +243,6 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
     id,
     {
       name: input.name,
-      aliases: joinAliases(input.aliases),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
     },
@@ -257,10 +253,6 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
 
 export function removeDynasty(id: number) {
   deleteDynasty(id);
-}
-
-function joinAliases(aliases: string[]) {
-  return aliases.length > 0 ? aliases.join(", ") : null;
 }
 
 function nullable(value: string | undefined) {

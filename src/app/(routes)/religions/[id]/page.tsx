@@ -54,10 +54,6 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
           <h2 className="text-lg font-semibold">基本情報</h2>
           <dl className="mt-6 grid gap-4 text-sm">
             <div>
-              <dt className="font-medium text-[var(--muted)]">別名</dt>
-              <dd className="mt-1">{view.religion.aliases ?? "-"}</dd>
-            </div>
-            <div>
               <dt className="font-medium text-[var(--muted)]">開祖</dt>
               <dd className="mt-1">
                 {view.founders.length === 0 ? "-" : view.founders.map((founder, index) => (

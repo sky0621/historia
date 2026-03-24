@@ -24,7 +24,6 @@ export default async function EditSectPage({ params }: { params: Promise<{ id: s
         religionId: view.sect.religionId,
         parentSectId: view.sect.parentSectId,
         name: view.sect.name,
-        aliases: view.sect.aliases ?? "",
         description: view.sect.description ?? "",
         note: view.sect.note ?? "",
         regionIds: view.regions.map((region) => region.id),

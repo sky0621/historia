@@ -13,7 +13,6 @@ type Props = {
   defaultValues?: {
     id?: number;
     name: string;
-    aliases: string;
     description: string;
     note: string;
     regionIds: number[];
@@ -46,10 +45,6 @@ export function ReligionForm({
           <label className="grid gap-2 text-sm">
             <span>名称</span>
             <input name="name" defaultValue={defaultValues?.name ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required />
-          </label>
-          <label className="grid gap-2 text-sm">
-            <span>別名</span>
-            <input name="aliases" defaultValue={defaultValues?.aliases ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
           </label>
           <label className="grid gap-2 text-sm">
             <span>説明</span>

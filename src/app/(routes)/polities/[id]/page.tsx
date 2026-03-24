@@ -62,10 +62,6 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
           <h2 className="text-lg font-semibold">基本情報</h2>
           <dl className="mt-6 grid gap-4 text-sm">
             <div>
-              <dt className="font-medium text-[var(--muted)]">別名</dt>
-              <dd className="mt-1">{view.polity.aliases ?? "-"}</dd>
-            </div>
-            <div>
               <dt className="font-medium text-[var(--muted)]">関連地域</dt>
               <dd className="mt-1">
                 {view.regions.length === 0 ? "-" : view.regions.map((region, index) => (

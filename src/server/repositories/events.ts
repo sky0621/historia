@@ -1,9 +1,9 @@
 import { asc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
-  conflictOutcomeParticipants,
-  conflictOutcomes,
-  conflictParticipants,
+  eventConflictOutcomeParticipants,
+  eventConflictOutcomes,
+  eventConflictParticipants,
   eventDynastyLinks,
   eventPeriodLinks,
   eventPersonLinks,
@@ -18,9 +18,9 @@ import {
 
 export type EventInsert = typeof events.$inferInsert;
 export type EventRelationInsert = typeof eventRelations.$inferInsert;
-export type ConflictParticipantInsert = typeof conflictParticipants.$inferInsert;
-export type ConflictOutcomeInsert = typeof conflictOutcomes.$inferInsert;
-export type ConflictOutcomeParticipantInsert = typeof conflictOutcomeParticipants.$inferInsert;
+export type ConflictParticipantInsert = typeof eventConflictParticipants.$inferInsert;
+export type ConflictOutcomeInsert = typeof eventConflictOutcomes.$inferInsert;
+export type ConflictOutcomeParticipantInsert = typeof eventConflictOutcomeParticipants.$inferInsert;
 
 export function listEvents() {
   return db.select().from(events).orderBy(asc(events.title)).all();
@@ -106,42 +106,42 @@ export function insertEventRelations(relations: EventRelationInsert[]) {
 }
 
 export function replaceConflictParticipants(eventId: number, participants: ConflictParticipantInsert[]) {
-  db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
+  db.delete(eventConflictParticipants).where(eq(eventConflictParticipants.eventId, eventId)).run();
 
   if (participants.length > 0) {
-    db.insert(conflictParticipants).values(participants).run();
+    db.insert(eventConflictParticipants).values(participants).run();
   }
 }
 
 export function insertConflictParticipants(participants: ConflictParticipantInsert[]) {
   if (participants.length > 0) {
-    db.insert(conflictParticipants).values(participants).run();
+    db.insert(eventConflictParticipants).values(participants).run();
   }
 }
 
 export function replaceConflictOutcome(eventId: number, outcome: ConflictOutcomeInsert | null) {
-  db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
+  db.delete(eventConflictOutcomes).where(eq(eventConflictOutcomes.eventId, eventId)).run();
 
   if (outcome) {
-    db.insert(conflictOutcomes).values(outcome).run();
+    db.insert(eventConflictOutcomes).values(outcome).run();
   }
 }
 
 export function insertConflictOutcome(outcome: ConflictOutcomeInsert) {
-  db.insert(conflictOutcomes).values(outcome).run();
+  db.insert(eventConflictOutcomes).values(outcome).run();
 }
 
 export function replaceConflictOutcomeParticipants(eventId: number, participants: ConflictOutcomeParticipantInsert[]) {
-  db.delete(conflictOutcomeParticipants).where(eq(conflictOutcomeParticipants.eventId, eventId)).run();
+  db.delete(eventConflictOutcomeParticipants).where(eq(eventConflictOutcomeParticipants.eventId, eventId)).run();
 
   if (participants.length > 0) {
-    db.insert(conflictOutcomeParticipants).values(participants).run();
+    db.insert(eventConflictOutcomeParticipants).values(participants).run();
   }
 }
 
 export function insertConflictOutcomeParticipants(participants: ConflictOutcomeParticipantInsert[]) {
   if (participants.length > 0) {
-    db.insert(conflictOutcomeParticipants).values(participants).run();
+    db.insert(eventConflictOutcomeParticipants).values(participants).run();
   }
 }
 
@@ -195,8 +195,8 @@ export function getConflictParticipantsByEventIds(eventIds: number[]) {
 
   return db
     .select()
-    .from(conflictParticipants)
-    .where(inArray(conflictParticipants.eventId, eventIds))
+    .from(eventConflictParticipants)
+    .where(inArray(eventConflictParticipants.eventId, eventIds))
     .all();
 }
 
@@ -207,8 +207,8 @@ export function getConflictOutcomesByEventIds(eventIds: number[]) {
 
   return db
     .select()
-    .from(conflictOutcomes)
-    .where(inArray(conflictOutcomes.eventId, eventIds))
+    .from(eventConflictOutcomes)
+    .where(inArray(eventConflictOutcomes.eventId, eventIds))
     .all();
 }
 
@@ -219,8 +219,8 @@ export function getConflictOutcomeParticipantsByEventIds(eventIds: number[]) {
 
   return db
     .select()
-    .from(conflictOutcomeParticipants)
-    .where(inArray(conflictOutcomeParticipants.eventId, eventIds))
+    .from(eventConflictOutcomeParticipants)
+    .where(inArray(eventConflictOutcomeParticipants.eventId, eventIds))
     .all();
 }
 
@@ -234,7 +234,7 @@ export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventRegionLinks).where(eq(eventRegionLinks.eventId, eventId)).run();
   db.delete(eventTagLinks).where(eq(eventTagLinks.eventId, eventId)).run();
   db.delete(eventRelations).where(or(eq(eventRelations.fromEventId, eventId), eq(eventRelations.toEventId, eventId))).run();
-  db.delete(conflictParticipants).where(eq(conflictParticipants.eventId, eventId)).run();
-  db.delete(conflictOutcomes).where(eq(conflictOutcomes.eventId, eventId)).run();
-  db.delete(conflictOutcomeParticipants).where(eq(conflictOutcomeParticipants.eventId, eventId)).run();
+  db.delete(eventConflictParticipants).where(eq(eventConflictParticipants.eventId, eventId)).run();
+  db.delete(eventConflictOutcomes).where(eq(eventConflictOutcomes.eventId, eventId)).run();
+  db.delete(eventConflictOutcomeParticipants).where(eq(eventConflictOutcomeParticipants.eventId, eventId)).run();
 }

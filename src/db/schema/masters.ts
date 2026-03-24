@@ -15,7 +15,6 @@ export const regions = sqliteTable("regions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   reading: text("reading"),
-  aliases: text("aliases"),
   description: text("description"),
   note: text("note")
 });
@@ -37,7 +36,6 @@ export const polities = sqliteTable("polities", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   reading: text("reading"),
-  aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
   fromCalendarEra: integer("from_calendar_era", { mode: "boolean" }).default(false),
@@ -52,7 +50,6 @@ export const dynasties = sqliteTable("dynasties", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   reading: text("reading"),
-  aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
   ...rangeTimeColumns()
@@ -98,7 +95,6 @@ export const religions = sqliteTable("religions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   reading: text("reading"),
-  aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
   ...rangeTimeColumns()
@@ -108,7 +104,6 @@ export const sects = sqliteTable("sects", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   reading: text("reading"),
-  aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
   ...rangeTimeColumns()

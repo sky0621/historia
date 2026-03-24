@@ -169,7 +169,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div>
               <dt className="font-medium text-[var(--muted)]">結果要約</dt>
               <dd className="mt-1 whitespace-pre-wrap">
-                {view.conflictOutcome?.settlementSummary ?? "-"}
+                {view.conflictOutcome?.resolutionSummary ?? "-"}
                 {view.conflictOutcome?.note ? (
                   <div className="mt-2 text-[var(--muted)]">{view.conflictOutcome.note}</div>
                 ) : null}
