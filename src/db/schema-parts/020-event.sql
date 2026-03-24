@@ -18,16 +18,16 @@ CREATE TABLE `event_relations` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 関連ID
   `from_event_id` integer NOT NULL, -- 起点となる出来事ID
   `to_event_id` integer NOT NULL, -- 終点となる出来事ID
-  `relation_type` text NOT NULL -- 関連種別: before / after / cause / related
+  `relation_type` text NOT NULL REFERENCES `event_relation_types`(`code`) -- 関連種別コード
 );
 
 -- 戦争や反乱の参加主体: 紛争イベントに参加した主体
 CREATE TABLE `event_conflict_participants` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 参加記録ID
   `event_id` integer NOT NULL, -- 対象イベントID
-  `participant_type` text NOT NULL, -- 参加主体の種別: person / polity / religion / sect
+  `participant_type` text NOT NULL REFERENCES `event_conflict_participant_types`(`code`), -- 参加主体種別コード
   `participant_id` integer NOT NULL, -- 参加主体のID
-  `role` text NOT NULL, -- 参加時の役割: attacker / defender / leader / ally / other
+  `role` text NOT NULL REFERENCES `event_conflict_participant_roles`(`code`), -- 参加時の役割コード
   `description` text, -- 参加内容の説明
   `note` text -- 編集メモ・注釈
 );
@@ -45,7 +45,7 @@ CREATE TABLE `event_conflict_outcomes` (
 CREATE TABLE `event_conflict_outcome_participants` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 結果参加主体ID
   `event_id` integer NOT NULL, -- 対象イベントID
-  `side` text NOT NULL, -- 陣営: winner / loser
-  `participant_type` text NOT NULL, -- 参加主体の種別: person / polity / religion / sect
+  `side` text NOT NULL REFERENCES `event_conflict_sides`(`code`), -- 陣営コード
+  `participant_type` text NOT NULL REFERENCES `event_conflict_participant_types`(`code`), -- 参加主体種別コード
   `participant_id` integer NOT NULL -- 参加主体のID
 );

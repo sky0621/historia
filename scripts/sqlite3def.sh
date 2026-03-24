@@ -76,6 +76,81 @@ ON CONFLICT(`code`) DO UPDATE SET
 SQL
 }
 
+ensure_event_relation_types_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `event_relation_types` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `event_relation_types` (`code`, `label`, `description`)
+VALUES
+  ('before', '先行', '他の出来事より前に起きた関係'),
+  ('after', '後続', '他の出来事より後に起きた関係'),
+  ('cause', '原因', '他の出来事の原因となる関係'),
+  ('related', '関連', '前後や因果に限定しない関連')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
+ensure_event_conflict_participant_types_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `event_conflict_participant_types` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `event_conflict_participant_types` (`code`, `label`, `description`)
+VALUES
+  ('person', '人物', '人物が参加主体である場合'),
+  ('polity', '国家', '国家・政体が参加主体である場合'),
+  ('religion', '宗教', '宗教が参加主体である場合'),
+  ('sect', '宗派', '宗派が参加主体である場合')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
+ensure_event_conflict_participant_roles_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `event_conflict_participant_roles` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `event_conflict_participant_roles` (`code`, `label`, `description`)
+VALUES
+  ('attacker', '攻撃側', '攻撃側として参加した役割'),
+  ('defender', '防御側', '防御側として参加した役割'),
+  ('leader', '指導者', '参加主体の指導者・中心人物としての役割'),
+  ('ally', '同盟者', '同盟・支援主体としての役割'),
+  ('other', 'その他', '上記に当てはまらない役割')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
+ensure_event_conflict_sides_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `event_conflict_sides` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `event_conflict_sides` (`code`, `label`, `description`)
+VALUES
+  ('winner', '勝者側', '結果として勝利した側'),
+  ('loser', '敗者側', '結果として敗北した側')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
 ensure_era_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `era` (
@@ -95,6 +170,10 @@ SQL
 
 ensure_era_seed_data
 ensure_event_types_seed_data
+ensure_event_relation_types_seed_data
+ensure_event_conflict_participant_types_seed_data
+ensure_event_conflict_participant_roles_seed_data
+ensure_event_conflict_sides_seed_data
 
 case "$MODE" in
   dry-run)

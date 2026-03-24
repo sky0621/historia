@@ -25,6 +25,10 @@ function clearTables() {
     "event_conflict_outcomes",
     "event_conflict_participants",
     "event_relations",
+    "event_conflict_sides",
+    "event_conflict_participant_roles",
+    "event_conflict_participant_types",
+    "event_relation_types",
     "role_assignment_dynasty_links",
     "role_assignment_polity_links",
     "role_assignment_person_links",
@@ -44,6 +48,7 @@ function clearTables() {
     "event_person_links",
     "events",
     "event_types",
+    "era",
     "sect_founder_links",
     "religion_founder_links",
     "person_period_links",
@@ -120,6 +125,45 @@ sqlite
       ('discovery', '発見', '発見、探検、到達など'),
       ('diplomatic_event', '外交', '使節派遣、国交樹立、朝貢開始など'),
       ('economic_event', '経済', '貨幣、税制、交易制度などの経済的変化')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO event_relation_types (code, label, description) VALUES
+      ('before', '先行', '他の出来事より前に起きた関係'),
+      ('after', '後続', '他の出来事より後に起きた関係'),
+      ('cause', '原因', '他の出来事の原因となる関係'),
+      ('related', '関連', '前後や因果に限定しない関連')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO event_conflict_participant_types (code, label, description) VALUES
+      ('person', '人物', '人物が参加主体である場合'),
+      ('polity', '国家', '国家・政体が参加主体である場合'),
+      ('religion', '宗教', '宗教が参加主体である場合'),
+      ('sect', '宗派', '宗派が参加主体である場合')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO event_conflict_participant_roles (code, label, description) VALUES
+      ('attacker', '攻撃側', '攻撃側として参加した役割'),
+      ('defender', '防御側', '防御側として参加した役割'),
+      ('leader', '指導者', '参加主体の指導者・中心人物としての役割'),
+      ('ally', '同盟者', '同盟・支援主体としての役割'),
+      ('other', 'その他', '上記に当てはまらない役割')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO event_conflict_sides (code, label, description) VALUES
+      ('winner', '勝者側', '結果として勝利した側'),
+      ('loser', '敗者側', '結果として敗北した側')`
   )
   .run();
 
