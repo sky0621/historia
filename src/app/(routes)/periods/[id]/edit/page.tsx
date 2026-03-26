@@ -26,7 +26,6 @@ export default async function EditHistoricalPeriodPage({
         polityId: view.period.polityId,
         name: view.period.name,
         regionLabel: view.period.regionLabel ?? "",
-        aliases: view.period.aliases ?? "",
         description: view.period.description ?? "",
         note: view.period.note ?? "",
         regionIds: view.regions.map((item) => item.id),

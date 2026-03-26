@@ -239,7 +239,7 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
       if (filters.polityId && period.polityId !== filters.polityId) {
         continue;
       }
-      if (!matchesTimelineQuery([period.name, period.aliases, period.description, period.note], query)) {
+      if (!matchesTimelineQuery([period.name, period.description, period.note], query)) {
         continue;
       }
       const range = getEmbeddedRangeFromRecord(period);

@@ -1,8 +1,13 @@
 import { integer, sqliteTable } from "drizzle-orm/sqlite-core";
+import { regions } from "./masters";
 
 export const regionParentLinks = sqliteTable("region_parent_links", {
-  regionId: integer("region_id").notNull(),
-  parentRegionId: integer("parent_region_id").notNull()
+  regionId: integer("region_id")
+    .notNull()
+    .references(() => regions.id),
+  parentRegionId: integer("parent_region_id")
+    .notNull()
+    .references(() => regions.id)
 });
 
 export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
@@ -100,7 +105,7 @@ export const dynastyRegionLinks = sqliteTable("dynasty_region_links", {
   regionId: integer("region_id").notNull()
 });
 
-export const periodRegionLinks = sqliteTable("period_region_links", {
+export const historicalPeriodRegionLinks = sqliteTable("historical_period_region_links", {
   periodId: integer("period_id").notNull(),
   regionId: integer("region_id").notNull()
 });

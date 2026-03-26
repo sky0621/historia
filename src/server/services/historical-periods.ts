@@ -71,7 +71,7 @@ export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilte
     })
     .filter((period) =>
       matchesQuery(
-        [period.name, period.aliases, period.description, period.note, period.categoryName, period.polityName, period.regionLabel, period.regionNames.join(", ")],
+        [period.name, period.description, period.note, period.categoryName, period.polityName, period.regionLabel, period.regionNames.join(", ")],
         normalizedQuery
       )
     );
@@ -114,7 +114,6 @@ export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
     {
       name: input.name,
       regionLabel: nullable(input.regionLabel),
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
@@ -139,7 +138,6 @@ export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPer
     {
       name: input.name,
       regionLabel: nullable(input.regionLabel),
-      aliases: joinAliases(input.aliases),
       description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
@@ -165,10 +163,6 @@ export function removeHistoricalPeriod(id: number) {
     action: "delete",
     snapshot
   });
-}
-
-function joinAliases(aliases: string[]) {
-  return aliases.length > 0 ? aliases.join(", ") : null;
 }
 
 function nullable(value: string | undefined) {

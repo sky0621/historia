@@ -4,7 +4,7 @@ import {
   historicalPeriodCategoryLinks,
   historicalPeriodPolityLinks,
   historicalPeriods,
-  periodRegionLinks
+  historicalPeriodRegionLinks
 } from "@/db/schema";
 
 export type HistoricalPeriodRecord = typeof historicalPeriods.$inferSelect & {
@@ -71,7 +71,7 @@ export function createHistoricalPeriod(
     }
 
     if (regionIds.length > 0) {
-      tx.insert(periodRegionLinks).values(regionIds.map((regionId) => ({ periodId, regionId }))).run();
+      tx.insert(historicalPeriodRegionLinks).values(regionIds.map((regionId) => ({ periodId, regionId }))).run();
     }
 
     return periodId;
@@ -89,14 +89,14 @@ export function updateHistoricalPeriod(
     tx.update(historicalPeriods).set(input).where(eq(historicalPeriods.id, id)).run();
     tx.delete(historicalPeriodCategoryLinks).where(eq(historicalPeriodCategoryLinks.periodId, id)).run();
     tx.delete(historicalPeriodPolityLinks).where(eq(historicalPeriodPolityLinks.periodId, id)).run();
-    tx.delete(periodRegionLinks).where(eq(periodRegionLinks.periodId, id)).run();
+    tx.delete(historicalPeriodRegionLinks).where(eq(historicalPeriodRegionLinks.periodId, id)).run();
     tx.insert(historicalPeriodCategoryLinks).values({ periodId: id, categoryId }).run();
     if (polityId != null) {
       tx.insert(historicalPeriodPolityLinks).values({ periodId: id, polityId }).run();
     }
 
     if (regionIds.length > 0) {
-      tx.insert(periodRegionLinks).values(regionIds.map((regionId) => ({ periodId: id, regionId }))).run();
+      tx.insert(historicalPeriodRegionLinks).values(regionIds.map((regionId) => ({ periodId: id, regionId }))).run();
     }
   });
 }
@@ -105,7 +105,7 @@ export function deleteHistoricalPeriod(id: number) {
   db.transaction((tx) => {
     tx.delete(historicalPeriodCategoryLinks).where(eq(historicalPeriodCategoryLinks.periodId, id)).run();
     tx.delete(historicalPeriodPolityLinks).where(eq(historicalPeriodPolityLinks.periodId, id)).run();
-    tx.delete(periodRegionLinks).where(eq(periodRegionLinks.periodId, id)).run();
+    tx.delete(historicalPeriodRegionLinks).where(eq(historicalPeriodRegionLinks.periodId, id)).run();
     tx.delete(historicalPeriods).where(eq(historicalPeriods.id, id)).run();
   });
 }
@@ -141,7 +141,7 @@ export function getHistoricalPeriodRegionIds(periodIds: number[]) {
 
   return db
     .select()
-    .from(periodRegionLinks)
-    .where(inArray(periodRegionLinks.periodId, periodIds))
+    .from(historicalPeriodRegionLinks)
+    .where(inArray(historicalPeriodRegionLinks.periodId, periodIds))
     .all();
 }

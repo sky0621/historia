@@ -29,6 +29,8 @@ function clearTables() {
     "event_conflict_participant_roles",
     "event_conflict_participant_types",
     "event_relation_types",
+    "historical_period_relation_types",
+    "region_relation_types",
     "role_assignment_dynasty_links",
     "role_assignment_polity_links",
     "role_assignment_person_links",
@@ -56,7 +58,7 @@ function clearTables() {
     "person_religion_links",
     "sect_region_links",
     "religion_region_links",
-    "period_region_links",
+    "historical_period_region_links",
     "dynasty_region_links",
     "polity_region_links",
     "person_region_links",
@@ -164,6 +166,29 @@ sqlite
     `INSERT INTO event_conflict_sides (code, label, description) VALUES
       ('winner', '勝者側', '結果として勝利した側'),
       ('loser', '敗者側', '結果として敗北した側')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO historical_period_relation_types (code, label, description) VALUES
+      ('precedes', '先行', '他の時代区分に先行する関係'),
+      ('succeeds', '後続', '他の時代区分に後続する関係'),
+      ('overlaps', '重複', '他の時代区分と期間が重なる関係'),
+      ('includes', '包含', '他の時代区分を含む関係'),
+      ('included_in', '被包含', '他の時代区分に含まれる関係')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO region_relation_types (code, label, description) VALUES
+      ('adjacent', '隣接', '地理的に隣接している関係'),
+      ('cultural_area', '文化圏', '同じ文化圏として結び付く関係'),
+      ('trade_zone', '交易圏', '同じ交易圏として結び付く関係'),
+      ('influences', '影響', '一方の地域が他方へ影響を与える関係'),
+      ('related', '関連', '上記に限定しない一般的な関連'),
+      ('equivalent', '対応', '別名や別区分だが概ね対応する関係')`
   )
   .run();
 

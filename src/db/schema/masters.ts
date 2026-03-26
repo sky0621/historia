@@ -91,7 +91,6 @@ export const historicalPeriods = sqliteTable("historical_periods", {
   name: text("name").notNull(),
   reading: text("reading"),
   regionLabel: text("region_label"),
-  aliases: text("aliases"),
   description: text("description"),
   note: text("note"),
   ...rangeTimeColumns()

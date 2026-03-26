@@ -1,5 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { era } from "./masters";
+import { era, historicalPeriods, regions } from "./masters";
 
 function rangeTimeColumns() {
   return {
@@ -34,18 +34,42 @@ export const dynastySuccessions = sqliteTable("dynasty_successions", {
 
 export const regionRelations = sqliteTable("region_relations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  fromRegionId: integer("from_region_id").notNull(),
-  toRegionId: integer("to_region_id").notNull(),
-  relationType: text("relation_type").notNull(),
+  fromRegionId: integer("from_region_id")
+    .notNull()
+    .references(() => regions.id),
+  toRegionId: integer("to_region_id")
+    .notNull()
+    .references(() => regions.id),
+  relationType: text("relation_type")
+    .notNull()
+    .references(() => regionRelationTypes.code),
   description: text("description"),
   note: text("note")
 });
 
+export const regionRelationTypes = sqliteTable("region_relation_types", {
+  code: text("code").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description")
+});
+
+export const historicalPeriodRelationTypes = sqliteTable("historical_period_relation_types", {
+  code: text("code").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description")
+});
+
 export const historicalPeriodRelations = sqliteTable("historical_period_relations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  fromPeriodId: integer("from_period_id").notNull(),
-  toPeriodId: integer("to_period_id").notNull(),
-  relationType: text("relation_type").notNull(),
+  fromPeriodId: integer("from_period_id")
+    .notNull()
+    .references(() => historicalPeriods.id),
+  toPeriodId: integer("to_period_id")
+    .notNull()
+    .references(() => historicalPeriods.id),
+  relationType: text("relation_type")
+    .notNull()
+    .references(() => historicalPeriodRelationTypes.code),
   description: text("description"),
   note: text("note")
 });

@@ -46,7 +46,7 @@ const LINK_TABLES = [
   "person_region_links",
   "polity_region_links",
   "dynasty_region_links",
-  "period_region_links",
+  "historical_period_region_links",
   "religion_region_links",
   "sect_region_links",
   "person_religion_links",
@@ -257,7 +257,7 @@ function findDuplicateEntity(table: string, row: Record<string, unknown>, import
 }
 
 function hasAliasMatch(table: string, aliases: string) {
-  if (!["regions", "polities", "dynasties", "persons", "historical_periods", "religions", "sects"].includes(table)) {
+  if (!["regions", "polities", "dynasties", "persons", "religions", "sects"].includes(table)) {
     return false;
   }
 
@@ -398,7 +398,7 @@ function mapLinkRow(table: string, row: Record<string, unknown>, idMaps: Map<str
     person_region_links: "persons:regions",
     polity_region_links: "polities:regions",
     dynasty_region_links: "dynasties:regions",
-    period_region_links: "historical_periods:regions",
+    historical_period_region_links: "historical_periods:regions",
     religion_region_links: "religions:regions",
     sect_region_links: "sects:regions",
     person_religion_links: "persons:religions",

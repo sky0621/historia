@@ -151,6 +151,47 @@ ON CONFLICT(`code`) DO UPDATE SET
 SQL
 }
 
+ensure_historical_period_relation_types_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `historical_period_relation_types` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `historical_period_relation_types` (`code`, `label`, `description`)
+VALUES
+  ('precedes', '先行', '他の時代区分に先行する関係'),
+  ('succeeds', '後続', '他の時代区分に後続する関係'),
+  ('overlaps', '重複', '他の時代区分と期間が重なる関係'),
+  ('includes', '包含', '他の時代区分を含む関係'),
+  ('included_in', '被包含', '他の時代区分に含まれる関係')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
+ensure_region_relation_types_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `region_relation_types` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `region_relation_types` (`code`, `label`, `description`)
+VALUES
+  ('adjacent', '隣接', '地理的に隣接している関係'),
+  ('cultural_area', '文化圏', '同じ文化圏として結び付く関係'),
+  ('trade_zone', '交易圏', '同じ交易圏として結び付く関係'),
+  ('influences', '影響', '一方の地域が他方へ影響を与える関係'),
+  ('related', '関連', '上記に限定しない一般的な関連'),
+  ('equivalent', '対応', '別名や別区分だが概ね対応する関係')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
 ensure_era_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `era` (
@@ -174,6 +215,8 @@ ensure_event_relation_types_seed_data
 ensure_event_conflict_participant_types_seed_data
 ensure_event_conflict_participant_roles_seed_data
 ensure_event_conflict_sides_seed_data
+ensure_historical_period_relation_types_seed_data
+ensure_region_relation_types_seed_data
 
 case "$MODE" in
   dry-run)

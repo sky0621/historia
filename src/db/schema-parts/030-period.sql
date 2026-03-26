@@ -12,7 +12,6 @@ CREATE TABLE `historical_periods` (
   `name` text NOT NULL, -- 時代区分名
   `reading` text, -- 読み方
   `region_label` text, -- 表示用の地域ラベル
-  `aliases` text, -- 別名のカンマ区切り文字列
   `description` text, -- 時代区分の説明
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
@@ -26,9 +25,11 @@ CREATE TABLE `historical_periods` (
 -- 時代区分間関係: 時代区分どうしの関係
 CREATE TABLE `historical_period_relations` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 関係ID
-  `from_period_id` integer NOT NULL, -- 起点となる時代区分ID
-  `to_period_id` integer NOT NULL, -- 終点となる時代区分ID
-  `relation_type` text NOT NULL, -- 関係種別
+  `from_period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 起点となる時代区分ID
+  `to_period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 終点となる時代区分ID
+  `relation_type` text NOT NULL REFERENCES `historical_period_relation_types`(`code`), -- 関係種別コード
   `description` text, -- 関係の説明
   `note` text -- 編集メモ・注釈
 );
+CREATE INDEX `idx_historical_period_relations_from_period_id` ON `historical_period_relations` (`from_period_id`);
+CREATE INDEX `idx_historical_period_relations_to_period_id` ON `historical_period_relations` (`to_period_id`);

@@ -11,14 +11,14 @@ const partFiles = [
   "010-person.sql",
   "010-person-link.sql",
   "030-period.sql",
-  "b-03-region.sql",
+  "040-region.sql",
   "b-04-polity.sql",
   "b-05-religion.sql",
   "b-06-source.sql",
   "b-07-other.sql",
   "b-08-import.sql",
   "020-event-link.sql",
-  "l-03-region.sql",
+  "040-region-link.sql",
   "l-99-links.sql"
 ];
 

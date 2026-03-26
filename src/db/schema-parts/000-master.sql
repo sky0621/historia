@@ -39,3 +39,17 @@ CREATE TABLE `event_conflict_sides` (
   `label` text NOT NULL, -- 表示名
   `description` text -- 陣営の説明
 );
+
+-- 時代区分関係種別マスタ: historical_period_relations.relation_type が参照する関係種別
+CREATE TABLE `historical_period_relation_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 関係種別コード: precedes / succeeds / overlaps / includes / included_in
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 関係種別の説明
+);
+
+-- 地域関係種別マスタ: region_relations.relation_type が参照する関係種別
+CREATE TABLE `region_relation_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 関係種別コード: adjacent / cultural_area / trade_zone / influences / related / equivalent
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 関係種別の説明
+);

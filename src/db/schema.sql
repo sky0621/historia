@@ -42,6 +42,20 @@ CREATE TABLE `event_conflict_sides` (
   `description` text -- 陣営の説明
 );
 
+-- 時代区分関係種別マスタ: historical_period_relations.relation_type が参照する関係種別
+CREATE TABLE `historical_period_relation_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 関係種別コード: precedes / succeeds / overlaps / includes / included_in
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 関係種別の説明
+);
+
+-- 地域関係種別マスタ: region_relations.relation_type が参照する関係種別
+CREATE TABLE `region_relation_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 関係種別コード: adjacent / cultural_area / trade_zone / influences / related / equivalent
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 関係種別の説明
+);
+
 -- 出来事: 歴史上の事件・出来事の基本情報
 CREATE TABLE `events` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 出来事ID
@@ -177,7 +191,6 @@ CREATE TABLE `historical_periods` (
   `name` text NOT NULL, -- 時代区分名
   `reading` text, -- 読み方
   `region_label` text, -- 表示用の地域ラベル
-  `aliases` text, -- 別名のカンマ区切り文字列
   `description` text, -- 時代区分の説明
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
@@ -191,12 +204,14 @@ CREATE TABLE `historical_periods` (
 -- 時代区分間関係: 時代区分どうしの関係
 CREATE TABLE `historical_period_relations` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 関係ID
-  `from_period_id` integer NOT NULL, -- 起点となる時代区分ID
-  `to_period_id` integer NOT NULL, -- 終点となる時代区分ID
-  `relation_type` text NOT NULL, -- 関係種別
+  `from_period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 起点となる時代区分ID
+  `to_period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 終点となる時代区分ID
+  `relation_type` text NOT NULL REFERENCES `historical_period_relation_types`(`code`), -- 関係種別コード
   `description` text, -- 関係の説明
   `note` text -- 編集メモ・注釈
 );
+CREATE INDEX `idx_historical_period_relations_from_period_id` ON `historical_period_relations` (`from_period_id`);
+CREATE INDEX `idx_historical_period_relations_to_period_id` ON `historical_period_relations` (`to_period_id`);
 
 -- 地域: 地理的な分類単位
 CREATE TABLE `regions` (
@@ -210,10 +225,12 @@ CREATE TABLE `regions` (
 -- 地域間の関連: 親子関係以外の地域どうしの関係
 CREATE TABLE `region_relations` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 地域関係ID
-  `from_region_id` integer NOT NULL, -- 起点となる地域ID
-  `to_region_id` integer NOT NULL, -- 終点となる地域ID
-  `relation_type` text NOT NULL -- 関係種別
+  `from_region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 起点となる地域ID
+  `to_region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 終点となる地域ID
+  `relation_type` text NOT NULL REFERENCES `region_relation_types`(`code`) -- 関係種別コード
 );
+CREATE INDEX `idx_region_relations_from_region_id` ON `region_relations` (`from_region_id`);
+CREATE INDEX `idx_region_relations_to_region_id` ON `region_relations` (`to_region_id`);
 
 -- 国家: 国家・政体の基本情報
 CREATE TABLE `polities` (
@@ -425,9 +442,11 @@ CREATE INDEX `idx_event_tag_links_tag_id` ON `event_tag_links` (`tag_id`);
 
 -- 地域の親子関係
 CREATE TABLE `region_parent_links` (
-  `region_id` integer NOT NULL, -- 子地域ID
-  `parent_region_id` integer NOT NULL -- 親地域ID
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 子地域ID
+  `parent_region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 親地域ID
 );
+CREATE INDEX `idx_region_parent_links_region_id` ON `region_parent_links` (`region_id`);
+CREATE INDEX `idx_region_parent_links_parent_region_id` ON `region_parent_links` (`parent_region_id`);
 
 -- 王朝と国家の所属関係
 CREATE TABLE `dynasty_polity_links` (
@@ -461,22 +480,6 @@ CREATE TABLE `role_assignment_dynasty_links` (
 CREATE INDEX `idx_role_assignment_dynasty_links_role_assignment_id` ON `role_assignment_dynasty_links` (`role_assignment_id`);
 CREATE INDEX `idx_role_assignment_dynasty_links_dynasty_id` ON `role_assignment_dynasty_links` (`dynasty_id`);
 
--- 時代区分とカテゴリの関連
-CREATE TABLE `historical_period_category_links` (
-  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 時代区分ID
-  `category_id` integer NOT NULL REFERENCES `period_categories`(`id`) -- カテゴリID
-);
-CREATE INDEX `idx_historical_period_category_links_period_id` ON `historical_period_category_links` (`period_id`);
-CREATE INDEX `idx_historical_period_category_links_category_id` ON `historical_period_category_links` (`category_id`);
-
--- 時代区分と国家の関連
-CREATE TABLE `historical_period_polity_links` (
-  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 時代区分ID
-  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
-);
-CREATE INDEX `idx_historical_period_polity_links_period_id` ON `historical_period_polity_links` (`period_id`);
-CREATE INDEX `idx_historical_period_polity_links_polity_id` ON `historical_period_polity_links` (`polity_id`);
-
 -- 宗派と宗教の所属関係
 CREATE TABLE `sect_religion_links` (
   `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID
@@ -508,14 +511,6 @@ CREATE TABLE `dynasty_region_links` (
 );
 CREATE INDEX `idx_dynasty_region_links_dynasty_id` ON `dynasty_region_links` (`dynasty_id`);
 CREATE INDEX `idx_dynasty_region_links_region_id` ON `dynasty_region_links` (`region_id`);
-
--- 時代区分と地域の関連
-CREATE TABLE `period_region_links` (
-  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 時代区分ID
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
-);
-CREATE INDEX `idx_period_region_links_period_id` ON `period_region_links` (`period_id`);
-CREATE INDEX `idx_period_region_links_region_id` ON `period_region_links` (`region_id`);
 
 -- 宗教と地域の関連
 CREATE TABLE `religion_region_links` (
