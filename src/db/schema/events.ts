@@ -24,14 +24,20 @@ export const events = sqliteTable("events", {
 
 export const eventRelations = sqliteTable("event_relations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  fromEventId: integer("from_event_id").notNull(),
-  toEventId: integer("to_event_id").notNull(),
+  fromEventId: integer("from_event_id")
+    .notNull()
+    .references(() => events.id),
+  toEventId: integer("to_event_id")
+    .notNull()
+    .references(() => events.id),
   relationType: text("relation_type").notNull()
 });
 
 export const eventConflictParticipants = sqliteTable("event_conflict_participants", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  eventId: integer("event_id").notNull(),
+  eventId: integer("event_id")
+    .notNull()
+    .references(() => events.id),
   participantType: text("participant_type").notNull(),
   participantId: integer("participant_id").notNull(),
   role: text("role").notNull(),
@@ -41,7 +47,9 @@ export const eventConflictParticipants = sqliteTable("event_conflict_participant
 
 export const eventConflictOutcomes = sqliteTable("event_conflict_outcomes", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  eventId: integer("event_id").notNull(),
+  eventId: integer("event_id")
+    .notNull()
+    .references(() => events.id),
   winnerSummary: text("winner_summary"),
   loserSummary: text("loser_summary"),
   resolutionSummary: text("resolution_summary"),
@@ -51,7 +59,9 @@ export const eventConflictOutcomes = sqliteTable("event_conflict_outcomes", {
 
 export const eventConflictOutcomeParticipants = sqliteTable("event_conflict_outcome_participants", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  eventId: integer("event_id").notNull(),
+  eventId: integer("event_id")
+    .notNull()
+    .references(() => events.id),
   side: text("side").notNull(),
   participantType: text("participant_type").notNull(),
   participantId: integer("participant_id").notNull()
