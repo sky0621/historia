@@ -85,7 +85,7 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
   return dynasties
     .map((dynasty) => ({
       ...dynasty,
-      polityName: polityNameById.get(dynasty.polityId) ?? "不明",
+      polityNames: dynasty.polityIds.map((polityId) => polityNameById.get(polityId) ?? `#${polityId}`),
       timeLabel: formatStoredTime("time", dynasty),
       regionNames: links
         .filter((link) => link.dynastyId === dynasty.id)
@@ -94,7 +94,7 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
       regionIds: links.filter((link) => link.dynastyId === dynasty.id).map((link) => link.regionId)
     }))
     .filter((dynasty) => {
-      if (filters.polityId && dynasty.polityId !== filters.polityId) {
+      if (filters.polityId && !dynasty.polityIds.includes(filters.polityId)) {
         return false;
       }
 
@@ -105,7 +105,7 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
       return true;
     })
     .filter((dynasty) =>
-      matchesQuery([dynasty.name, dynasty.note, dynasty.polityName, dynasty.regionNames.join(", ")], normalizedQuery)
+      matchesQuery([dynasty.name, dynasty.note, dynasty.polityNames.join(", "), dynasty.regionNames.join(", ")], normalizedQuery)
     );
 }
 
@@ -115,7 +115,7 @@ export function getPolityDetailView(id: number) {
     return null;
   }
 
-  const dynasties = listDynasties().filter((dynasty) => dynasty.polityId === polity.id);
+  const dynasties = listDynasties().filter((dynasty) => dynasty.polityIds.includes(polity.id));
   const relatedPeriods = listHistoricalPeriods()
     .filter((period) => period.polityId === polity.id)
     .map((period) => ({
@@ -154,7 +154,7 @@ export function getDynastyDetailView(id: number) {
     return null;
   }
 
-  const polity = getPolityById(dynasty.polityId);
+  const polities = listPolities().filter((polity) => dynasty.polityIds.includes(polity.id));
   const regions = listRegions();
   const linkedRegionIds = getDynastyRegionIds([dynasty.id]).map((link) => link.regionId);
   const person = listPersonDetailed();
@@ -162,7 +162,7 @@ export function getDynastyDetailView(id: number) {
 
   return {
     dynasty,
-    polity,
+    polities,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
     relatedPerson: buildRelatedPerson(
       person,
@@ -233,7 +233,7 @@ export function createDynastyFromInput(input: DynastyInput) {
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
     },
-    input.polityId,
+    input.polityIds,
     input.regionIds
   );
 }
@@ -246,7 +246,7 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
       note: nullable(input.note),
       ...toStoredTime(input.timeExpression)
     },
-    input.polityId,
+    input.polityIds,
     input.regionIds
   );
 }

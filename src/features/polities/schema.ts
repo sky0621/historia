@@ -13,7 +13,7 @@ export const politySchema = z.object({
 });
 
 export const dynastySchema = z.object({
-  polityId: z.number().int().positive(),
+  polityIds: regionIdsSchema,
   name: z.string().trim().min(1, "名称は必須です"),
   note: z.string().trim().optional(),
   timeExpression: timeExpressionSchema.optional(),
@@ -35,7 +35,7 @@ export function parsePolityFormData(formData: FormData): PolityInput {
 
 export function parseDynastyFormData(formData: FormData): DynastyInput {
   return dynastySchema.parse({
-    polityId: Number(formData.get("polityId")),
+    polityIds: normalizeIds(formData.getAll("polityIds")),
     name: formData.get("name"),
     note: formData.get("note") ?? undefined,
     timeExpression: parseTimeExpressionFormData(formData, "time"),

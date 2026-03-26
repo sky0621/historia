@@ -19,7 +19,7 @@ export default async function EditDynastyPage({ params }: { params: Promise<{ id
       regionOptions={getRegionOptions()}
       defaultValues={{
         id: view.dynasty.id,
-        polityId: view.dynasty.polityId,
+        polityIds: view.dynasty.polityIds,
         name: view.dynasty.name,
         note: view.dynasty.note ?? "",
         regionIds: view.regions.map((region) => region.id),

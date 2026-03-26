@@ -231,7 +231,7 @@ export function CsvImportPanel() {
                             : targetType === "religion"
                               ? "name,time_start_year,regions,founders\n仏教,-566,インド|東アジア,釈迦"
                               : targetType === "dynasty"
-                                ? "name,polity,time_start_year,regions\n平安朝,日本,794,日本"
+                                ? "name,polities,time_start_year,regions\nハプスブルク家,スペイン王国|神聖ローマ帝国,1273,中央ヨーロッパ"
                                 : targetType === "historical-period"
                                   ? "name,category,polity,time_start_year,regions\n平安時代,日本史区分,日本,794,日本"
                                   : targetType === "sect"
@@ -656,7 +656,7 @@ function renderDynastyRow(row: CsvPreviewRow<DynastyCsvInput>) {
     <article key={row.rowNumber} className="rounded-3xl border border-[var(--border)] px-4 py-4">
       <RowHeader row={row} />
       <RowIssues row={row} />
-      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">polityId: {row.input.polityId} / regions: {row.input.regionIds.length}</div> : null}
+      {row.input ? <div className="mt-3 text-xs text-[var(--muted)]">polities: {row.input.polityIds.length} / regions: {row.input.regionIds.length}</div> : null}
     </article>
   );
 }

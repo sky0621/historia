@@ -20,7 +20,7 @@ export default async function DynastiesPage({ searchParams }: DynastiesPageProps
         <div>
           <h1 className="text-3xl font-semibold">王朝</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            国家に属する王朝とその期間を管理します。
+            王朝と、その国家横断的な関係を管理します。
           </p>
         </div>
         <Link href="/dynasties/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
@@ -34,7 +34,7 @@ export default async function DynastiesPage({ searchParams }: DynastiesPageProps
           <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="王朝名・別名・所属国家・地域" />
         </label>
         <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">所属国家</span>
+          <span className="font-medium text-[var(--muted)]">関連国家</span>
           <select name="polityId" defaultValue={polityId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
             {polities.map((polity) => (
@@ -91,9 +91,16 @@ export default async function DynastiesPage({ searchParams }: DynastiesPageProps
                     </Link>
                   </td>
                   <td className="px-5 py-4">
-                    <Link href={`/polities/${dynasty.polityId}`} className="underline-offset-4 hover:underline">
-                      {dynasty.polityName}
-                    </Link>
+                    {dynasty.polityIds.length === 0
+                      ? "-"
+                      : dynasty.polityIds.map((polityId, index) => (
+                          <span key={polityId}>
+                            {index > 0 ? ", " : null}
+                            <Link href={`/polities/${polityId}`} className="underline-offset-4 hover:underline">
+                              {dynasty.polityNames[index] ?? `#${polityId}`}
+                            </Link>
+                          </span>
+                        ))}
                   </td>
                   <td className="px-5 py-4">{dynasty.timeLabel}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">

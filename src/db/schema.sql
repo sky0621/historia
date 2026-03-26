@@ -56,6 +56,13 @@ CREATE TABLE `region_relation_types` (
   `description` text -- 関係種別の説明
 );
 
+-- 国家変遷種別マスタ: polity_transitions.transition_type が参照する変遷種別
+CREATE TABLE `polity_transition_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 変遷種別コード: renamed / succeeded / merged / split / annexed / absorbed / restored / reorganized / other
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 変遷種別の説明
+);
+
 -- 出来事: 歴史上の事件・出来事の基本情報
 CREATE TABLE `events` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 出来事ID
@@ -250,9 +257,9 @@ CREATE TABLE `polities` (
 -- 国家変遷: 前身国家と後継国家の関係
 CREATE TABLE `polity_transitions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 国家変遷ID
-  `predecessor_polity_id` integer NOT NULL, -- 前身国家ID
-  `successor_polity_id` integer NOT NULL, -- 後継国家ID
-  `transition_type` text NOT NULL, -- 変遷種別
+  `predecessor_polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 前身国家ID
+  `successor_polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 後継国家ID
+  `transition_type` text NOT NULL REFERENCES `polity_transition_types`(`code`), -- 変遷種別コード
   `description` text, -- 変遷の説明
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text REFERENCES `era`(`code`), -- 変遷開始年の紀元区分コード
@@ -262,8 +269,10 @@ CREATE TABLE `polity_transitions` (
   `to_year` integer, -- 変遷終了年
   `to_is_approximate` integer DEFAULT false -- 変遷終了年がおおよそか
 );
+CREATE INDEX `idx_polity_transitions_predecessor_polity_id` ON `polity_transitions` (`predecessor_polity_id`);
+CREATE INDEX `idx_polity_transitions_successor_polity_id` ON `polity_transitions` (`successor_polity_id`);
 
--- 王朝: 国家に属する王朝の基本情報
+-- 王朝: 王朝・王家・支配家門の基本情報
 CREATE TABLE `dynasties` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 王朝ID
   `name` text NOT NULL, -- 王朝名
@@ -281,9 +290,9 @@ CREATE TABLE `dynasties` (
 -- 王朝継承: 同一国家内での王朝交代
 CREATE TABLE `dynasty_successions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 王朝継承ID
-  `polity_id` integer NOT NULL, -- 対象国家ID
-  `predecessor_dynasty_id` integer NOT NULL, -- 先行王朝ID
-  `successor_dynasty_id` integer NOT NULL, -- 後継王朝ID
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 対象国家ID
+  `predecessor_dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 先行王朝ID
+  `successor_dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 後継王朝ID
   `description` text, -- 継承の説明
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text REFERENCES `era`(`code`), -- 継承開始年の紀元区分コード
@@ -293,6 +302,9 @@ CREATE TABLE `dynasty_successions` (
   `to_year` integer, -- 継承終了年
   `to_is_approximate` integer DEFAULT false -- 継承終了年がおおよそか
 );
+CREATE INDEX `idx_dynasty_successions_polity_id` ON `dynasty_successions` (`polity_id`);
+CREATE INDEX `idx_dynasty_successions_predecessor_dynasty_id` ON `dynasty_successions` (`predecessor_dynasty_id`);
+CREATE INDEX `idx_dynasty_successions_successor_dynasty_id` ON `dynasty_successions` (`successor_dynasty_id`);
 
 -- 宗教: 宗教本体の基本情報
 CREATE TABLE `religions` (
@@ -448,14 +460,6 @@ CREATE TABLE `region_parent_links` (
 CREATE INDEX `idx_region_parent_links_region_id` ON `region_parent_links` (`region_id`);
 CREATE INDEX `idx_region_parent_links_parent_region_id` ON `region_parent_links` (`parent_region_id`);
 
--- 王朝と国家の所属関係
-CREATE TABLE `dynasty_polity_links` (
-  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 王朝ID
-  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
-);
-CREATE INDEX `idx_dynasty_polity_links_dynasty_id` ON `dynasty_polity_links` (`dynasty_id`);
-CREATE INDEX `idx_dynasty_polity_links_polity_id` ON `dynasty_polity_links` (`polity_id`);
-
 -- 役職と人物の関連
 CREATE TABLE `role_assignment_person_links` (
   `role_assignment_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
@@ -495,22 +499,6 @@ CREATE TABLE `sect_parent_links` (
 );
 CREATE INDEX `idx_sect_parent_links_sect_id` ON `sect_parent_links` (`sect_id`);
 CREATE INDEX `idx_sect_parent_links_parent_sect_id` ON `sect_parent_links` (`parent_sect_id`);
-
--- 国家と地域の関連
-CREATE TABLE `polity_region_links` (
-  `polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 国家ID
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
-);
-CREATE INDEX `idx_polity_region_links_polity_id` ON `polity_region_links` (`polity_id`);
-CREATE INDEX `idx_polity_region_links_region_id` ON `polity_region_links` (`region_id`);
-
--- 王朝と地域の関連
-CREATE TABLE `dynasty_region_links` (
-  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 王朝ID
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
-);
-CREATE INDEX `idx_dynasty_region_links_dynasty_id` ON `dynasty_region_links` (`dynasty_id`);
-CREATE INDEX `idx_dynasty_region_links_region_id` ON `dynasty_region_links` (`region_id`);
 
 -- 宗教と地域の関連
 CREATE TABLE `religion_region_links` (

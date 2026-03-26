@@ -1133,7 +1133,7 @@ describe("csv import service", () => {
       status: "ok",
       input: {
         name: "平安朝",
-        polityId: 1,
+        polityIds: [1],
         regionIds: [2],
         timeExpression: expect.objectContaining({ startYear: 794 })
       }

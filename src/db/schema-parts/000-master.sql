@@ -53,3 +53,10 @@ CREATE TABLE `region_relation_types` (
   `label` text NOT NULL, -- 表示名
   `description` text -- 関係種別の説明
 );
+
+-- 国家変遷種別マスタ: polity_transitions.transition_type が参照する変遷種別
+CREATE TABLE `polity_transition_types` (
+  `code` text PRIMARY KEY NOT NULL, -- 変遷種別コード: renamed / succeeded / merged / split / annexed / absorbed / restored / reorganized / other
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 変遷種別の説明
+);

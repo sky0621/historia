@@ -283,7 +283,7 @@ export function getTimelineView(filters: TimelineFilters = {}): TimelineView {
 
   if (filters.includeDynasties ?? true) {
     for (const dynasty of listDynasties()) {
-      if (filters.polityId && dynasty.polityId !== filters.polityId) {
+      if (filters.polityId && !dynasty.polityIds.includes(filters.polityId)) {
         continue;
       }
       if (!matchesTimelineQuery([dynasty.name, dynasty.note], query)) {

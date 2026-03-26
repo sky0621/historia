@@ -267,10 +267,6 @@ function hasAliasMatch(table: string, aliases: string) {
 function insertEntityRow(table: TableName, row: Record<string, unknown>, idMaps: Map<string, Map<number, number>>) {
   const prepared = { ...row };
 
-  if (table === "dynasties" && typeof row.polity_id === "number") {
-    prepared.polity_id = idMaps.get("polities")?.get(row.polity_id) ?? row.polity_id;
-  }
-
   if (table === "historical_periods") {
     if (typeof row.category_id === "number") {
       prepared.category_id = idMaps.get("period_categories")?.get(row.category_id) ?? row.category_id;

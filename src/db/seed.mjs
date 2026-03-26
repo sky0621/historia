@@ -31,6 +31,7 @@ function clearTables() {
     "event_relation_types",
     "historical_period_relation_types",
     "region_relation_types",
+    "polity_transition_types",
     "role_assignment_dynasty_links",
     "role_assignment_polity_links",
     "role_assignment_person_links",
@@ -189,6 +190,21 @@ sqlite
       ('influences', '影響', '一方の地域が他方へ影響を与える関係'),
       ('related', '関連', '上記に限定しない一般的な関連'),
       ('equivalent', '対応', '別名や別区分だが概ね対応する関係')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO polity_transition_types (code, label, description) VALUES
+      ('renamed', '改称', '国家名称の変更による変遷'),
+      ('succeeded', '後継', '前身国家の後継国家となる変遷'),
+      ('merged', '統合', '複数国家の統合による変遷'),
+      ('split', '分裂', '分裂によって生じた変遷'),
+      ('annexed', '併合', '他国家への併合による変遷'),
+      ('absorbed', '吸収', '他国家に吸収される変遷'),
+      ('restored', '復興', '再興・復活による変遷'),
+      ('reorganized', '再編', '制度や構造の再編による変遷'),
+      ('other', 'その他', '上記に当てはまらない変遷')`
   )
   .run();
 

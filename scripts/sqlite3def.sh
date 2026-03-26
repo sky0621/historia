@@ -192,6 +192,30 @@ ON CONFLICT(`code`) DO UPDATE SET
 SQL
 }
 
+ensure_polity_transition_types_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `polity_transition_types` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `polity_transition_types` (`code`, `label`, `description`)
+VALUES
+  ('renamed', '改称', '国家名称の変更による変遷'),
+  ('succeeded', '後継', '前身国家の後継国家となる変遷'),
+  ('merged', '統合', '複数国家の統合による変遷'),
+  ('split', '分裂', '分裂によって生じた変遷'),
+  ('annexed', '併合', '他国家への併合による変遷'),
+  ('absorbed', '吸収', '他国家に吸収される変遷'),
+  ('restored', '復興', '再興・復活による変遷'),
+  ('reorganized', '再編', '制度や構造の再編による変遷'),
+  ('other', 'その他', '上記に当てはまらない変遷')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
 ensure_era_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `era` (
@@ -217,6 +241,7 @@ ensure_event_conflict_participant_roles_seed_data
 ensure_event_conflict_sides_seed_data
 ensure_historical_period_relation_types_seed_data
 ensure_region_relation_types_seed_data
+ensure_polity_transition_types_seed_data
 
 case "$MODE" in
   dry-run)

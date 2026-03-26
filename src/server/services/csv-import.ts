@@ -212,6 +212,7 @@ const REQUIRED_RELIGION_HEADERS = ["name"] as const;
 const DYNASTY_HEADERS = [
   "name",
   "polity",
+  "polities",
   "note",
   "time_label",
   "time_calendar_era",
@@ -220,7 +221,7 @@ const DYNASTY_HEADERS = [
   "time_is_approximate",
   "regions"
 ] as const;
-const REQUIRED_DYNASTY_HEADERS = ["name", "polity"] as const;
+const REQUIRED_DYNASTY_HEADERS = ["name"] as const;
 const HISTORICAL_PERIOD_HEADERS = [
   "name",
   "category",
@@ -1177,8 +1178,9 @@ export function previewDynastyCsvImport(rawCsv: string): CsvPreviewResult<Dynast
     const issues: CsvPreviewIssue[] = [];
     const warnings: CsvPreviewIssue[] = [];
     const cells = mapRowToCells(parsed.headers, row.values);
+    const polityNames = normalizeOptionalString(cells.polities) ?? normalizeOptionalString(cells.polity) ?? "";
     const inputCandidate = {
-      polityId: resolveSingleReference("polities", cells.polity, references.polities, issues),
+      polityIds: resolveReferences("polities", polityNames, references.polities, issues),
       name: cells.name.trim(),
       note: normalizeOptionalString(cells.note),
       timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),

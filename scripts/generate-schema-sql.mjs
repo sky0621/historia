@@ -12,7 +12,7 @@ const partFiles = [
   "010-person-link.sql",
   "030-period.sql",
   "040-region.sql",
-  "b-04-polity.sql",
+  "050-polity.sql",
   "b-05-religion.sql",
   "b-06-source.sql",
   "b-07-other.sql",

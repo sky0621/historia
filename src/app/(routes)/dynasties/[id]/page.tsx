@@ -54,20 +54,19 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
           <h2 className="text-lg font-semibold">基本情報</h2>
           <dl className="mt-6 grid gap-4 text-sm">
             <div>
-              <dt className="font-medium text-[var(--muted)]">所属国家</dt>
+              <dt className="font-medium text-[var(--muted)]">関連国家</dt>
               <dd className="mt-1">
-                {view.polity ? (
-                  <>
-                    <Link href={`/polities/${view.polity.id}`} className="underline-offset-4 hover:underline">
-                      {view.polity.name}
-                    </Link>
-                    <span className="text-[var(--muted)]"> / </span>
-                    <Link href={`/polities/${view.polity.id}`} className="text-[var(--muted)] underline-offset-4 hover:underline">
-                      国家詳細へ
-                    </Link>
-                  </>
+                {view.polities.length > 0 ? (
+                  view.polities.map((polity, index) => (
+                    <span key={polity.id}>
+                      {index > 0 ? ", " : null}
+                      <Link href={`/polities/${polity.id}`} className="underline-offset-4 hover:underline">
+                        {polity.name}
+                      </Link>
+                    </span>
+                  ))
                 ) : (
-                  "不明"
+                  "-"
                 )}
               </dd>
             </div>
@@ -130,12 +129,15 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
       <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">王朝継承</h2>
-          {view.polity ? (
-            <Link href={`/dynasty-successions/new?polityId=${view.polity.id}&predecessorDynastyId=${view.dynasty.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+          {view.polities.length === 1 ? (
+            <Link href={`/dynasty-successions/new?polityId=${view.polities[0]!.id}&predecessorDynastyId=${view.dynasty.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
               継承を追加
             </Link>
           ) : null}
         </div>
+        {view.polities.length > 1 ? (
+          <p className="mt-3 text-sm text-[var(--muted)]">王朝継承は国家単位で登録するため、追加は国家詳細側または対象国家を決めて行ってください。</p>
+        ) : null}
         <div className="mt-4 space-y-3">
           {view.dynastySuccessions.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">この王朝に関連する継承はまだありません。</p>
