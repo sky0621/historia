@@ -1,13 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f3ea;
-  --foreground: #1f2937;
-  --surface: rgba(255, 255, 255, 0.78);
-  --border: rgba(31, 41, 55, 0.14);
-  --muted: #5b6472;
-  --accent: #9a3412;
-  --accent-soft: rgba(154, 52, 18, 0.12);
+  --background: #120f0d;
+  --background-deep: #0a0807;
+  --foreground: #f5eddc;
+  --foreground-strong: #fff7e7;
+  --surface: rgba(42, 31, 24, 0.72);
+  --surface-strong: rgba(33, 24, 19, 0.92);
+  --surface-soft: rgba(86, 67, 53, 0.26);
+  --panel: rgba(24, 19, 16, 0.86);
+  --border: rgba(220, 193, 148, 0.18);
+  --border-strong: rgba(220, 193, 148, 0.34);
+  --muted: #bda98f;
+  --muted-strong: #d7c6af;
+  --accent: #b88a44;
+  --accent-strong: #deb36f;
+  --accent-soft: rgba(184, 138, 68, 0.16);
+  --danger: #cf6b5d;
+  --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.28);
+  --shadow-strong: 0 30px 100px rgba(0, 0, 0, 0.48);
+  --radius-panel: 28px;
+  --radius-card: 22px;
 }
 
 * {
@@ -16,15 +29,50 @@
 
 html {
   background:
-    radial-gradient(circle at top, rgba(154, 52, 18, 0.12), transparent 40%),
-    linear-gradient(180deg, #f7f3ea 0%, #f3ede2 100%);
+    radial-gradient(circle at top, rgba(184, 138, 68, 0.2), transparent 24%),
+    radial-gradient(circle at 20% 20%, rgba(121, 75, 37, 0.24), transparent 30%),
+    linear-gradient(180deg, #191411 0%, #100d0c 45%, #090706 100%);
+  color: var(--foreground);
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  color: var(--foreground);
+  min-height: 100vh;
   background: transparent;
-  font-family: Georgia, "Times New Roman", serif;
+  color: var(--foreground);
+  font-family:
+    "Hiragino Mincho ProN",
+    "Yu Mincho",
+    "Palatino Linotype",
+    "Book Antiqua",
+    Georgia,
+    serif;
+  letter-spacing: 0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(135deg, rgba(255, 229, 180, 0.03), transparent 35%),
+    radial-gradient(circle at top right, rgba(222, 179, 111, 0.08), transparent 26%);
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 243, 219, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 243, 219, 0.025) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 80%);
+  pointer-events: none;
 }
 
 a {
@@ -37,4 +85,92 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+[class*="rounded-"] {
+  border-radius: 8px;
+}
+
+::selection {
+  background: rgba(222, 179, 111, 0.28);
+  color: var(--foreground-strong);
+}
+
+input,
+select,
+textarea {
+  color: var(--foreground);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, transparent);
+}
+
+input,
+select,
+textarea,
+button {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--accent-strong), 0 0 0 5px rgba(184, 138, 68, 0.15);
+}
+
+.historia-shell {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 244, 223, 0.02), transparent 20%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
+}
+
+.historia-panel {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(56, 40, 30, 0.86), rgba(20, 15, 13, 0.92));
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.historia-card {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(35, 25, 20, 0.88), rgba(23, 18, 15, 0.94));
+  box-shadow: var(--shadow-soft);
+}
+
+.historia-inset {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 243, 220, 0.04), rgba(255, 243, 220, 0.02));
+}
+
+.historia-label {
+  font-family:
+    "Avenir Next",
+    "Hiragino Sans",
+    "Yu Gothic",
+    sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.historia-title {
+  color: var(--foreground-strong);
+  line-height: 1.08;
+  text-wrap: balance;
 }
