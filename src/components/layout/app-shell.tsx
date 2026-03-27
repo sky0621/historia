@@ -71,8 +71,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="historia-label">Navigation atlas</p>
                 <div className="mt-4 space-y-4">
                   {navigationGroups.map((group) => (
-                    <div key={group.title} className="rounded-[14px] border border-[var(--border)] bg-[var(--surface-soft)] p-3">
-                      <div className="px-2 pb-2 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">{group.title}</div>
+                    <div
+                      key={group.title}
+                      className="rounded-[14px] border border-[var(--border-strong)] bg-[color:rgba(255,244,223,0.06)] p-3"
+                    >
+                      <div className="px-2 pb-2 text-xs uppercase tracking-[0.18em] text-[var(--muted-strong)]">{group.title}</div>
                       <nav className="flex flex-wrap gap-2">
                         {group.items.map((item) => {
                           const active = isActivePath(pathname, item.href);
@@ -82,10 +85,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               href={item.href}
                               aria-current={active ? "page" : undefined}
                               className={[
-                                "rounded-[14px] border px-3 py-2 text-sm",
+                                "rounded-[14px] border px-3 py-2 text-sm font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
                                 active
-                                  ? "border-[var(--accent-strong)] bg-[var(--accent-soft)] text-[var(--foreground-strong)] shadow-[inset_0_0_0_1px_rgba(222,179,111,0.18)]"
-                                  : "border-[var(--border)] bg-black/10 text-[var(--muted-strong)] hover:border-[var(--border-strong)] hover:bg-white/6 hover:text-[var(--foreground)]"
+                                  ? "border-[var(--accent-strong)] bg-[color:rgba(222,179,111,0.24)] text-[var(--foreground-strong)] shadow-[inset_0_0_0_1px_rgba(255,244,223,0.08)]"
+                                  : "border-[color:rgba(255,244,223,0.12)] bg-[color:rgba(255,244,223,0.08)] text-[color:#fff4dc] hover:border-[var(--accent-strong)] hover:bg-[color:rgba(255,244,223,0.14)] hover:text-[color:#fff9ef]"
                               ].join(" ")}
                             >
                               {item.label}

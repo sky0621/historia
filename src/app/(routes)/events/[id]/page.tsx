@@ -60,7 +60,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={`/events/${view.event.id}/edit`}
-                className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--foreground-strong)] hover:border-[var(--accent-strong)]"
+                className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground)] hover:border-[var(--accent-strong)]"
               >
                 編集
               </Link>
@@ -199,7 +199,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div className="flex justify-end">
               <Link
                 href={`/citations/new?targetType=event&targetId=${view.event.id}`}
-                className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--foreground-strong)] hover:border-[var(--accent-strong)]"
+                className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground)] hover:border-[var(--accent-strong)]"
               >
                 引用を追加
               </Link>

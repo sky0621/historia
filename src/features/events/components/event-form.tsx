@@ -166,7 +166,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             <button
               type="button"
               onClick={() => setRelationCount((count) => count + 1)}
-              className="rounded-full border border-[var(--border)] px-4 py-2 text-sm"
+              className="rounded-full border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground-contrast)] hover:border-[var(--accent-strong)]"
             >
               関係を追加
             </button>
@@ -235,7 +235,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                   <button
                     type="button"
                     onClick={addParticipant}
-                    className="rounded-full border border-[var(--border)] px-4 py-2 text-sm"
+                    className="rounded-full border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground-contrast)] hover:border-[var(--accent-strong)]"
                   >
                     参加者を追加
                   </button>
@@ -364,7 +364,10 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         </section>
 
         <div className="flex justify-end">
-          <button type="submit" className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+          <button
+            type="submit"
+            className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-[var(--button-foreground-contrast)]"
+          >
             {submitLabel}
           </button>
         </div>

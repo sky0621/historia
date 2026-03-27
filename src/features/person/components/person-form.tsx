@@ -121,7 +121,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
             <button
               type="button"
               onClick={() => setRoleCount((count) => count + 1)}
-              className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--foreground-strong)] hover:border-[var(--accent-strong)]"
+              className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground)] hover:border-[var(--accent-strong)]"
             >
               役職を追加
             </button>
@@ -228,7 +228,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
         <div className="flex justify-end">
           <button
             type="submit"
-            className="rounded-[14px] border border-[var(--accent-strong)] bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[#1b130d] hover:bg-[var(--accent-strong)]"
+            className="rounded-[14px] border border-[var(--accent-strong)] bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--button-foreground-contrast)] hover:bg-[var(--accent-strong)]"
           >
             {submitLabel}
           </button>

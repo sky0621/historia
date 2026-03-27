@@ -5,6 +5,10 @@
   --background-deep: #0a0807;
   --foreground: #f5eddc;
   --foreground-strong: #fff7e7;
+  --ink: #231a14;
+  --ink-strong: #120d0a;
+  --button-foreground: #fff4de;
+  --button-foreground-contrast: #1b130d;
   --surface: rgba(42, 31, 24, 0.72);
   --surface-strong: rgba(33, 24, 19, 0.92);
   --surface-soft: rgba(86, 67, 53, 0.26);
@@ -13,6 +17,8 @@
   --border-strong: rgba(220, 193, 148, 0.34);
   --muted: #bda98f;
   --muted-strong: #d7c6af;
+  --ink-muted: #6a594c;
+  --ink-muted-strong: #4e4035;
   --accent: #b88a44;
   --accent-strong: #deb36f;
   --accent-soft: rgba(184, 138, 68, 0.16);
@@ -95,6 +101,16 @@ button {
   border-radius: 8px;
 }
 
+[class*="bg-white"] {
+  --foreground: var(--ink);
+  --foreground-strong: var(--ink-strong);
+  --muted: var(--ink-muted);
+  --muted-strong: var(--ink-muted-strong);
+  --button-foreground: #fff6e7;
+  --button-foreground-contrast: #1b130d;
+  color: var(--foreground);
+}
+
 ::selection {
   background: rgba(222, 179, 111, 0.28);
   color: var(--foreground-strong);
@@ -109,6 +125,11 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: color-mix(in srgb, var(--muted) 78%, transparent);
+}
+
+select option {
+  background: #fffaf2;
+  color: var(--ink);
 }
 
 input,

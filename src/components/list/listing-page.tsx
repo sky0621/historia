@@ -41,7 +41,7 @@ export function ListingPage({
             <div className="space-y-4">
               <Link
                 href={primaryAction.href}
-                className="inline-flex w-full items-center justify-center rounded-[14px] border border-[var(--accent-strong)] bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[#1a120d] hover:bg-[var(--accent-strong)]"
+                className="inline-flex w-full items-center justify-center rounded-[14px] border border-[var(--accent-strong)] bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--button-foreground-contrast)] hover:bg-[var(--accent-strong)]"
               >
                 {primaryAction.label}
               </Link>
