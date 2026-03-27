@@ -15,18 +15,18 @@ export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
   polityId: integer("polity_id").notNull()
 });
 
-export const roleAssignmentPersonLinks = sqliteTable("role_assignment_person_links", {
-  roleAssignmentId: integer("role_assignment_id").notNull(),
+export const rolePersonLinks = sqliteTable("role_person_links", {
+  roleId: integer("role_id").notNull(),
   personId: integer("person_id").notNull()
 });
 
-export const roleAssignmentPolityLinks = sqliteTable("role_assignment_polity_links", {
-  roleAssignmentId: integer("role_assignment_id").notNull(),
+export const rolePolityLinks = sqliteTable("role_polity_links", {
+  roleId: integer("role_id").notNull(),
   polityId: integer("polity_id").notNull()
 });
 
-export const roleAssignmentDynastyLinks = sqliteTable("role_assignment_dynasty_links", {
-  roleAssignmentId: integer("role_assignment_id").notNull(),
+export const roleDynastyLinks = sqliteTable("role_dynasty_links", {
+  roleId: integer("role_id").notNull(),
   dynastyId: integer("dynasty_id").notNull()
 });
 
@@ -40,9 +40,9 @@ export const historicalPeriodPolityLinks = sqliteTable("historical_period_polity
   polityId: integer("polity_id").notNull()
 });
 
-export const sectReligionLinks = sqliteTable("sect_religion_links", {
-  sectId: integer("sect_id").notNull(),
-  religionId: integer("religion_id").notNull()
+export const religionSectLinks = sqliteTable("religion_sect_links", {
+  religionId: integer("religion_id").notNull(),
+  sectId: integer("sect_id").notNull()
 });
 
 export const sectParentLinks = sqliteTable("sect_parent_links", {

@@ -22,10 +22,7 @@ export const polityTransitions = sqliteTable("polity_transitions", {
     .references(() => polities.id),
   transitionType: text("transition_type")
     .notNull()
-    .references(() => polityTransitionTypes.code),
-  description: text("description"),
-  note: text("note"),
-  ...rangeTimeColumns()
+    .references(() => polityTransitionTypes.code)
 });
 
 export const polityTransitionTypes = sqliteTable("polity_transition_types", {
@@ -44,10 +41,7 @@ export const dynastySuccessions = sqliteTable("dynasty_successions", {
     .references(() => dynasties.id),
   successorDynastyId: integer("successor_dynasty_id")
     .notNull()
-    .references(() => dynasties.id),
-  description: text("description"),
-  note: text("note"),
-  ...rangeTimeColumns()
+    .references(() => dynasties.id)
 });
 
 export const regionRelations = sqliteTable("region_relations", {

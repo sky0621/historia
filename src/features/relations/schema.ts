@@ -5,17 +5,13 @@ import { timeExpressionSchema } from "@/lib/time-expression/schema";
 export const polityTransitionSchema = z.object({
   predecessorPolityId: z.number().int().positive(),
   successorPolityId: z.number().int().positive(),
-  transitionType: z.enum(["split", "merge", "rename", "succession", "other"]),
-  note: z.string().trim().optional(),
-  timeExpression: timeExpressionSchema.optional()
+  transitionType: z.enum(["split", "merge", "rename", "succession", "other"])
 });
 
 export const dynastySuccessionSchema = z.object({
   polityId: z.number().int().positive(),
   predecessorDynastyId: z.number().int().positive(),
-  successorDynastyId: z.number().int().positive(),
-  note: z.string().trim().optional(),
-  timeExpression: timeExpressionSchema.optional()
+  successorDynastyId: z.number().int().positive()
 });
 
 export const regionRelationSchema = z.object({
@@ -41,9 +37,7 @@ export function parsePolityTransitionFormData(formData: FormData): PolityTransit
   return polityTransitionSchema.parse({
     predecessorPolityId: Number(formData.get("predecessorPolityId")),
     successorPolityId: Number(formData.get("successorPolityId")),
-    transitionType: formData.get("transitionType"),
-    note: formData.get("note") ?? undefined,
-    timeExpression: parseTimeExpressionFormData(formData, "time")
+    transitionType: formData.get("transitionType")
   });
 }
 
@@ -51,9 +45,7 @@ export function parseDynastySuccessionFormData(formData: FormData): DynastySucce
   return dynastySuccessionSchema.parse({
     polityId: Number(formData.get("polityId")),
     predecessorDynastyId: Number(formData.get("predecessorDynastyId")),
-    successorDynastyId: Number(formData.get("successorDynastyId")),
-    note: formData.get("note") ?? undefined,
-    timeExpression: parseTimeExpressionFormData(formData, "time")
+    successorDynastyId: Number(formData.get("successorDynastyId"))
   });
 }
 

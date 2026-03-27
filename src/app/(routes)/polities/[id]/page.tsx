@@ -146,8 +146,7 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
                     編集
                   </Link>
                 </div>
-                <div className="mt-1 text-[var(--muted)]">{transition.transitionType} / {transition.timeLabel}</div>
-                {transition.note ? <div className="mt-1 text-[var(--muted)]">{transition.note}</div> : null}
+                <div className="mt-1 text-[var(--muted)]">{transition.transitionType}</div>
               </div>
             ))
           )}
@@ -181,8 +180,6 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
                     編集
                   </Link>
                 </div>
-                <div className="mt-1 text-[var(--muted)]">{succession.timeLabel}</div>
-                {succession.note ? <div className="mt-1 text-[var(--muted)]">{succession.note}</div> : null}
               </div>
             ))
           )}

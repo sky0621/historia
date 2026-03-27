@@ -22,11 +22,19 @@ export const citations = sqliteTable("citations", {
   note: text("note")
 });
 
+export const changeHistoryActions = sqliteTable("change_history_actions", {
+  code: text("code").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description")
+});
+
 export const changeHistories = sqliteTable("change_histories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   targetType: text("target_type").notNull(),
   targetId: integer("target_id").notNull(),
-  action: text("action").notNull(),
+  action: text("action")
+    .notNull()
+    .references(() => changeHistoryActions.code),
   snapshotJson: text("snapshot_json").notNull(),
   changedAt: integer("changed_at", { mode: "timestamp_ms" }).notNull()
 });

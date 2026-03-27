@@ -6,9 +6,9 @@ import {
   personRegionLinks,
   personReligionLinks,
   personSectLinks,
-  roleAssignmentDynastyLinks,
-  roleAssignmentPersonLinks,
-  roleAssignmentPolityLinks,
+  roleDynastyLinks,
+  rolePersonLinks,
+  rolePolityLinks,
   role
 } from "@/db/schema";
 
@@ -67,18 +67,18 @@ export function replaceRoleAssignments(
   personId: number,
   roles: Array<(typeof role.$inferInsert) & { personId: number; polityId: number | null; dynastyId: number | null }>
 ) {
-  const existingRoleAssignmentIds = db
+  const existingRoleIds = db
     .select()
-    .from(roleAssignmentPersonLinks)
-    .where(eq(roleAssignmentPersonLinks.personId, personId))
+    .from(rolePersonLinks)
+    .where(eq(rolePersonLinks.personId, personId))
     .all()
-    .map((link) => link.roleAssignmentId);
+    .map((link) => link.roleId);
 
-  db.delete(roleAssignmentPersonLinks).where(eq(roleAssignmentPersonLinks.personId, personId)).run();
-  if (existingRoleAssignmentIds.length > 0) {
-    db.delete(roleAssignmentPolityLinks).where(inArray(roleAssignmentPolityLinks.roleAssignmentId, existingRoleAssignmentIds)).run();
-    db.delete(roleAssignmentDynastyLinks).where(inArray(roleAssignmentDynastyLinks.roleAssignmentId, existingRoleAssignmentIds)).run();
-    db.delete(role).where(inArray(role.id, existingRoleAssignmentIds)).run();
+  db.delete(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).run();
+  if (existingRoleIds.length > 0) {
+    db.delete(rolePolityLinks).where(inArray(rolePolityLinks.roleId, existingRoleIds)).run();
+    db.delete(roleDynastyLinks).where(inArray(roleDynastyLinks.roleId, existingRoleIds)).run();
+    db.delete(role).where(inArray(role.id, existingRoleIds)).run();
   }
 
   if (roles.length === 0) {
@@ -88,15 +88,15 @@ export function replaceRoleAssignments(
   for (const roleItem of roles) {
     const { personId: rolePersonId, polityId, dynastyId, ...roleInput } = roleItem;
     const result = db.insert(role).values(roleInput).run();
-    const roleAssignmentId = Number(result.lastInsertRowid);
-    db.insert(roleAssignmentPersonLinks).values({ roleAssignmentId, personId: rolePersonId }).run();
+    const roleId = Number(result.lastInsertRowid);
+    db.insert(rolePersonLinks).values({ roleId, personId: rolePersonId }).run();
 
     if (polityId != null) {
-      db.insert(roleAssignmentPolityLinks).values({ roleAssignmentId, polityId }).run();
+      db.insert(rolePolityLinks).values({ roleId, polityId }).run();
     }
 
     if (dynastyId != null) {
-      db.insert(roleAssignmentDynastyLinks).values({ roleAssignmentId, dynastyId }).run();
+      db.insert(roleDynastyLinks).values({ roleId, dynastyId }).run();
     }
   }
 }

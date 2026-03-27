@@ -11,15 +11,18 @@ const partFiles = [
   "010-person.sql",
   "010-person-link.sql",
   "030-period.sql",
+  "030-period-link.sql",
   "040-region.sql",
+  "040-region-parent-link.sql",
   "050-polity.sql",
-  "b-05-religion.sql",
-  "b-06-source.sql",
-  "b-07-other.sql",
-  "b-08-import.sql",
-  "020-event-link.sql",
-  "040-region-link.sql",
-  "l-99-links.sql"
+  "050-polity-link.sql",
+  "060-religion.sql",
+  "060-religion-link.sql",
+  "060-religion-parent-link.sql",
+  "070-source.sql",
+  "080-other.sql",
+  "090-import.sql",
+  "020-event-link.sql"
 ];
 
 const header = [

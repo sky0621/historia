@@ -216,6 +216,25 @@ ON CONFLICT(`code`) DO UPDATE SET
 SQL
 }
 
+ensure_change_history_actions_seed_data() {
+  sqlite3 "$DATABASE_URL" <<'SQL'
+CREATE TABLE IF NOT EXISTS `change_history_actions` (
+  `code` text PRIMARY KEY NOT NULL,
+  `label` text NOT NULL,
+  `description` text
+);
+INSERT INTO `change_history_actions` (`code`, `label`, `description`)
+VALUES
+  ('create', '作成', '新規作成による変更履歴'),
+  ('update', '更新', '更新による変更履歴'),
+  ('delete', '削除', '削除による変更履歴'),
+  ('import', 'インポート', 'インポート処理による変更履歴')
+ON CONFLICT(`code`) DO UPDATE SET
+  `label` = excluded.`label`,
+  `description` = excluded.`description`;
+SQL
+}
+
 ensure_era_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `era` (
@@ -242,6 +261,7 @@ ensure_event_conflict_sides_seed_data
 ensure_historical_period_relation_types_seed_data
 ensure_region_relation_types_seed_data
 ensure_polity_transition_types_seed_data
+ensure_change_history_actions_seed_data
 
 case "$MODE" in
   dry-run)

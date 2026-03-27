@@ -1,9 +1,9 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
-  roleAssignmentDynastyLinks,
-  roleAssignmentPersonLinks,
-  roleAssignmentPolityLinks,
+  roleDynastyLinks,
+  rolePersonLinks,
+  rolePolityLinks,
   role
 } from "@/db/schema";
 
@@ -21,29 +21,29 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
 
   const personLinks = db
     .select()
-    .from(roleAssignmentPersonLinks)
-    .where(inArray(roleAssignmentPersonLinks.personId, personIds))
+    .from(rolePersonLinks)
+    .where(inArray(rolePersonLinks.personId, personIds))
     .all();
 
-  const roleAssignmentIds = personLinks.map((link) => link.roleAssignmentId);
-  if (roleAssignmentIds.length === 0) {
+  const roleIds = personLinks.map((link) => link.roleId);
+  if (roleIds.length === 0) {
     return [];
   }
 
-  const items = db.select().from(role).where(inArray(role.id, roleAssignmentIds)).all();
+  const items = db.select().from(role).where(inArray(role.id, roleIds)).all();
   const polityLinks = db
     .select()
-    .from(roleAssignmentPolityLinks)
-    .where(inArray(roleAssignmentPolityLinks.roleAssignmentId, roleAssignmentIds))
+    .from(rolePolityLinks)
+    .where(inArray(rolePolityLinks.roleId, roleIds))
     .all();
   const dynastyLinks = db
     .select()
-    .from(roleAssignmentDynastyLinks)
-    .where(inArray(roleAssignmentDynastyLinks.roleAssignmentId, roleAssignmentIds))
+    .from(roleDynastyLinks)
+    .where(inArray(roleDynastyLinks.roleId, roleIds))
     .all();
-  const personByRoleId = new Map(personLinks.map((link) => [link.roleAssignmentId, link.personId]));
-  const polityByRoleId = new Map(polityLinks.map((link) => [link.roleAssignmentId, link.polityId]));
-  const dynastyByRoleId = new Map(dynastyLinks.map((link) => [link.roleAssignmentId, link.dynastyId]));
+  const personByRoleId = new Map(personLinks.map((link) => [link.roleId, link.personId]));
+  const polityByRoleId = new Map(polityLinks.map((link) => [link.roleId, link.polityId]));
+  const dynastyByRoleId = new Map(dynastyLinks.map((link) => [link.roleId, link.dynastyId]));
 
   return items
     .map((item) => {
@@ -63,14 +63,14 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
 }
 
 export function deleteRoleAssignmentsByPersonId(personId: number) {
-  const links = db.select().from(roleAssignmentPersonLinks).where(eq(roleAssignmentPersonLinks.personId, personId)).all();
-  const roleAssignmentIds = links.map((link) => link.roleAssignmentId);
-  if (roleAssignmentIds.length === 0) {
+  const links = db.select().from(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).all();
+  const roleIds = links.map((link) => link.roleId);
+  if (roleIds.length === 0) {
     return;
   }
 
-  db.delete(roleAssignmentPersonLinks).where(eq(roleAssignmentPersonLinks.personId, personId)).run();
-  db.delete(roleAssignmentPolityLinks).where(inArray(roleAssignmentPolityLinks.roleAssignmentId, roleAssignmentIds)).run();
-  db.delete(roleAssignmentDynastyLinks).where(inArray(roleAssignmentDynastyLinks.roleAssignmentId, roleAssignmentIds)).run();
-  db.delete(role).where(inArray(role.id, roleAssignmentIds)).run();
+  db.delete(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).run();
+  db.delete(rolePolityLinks).where(inArray(rolePolityLinks.roleId, roleIds)).run();
+  db.delete(roleDynastyLinks).where(inArray(roleDynastyLinks.roleId, roleIds)).run();
+  db.delete(role).where(inArray(role.id, roleIds)).run();
 }

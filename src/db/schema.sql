@@ -63,6 +63,13 @@ CREATE TABLE `polity_transition_types` (
   `description` text -- 変遷種別の説明
 );
 
+-- 変更履歴操作種別マスタ: change_histories.action が参照する操作種別
+CREATE TABLE `change_history_actions` (
+  `code` text PRIMARY KEY NOT NULL, -- 操作種別コード: create / update / delete / import
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 操作種別の説明
+);
+
 -- 出来事: 歴史上の事件・出来事の基本情報
 CREATE TABLE `events` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 出来事ID
@@ -184,6 +191,30 @@ CREATE TABLE `person_sect_links` (
 CREATE INDEX `idx_person_sect_links_person_id` ON `person_sect_links` (`person_id`);
 CREATE INDEX `idx_person_sect_links_sect_id` ON `person_sect_links` (`sect_id`);
 
+-- 役職と人物の関連
+CREATE TABLE `role_person_links` (
+  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 人物ID
+);
+CREATE INDEX `idx_role_person_links_role_id` ON `role_person_links` (`role_id`);
+CREATE INDEX `idx_role_person_links_person_id` ON `role_person_links` (`person_id`);
+
+-- 役職と国家の関連
+CREATE TABLE `role_polity_links` (
+  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
+);
+CREATE INDEX `idx_role_polity_links_role_id` ON `role_polity_links` (`role_id`);
+CREATE INDEX `idx_role_polity_links_polity_id` ON `role_polity_links` (`polity_id`);
+
+-- 役職と王朝の関連
+CREATE TABLE `role_dynasty_links` (
+  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
+  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`) -- 王朝ID
+);
+CREATE INDEX `idx_role_dynasty_links_role_id` ON `role_dynasty_links` (`role_id`);
+CREATE INDEX `idx_role_dynasty_links_dynasty_id` ON `role_dynasty_links` (`dynasty_id`);
+
 -- 時代区分カテゴリ: 時代区分の分類軸
 CREATE TABLE `period_categories` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- カテゴリID
@@ -220,6 +251,30 @@ CREATE TABLE `historical_period_relations` (
 CREATE INDEX `idx_historical_period_relations_from_period_id` ON `historical_period_relations` (`from_period_id`);
 CREATE INDEX `idx_historical_period_relations_to_period_id` ON `historical_period_relations` (`to_period_id`);
 
+-- 時代区分と地域の関連
+CREATE TABLE `historical_period_region_links` (
+  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 時代区分ID
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
+);
+CREATE INDEX `idx_historical_period_region_links_period_id` ON `historical_period_region_links` (`period_id`);
+CREATE INDEX `idx_historical_period_region_links_region_id` ON `historical_period_region_links` (`region_id`);
+
+-- 時代区分とカテゴリの関連
+CREATE TABLE `historical_period_category_links` (
+  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 時代区分ID
+  `category_id` integer NOT NULL REFERENCES `period_categories`(`id`) -- カテゴリID
+);
+CREATE INDEX `idx_historical_period_category_links_period_id` ON `historical_period_category_links` (`period_id`);
+CREATE INDEX `idx_historical_period_category_links_category_id` ON `historical_period_category_links` (`category_id`);
+
+-- 時代区分と国家の関連
+CREATE TABLE `historical_period_polity_links` (
+  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`), -- 時代区分ID
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
+);
+CREATE INDEX `idx_historical_period_polity_links_period_id` ON `historical_period_polity_links` (`period_id`);
+CREATE INDEX `idx_historical_period_polity_links_polity_id` ON `historical_period_polity_links` (`polity_id`);
+
 -- 地域: 地理的な分類単位
 CREATE TABLE `regions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 地域ID
@@ -238,6 +293,14 @@ CREATE TABLE `region_relations` (
 );
 CREATE INDEX `idx_region_relations_from_region_id` ON `region_relations` (`from_region_id`);
 CREATE INDEX `idx_region_relations_to_region_id` ON `region_relations` (`to_region_id`);
+
+-- 地域の親子関係
+CREATE TABLE `region_parent_links` (
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 子地域ID
+  `parent_region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 親地域ID
+);
+CREATE INDEX `idx_region_parent_links_region_id` ON `region_parent_links` (`region_id`);
+CREATE INDEX `idx_region_parent_links_parent_region_id` ON `region_parent_links` (`parent_region_id`);
 
 -- 国家: 国家・政体の基本情報
 CREATE TABLE `polities` (
@@ -259,15 +322,7 @@ CREATE TABLE `polity_transitions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 国家変遷ID
   `predecessor_polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 前身国家ID
   `successor_polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 後継国家ID
-  `transition_type` text NOT NULL REFERENCES `polity_transition_types`(`code`), -- 変遷種別コード
-  `description` text, -- 変遷の説明
-  `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text REFERENCES `era`(`code`), -- 変遷開始年の紀元区分コード
-  `from_year` integer, -- 変遷開始年
-  `from_is_approximate` integer DEFAULT false, -- 変遷開始年がおおよそか
-  `to_calendar_era` text REFERENCES `era`(`code`), -- 変遷終了年の紀元区分コード
-  `to_year` integer, -- 変遷終了年
-  `to_is_approximate` integer DEFAULT false -- 変遷終了年がおおよそか
+  `transition_type` text NOT NULL REFERENCES `polity_transition_types`(`code`) -- 変遷種別コード
 );
 CREATE INDEX `idx_polity_transitions_predecessor_polity_id` ON `polity_transitions` (`predecessor_polity_id`);
 CREATE INDEX `idx_polity_transitions_successor_polity_id` ON `polity_transitions` (`successor_polity_id`);
@@ -292,19 +347,35 @@ CREATE TABLE `dynasty_successions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 王朝継承ID
   `polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 対象国家ID
   `predecessor_dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 先行王朝ID
-  `successor_dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 後継王朝ID
-  `description` text, -- 継承の説明
-  `note` text, -- 編集メモ・注釈
-  `from_calendar_era` text REFERENCES `era`(`code`), -- 継承開始年の紀元区分コード
-  `from_year` integer, -- 継承開始年
-  `from_is_approximate` integer DEFAULT false, -- 継承開始年がおおよそか
-  `to_calendar_era` text REFERENCES `era`(`code`), -- 継承終了年の紀元区分コード
-  `to_year` integer, -- 継承終了年
-  `to_is_approximate` integer DEFAULT false -- 継承終了年がおおよそか
+  `successor_dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`) -- 後継王朝ID
 );
 CREATE INDEX `idx_dynasty_successions_polity_id` ON `dynasty_successions` (`polity_id`);
 CREATE INDEX `idx_dynasty_successions_predecessor_dynasty_id` ON `dynasty_successions` (`predecessor_dynasty_id`);
 CREATE INDEX `idx_dynasty_successions_successor_dynasty_id` ON `dynasty_successions` (`successor_dynasty_id`);
+
+-- 国家と地域の関連
+CREATE TABLE `polity_region_links` (
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`), -- 国家ID
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
+);
+CREATE INDEX `idx_polity_region_links_polity_id` ON `polity_region_links` (`polity_id`);
+CREATE INDEX `idx_polity_region_links_region_id` ON `polity_region_links` (`region_id`);
+
+-- 王朝と国家の関係
+CREATE TABLE `dynasty_polity_links` (
+  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 王朝ID
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
+);
+CREATE INDEX `idx_dynasty_polity_links_dynasty_id` ON `dynasty_polity_links` (`dynasty_id`);
+CREATE INDEX `idx_dynasty_polity_links_polity_id` ON `dynasty_polity_links` (`polity_id`);
+
+-- 王朝と地域の関連
+CREATE TABLE `dynasty_region_links` (
+  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`), -- 王朝ID
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
+);
+CREATE INDEX `idx_dynasty_region_links_dynasty_id` ON `dynasty_region_links` (`dynasty_id`);
+CREATE INDEX `idx_dynasty_region_links_region_id` ON `dynasty_region_links` (`region_id`);
 
 -- 宗教: 宗教本体の基本情報
 CREATE TABLE `religions` (
@@ -335,6 +406,54 @@ CREATE TABLE `sects` (
   `to_year` integer, -- 終了年
   `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
+
+-- 宗教と地域の関連
+CREATE TABLE `religion_region_links` (
+  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
+);
+CREATE INDEX `idx_religion_region_links_religion_id` ON `religion_region_links` (`religion_id`);
+CREATE INDEX `idx_religion_region_links_region_id` ON `religion_region_links` (`region_id`);
+
+-- 宗教と開祖人物の関連
+CREATE TABLE `religion_founder_links` (
+  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 開祖人物ID
+);
+CREATE INDEX `idx_religion_founder_links_religion_id` ON `religion_founder_links` (`religion_id`);
+CREATE INDEX `idx_religion_founder_links_person_id` ON `religion_founder_links` (`person_id`);
+
+-- 宗派と宗教の所属関係
+CREATE TABLE `religion_sect_links` (
+  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
+  `sect_id` integer NOT NULL REFERENCES `sects`(`id`) -- 宗派ID
+);
+CREATE INDEX `idx_religion_sect_links_religion_id` ON `religion_sect_links` (`religion_id`);
+CREATE INDEX `idx_religion_sect_links_sect_id` ON `religion_sect_links` (`sect_id`);
+
+-- 宗派と地域の関連
+CREATE TABLE `sect_region_links` (
+  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID
+  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
+);
+CREATE INDEX `idx_sect_region_links_sect_id` ON `sect_region_links` (`sect_id`);
+CREATE INDEX `idx_sect_region_links_region_id` ON `sect_region_links` (`region_id`);
+
+-- 宗派と開祖人物の関連
+CREATE TABLE `sect_founder_links` (
+  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 開祖人物ID
+);
+CREATE INDEX `idx_sect_founder_links_sect_id` ON `sect_founder_links` (`sect_id`);
+CREATE INDEX `idx_sect_founder_links_person_id` ON `sect_founder_links` (`person_id`);
+
+-- 宗派の親子関係
+CREATE TABLE `sect_parent_links` (
+  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 子宗派ID
+  `parent_sect_id` integer NOT NULL REFERENCES `sects`(`id`) -- 親宗派ID
+);
+CREATE INDEX `idx_sect_parent_links_sect_id` ON `sect_parent_links` (`sect_id`);
+CREATE INDEX `idx_sect_parent_links_parent_sect_id` ON `sect_parent_links` (`parent_sect_id`);
 
 -- 出典: 書誌情報のマスタ
 CREATE TABLE `sources` (
@@ -372,7 +491,7 @@ CREATE TABLE `change_histories` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 変更履歴ID
   `target_type` text NOT NULL, -- 対象エンティティ種別
   `target_id` integer NOT NULL, -- 対象エンティティID
-  `action` text NOT NULL, -- 操作種別: create / update / delete
+  `action` text NOT NULL REFERENCES `change_history_actions`(`code`), -- 操作種別コード
   `snapshot_json` text NOT NULL, -- 変更前後比較用のJSONスナップショット
   `changed_at` integer NOT NULL -- 変更日時のUnixタイムスタンプ
 );
@@ -451,83 +570,3 @@ CREATE TABLE `event_tag_links` (
 );
 CREATE INDEX `idx_event_tag_links_event_id` ON `event_tag_links` (`event_id`);
 CREATE INDEX `idx_event_tag_links_tag_id` ON `event_tag_links` (`tag_id`);
-
--- 地域の親子関係
-CREATE TABLE `region_parent_links` (
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 子地域ID
-  `parent_region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 親地域ID
-);
-CREATE INDEX `idx_region_parent_links_region_id` ON `region_parent_links` (`region_id`);
-CREATE INDEX `idx_region_parent_links_parent_region_id` ON `region_parent_links` (`parent_region_id`);
-
--- 役職と人物の関連
-CREATE TABLE `role_assignment_person_links` (
-  `role_assignment_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 人物ID
-);
-CREATE INDEX `idx_role_assignment_person_links_role_assignment_id` ON `role_assignment_person_links` (`role_assignment_id`);
-CREATE INDEX `idx_role_assignment_person_links_person_id` ON `role_assignment_person_links` (`person_id`);
-
--- 役職と国家の関連
-CREATE TABLE `role_assignment_polity_links` (
-  `role_assignment_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
-);
-CREATE INDEX `idx_role_assignment_polity_links_role_assignment_id` ON `role_assignment_polity_links` (`role_assignment_id`);
-CREATE INDEX `idx_role_assignment_polity_links_polity_id` ON `role_assignment_polity_links` (`polity_id`);
-
--- 役職と王朝の関連
-CREATE TABLE `role_assignment_dynasty_links` (
-  `role_assignment_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`) -- 王朝ID
-);
-CREATE INDEX `idx_role_assignment_dynasty_links_role_assignment_id` ON `role_assignment_dynasty_links` (`role_assignment_id`);
-CREATE INDEX `idx_role_assignment_dynasty_links_dynasty_id` ON `role_assignment_dynasty_links` (`dynasty_id`);
-
--- 宗派と宗教の所属関係
-CREATE TABLE `sect_religion_links` (
-  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID
-  `religion_id` integer NOT NULL REFERENCES `religions`(`id`) -- 宗教ID
-);
-CREATE INDEX `idx_sect_religion_links_sect_id` ON `sect_religion_links` (`sect_id`);
-CREATE INDEX `idx_sect_religion_links_religion_id` ON `sect_religion_links` (`religion_id`);
-
--- 宗派の親子関係
-CREATE TABLE `sect_parent_links` (
-  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 子宗派ID
-  `parent_sect_id` integer NOT NULL REFERENCES `sects`(`id`) -- 親宗派ID
-);
-CREATE INDEX `idx_sect_parent_links_sect_id` ON `sect_parent_links` (`sect_id`);
-CREATE INDEX `idx_sect_parent_links_parent_sect_id` ON `sect_parent_links` (`parent_sect_id`);
-
--- 宗教と地域の関連
-CREATE TABLE `religion_region_links` (
-  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
-);
-CREATE INDEX `idx_religion_region_links_religion_id` ON `religion_region_links` (`religion_id`);
-CREATE INDEX `idx_religion_region_links_region_id` ON `religion_region_links` (`region_id`);
-
--- 宗派と地域の関連
-CREATE TABLE `sect_region_links` (
-  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 地域ID
-);
-CREATE INDEX `idx_sect_region_links_sect_id` ON `sect_region_links` (`sect_id`);
-CREATE INDEX `idx_sect_region_links_region_id` ON `sect_region_links` (`region_id`);
-
--- 宗教と開祖人物の関連
-CREATE TABLE `religion_founder_links` (
-  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
-  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 開祖人物ID
-);
-CREATE INDEX `idx_religion_founder_links_religion_id` ON `religion_founder_links` (`religion_id`);
-CREATE INDEX `idx_religion_founder_links_person_id` ON `religion_founder_links` (`person_id`);
-
--- 宗派と開祖人物の関連
-CREATE TABLE `sect_founder_links` (
-  `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID
-  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 開祖人物ID
-);
-CREATE INDEX `idx_sect_founder_links_sect_id` ON `sect_founder_links` (`sect_id`);
-CREATE INDEX `idx_sect_founder_links_person_id` ON `sect_founder_links` (`person_id`);

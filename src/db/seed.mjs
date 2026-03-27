@@ -32,11 +32,12 @@ function clearTables() {
     "historical_period_relation_types",
     "region_relation_types",
     "polity_transition_types",
-    "role_assignment_dynasty_links",
-    "role_assignment_polity_links",
-    "role_assignment_person_links",
+    "change_history_actions",
+    "role_dynasty_links",
+    "role_polity_links",
+    "role_person_links",
     "sect_parent_links",
-    "sect_religion_links",
+    "religion_sect_links",
     "historical_period_polity_links",
     "historical_period_category_links",
     "dynasty_polity_links",
@@ -205,6 +206,16 @@ sqlite
       ('restored', '復興', '再興・復活による変遷'),
       ('reorganized', '再編', '制度や構造の再編による変遷'),
       ('other', 'その他', '上記に当てはまらない変遷')`
+  )
+  .run();
+
+sqlite
+  .prepare(
+    `INSERT INTO change_history_actions (code, label, description) VALUES
+      ('create', '作成', '新規作成による変更履歴'),
+      ('update', '更新', '更新による変更履歴'),
+      ('delete', '削除', '削除による変更履歴'),
+      ('import', 'インポート', 'インポート処理による変更履歴')`
   )
   .run();
 

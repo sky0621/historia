@@ -60,3 +60,10 @@ CREATE TABLE `polity_transition_types` (
   `label` text NOT NULL, -- 表示名
   `description` text -- 変遷種別の説明
 );
+
+-- 変更履歴操作種別マスタ: change_histories.action が参照する操作種別
+CREATE TABLE `change_history_actions` (
+  `code` text PRIMARY KEY NOT NULL, -- 操作種別コード: create / update / delete / import
+  `label` text NOT NULL, -- 表示名
+  `description` text -- 操作種別の説明
+);

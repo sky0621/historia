@@ -261,25 +261,13 @@ const REQUIRED_CITATION_HEADERS = ["source", "target_type", "target_name"] as co
 const POLITY_TRANSITION_HEADERS = [
   "predecessor_polity",
   "successor_polity",
-  "transition_type",
-  "note",
-  "time_label",
-  "time_calendar_era",
-  "time_start_year",
-  "time_end_year",
-  "time_is_approximate"
+  "transition_type"
 ] as const;
 const REQUIRED_POLITY_TRANSITION_HEADERS = ["predecessor_polity", "successor_polity", "transition_type"] as const;
 const DYNASTY_SUCCESSION_HEADERS = [
   "polity",
   "predecessor_dynasty",
-  "successor_dynasty",
-  "note",
-  "time_label",
-  "time_calendar_era",
-  "time_start_year",
-  "time_end_year",
-  "time_is_approximate"
+  "successor_dynasty"
 ] as const;
 const REQUIRED_DYNASTY_SUCCESSION_HEADERS = ["polity", "predecessor_dynasty", "successor_dynasty"] as const;
 const REGION_RELATION_HEADERS = ["from_region", "to_region", "relation_type", "note"] as const;
@@ -1768,9 +1756,7 @@ export function previewPolityTransitionCsvImport(rawCsv: string): CsvPreviewResu
     const inputCandidate = {
       predecessorPolityId: resolveSingleReference("polities", cells.predecessor_polity, references.polities, issues),
       successorPolityId: resolveSingleReference("polities", cells.successor_polity, references.polities, issues),
-      transitionType: cells.transition_type.trim(),
-      note: normalizeOptionalString(cells.note) ?? undefined,
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues)
+      transitionType: cells.transition_type.trim()
     };
     const parsedInput = polityTransitionSchema.safeParse(inputCandidate);
     if (!parsedInput.success) {
@@ -1819,9 +1805,7 @@ export function previewDynastySuccessionCsvImport(rawCsv: string): CsvPreviewRes
     const inputCandidate = {
       polityId: resolveSingleReference("polities", cells.polity, references.polities, issues),
       predecessorDynastyId: resolveSingleReference("dynasties", cells.predecessor_dynasty, references.dynasties, issues),
-      successorDynastyId: resolveSingleReference("dynasties", cells.successor_dynasty, references.dynasties, issues),
-      note: normalizeOptionalString(cells.note) ?? undefined,
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues)
+      successorDynastyId: resolveSingleReference("dynasties", cells.successor_dynasty, references.dynasties, issues)
     };
     const parsedInput = dynastySuccessionSchema.safeParse(inputCandidate);
     if (!parsedInput.success) {

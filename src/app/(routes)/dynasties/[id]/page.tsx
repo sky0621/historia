@@ -158,8 +158,6 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
                     編集
                   </Link>
                 </div>
-                <div className="mt-1 text-[var(--muted)]">{succession.timeLabel}</div>
-                {succession.note ? <div className="mt-1 text-[var(--muted)]">{succession.note}</div> : null}
               </div>
             ))
           )}

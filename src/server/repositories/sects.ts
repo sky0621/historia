@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { sectFounderLinks, sectParentLinks, sectRegionLinks, sectReligionLinks, sects } from "@/db/schema";
+import { religionSectLinks, sectFounderLinks, sectParentLinks, sectRegionLinks, sects } from "@/db/schema";
 
 export type SectInsert = typeof sects.$inferInsert;
 export type SectRecord = typeof sects.$inferSelect & {
@@ -60,7 +60,7 @@ export function createSect(
     const result = tx.insert(sects).values(input).run();
     const sectId = Number(result.lastInsertRowid);
 
-    tx.insert(sectReligionLinks).values({ sectId, religionId }).run();
+    tx.insert(religionSectLinks).values({ religionId, sectId }).run();
     if (parentSectId != null) {
       tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
     }
@@ -87,11 +87,11 @@ export function updateSect(
 ) {
   db.transaction((tx) => {
     tx.update(sects).set(input).where(eq(sects.id, id)).run();
-    tx.delete(sectReligionLinks).where(eq(sectReligionLinks.sectId, id)).run();
+    tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
     tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
     tx.delete(sectRegionLinks).where(eq(sectRegionLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
-    tx.insert(sectReligionLinks).values({ sectId: id, religionId }).run();
+    tx.insert(religionSectLinks).values({ religionId, sectId: id }).run();
     if (parentSectId != null) {
       tx.insert(sectParentLinks).values({ sectId: id, parentSectId }).run();
     }
@@ -110,7 +110,7 @@ export function deleteSect(id: number) {
   db.transaction((tx) => {
     tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
     tx.delete(sectParentLinks).where(eq(sectParentLinks.parentSectId, id)).run();
-    tx.delete(sectReligionLinks).where(eq(sectReligionLinks.sectId, id)).run();
+    tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
     tx.delete(sectRegionLinks).where(eq(sectRegionLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
     tx.delete(sects).where(eq(sects.id, id)).run();
@@ -148,8 +148,8 @@ export function getSectReligionLinks(sectIds: number[]) {
 
   return db
     .select()
-    .from(sectReligionLinks)
-    .where(inArray(sectReligionLinks.sectId, sectIds))
+    .from(religionSectLinks)
+    .where(inArray(religionSectLinks.sectId, sectIds))
     .all();
 }
 

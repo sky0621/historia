@@ -10,7 +10,6 @@ import {
   updateRegionRelationAction
 } from "@/features/relations/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
-
 type Option = { id: number; name: string };
 
 export function PolityTransitionForm({
@@ -29,8 +28,6 @@ export function PolityTransitionForm({
     predecessorPolityId: number;
     successorPolityId: number;
     transitionType: "split" | "merge" | "rename" | "succession" | "other";
-    note: string;
-    timeExpression?: TimeExpressionInput;
   };
 }) {
   const action = defaultValues?.id ? updatePolityTransitionAction : createPolityTransitionAction;
@@ -53,8 +50,6 @@ export function PolityTransitionForm({
             </select>
           </label>
         </div>
-        <TimeExpressionInputs prefix="time" label="変遷時期" defaultValue={defaultValues?.timeExpression} />
-        <TextAreaField name="note" label="メモ" defaultValue={defaultValues?.note} />
         <SubmitButton label={submitLabel} />
       </form>
     </RelationFormShell>
@@ -79,8 +74,6 @@ export function DynastySuccessionForm({
     polityId: number;
     predecessorDynastyId: number;
     successorDynastyId: number;
-    note: string;
-    timeExpression?: TimeExpressionInput;
   };
 }) {
   const action = defaultValues?.id ? updateDynastySuccessionAction : createDynastySuccessionAction;
@@ -95,8 +88,6 @@ export function DynastySuccessionForm({
           <SelectField name="predecessorDynastyId" label="前王朝" options={dynastyOptions} defaultValue={defaultValues?.predecessorDynastyId} />
           <SelectField name="successorDynastyId" label="後王朝" options={dynastyOptions} defaultValue={defaultValues?.successorDynastyId} />
         </div>
-        <TimeExpressionInputs prefix="time" label="継承時期" defaultValue={defaultValues?.timeExpression} />
-        <TextAreaField name="note" label="メモ" defaultValue={defaultValues?.note} />
         <SubmitButton label={submitLabel} />
       </form>
     </RelationFormShell>

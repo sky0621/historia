@@ -63,16 +63,12 @@ export function getPolityTransitionFormView(id?: number, defaults?: Partial<Poli
           id: transition.id,
           predecessorPolityId: transition.predecessorPolityId,
           successorPolityId: transition.successorPolityId,
-          transitionType: transition.transitionType as PolityTransitionInput["transitionType"],
-          note: transition.note ?? "",
-          timeExpression: extractTimeExpression("time", transition)
+          transitionType: transition.transitionType as PolityTransitionInput["transitionType"]
         }
       : {
           predecessorPolityId: defaults?.predecessorPolityId ?? 0,
           successorPolityId: defaults?.successorPolityId ?? 0,
-          transitionType: defaults?.transitionType ?? "succession",
-          note: defaults?.note ?? "",
-          timeExpression: defaults?.timeExpression
+          transitionType: defaults?.transitionType ?? "succession"
         }
   };
 }
@@ -89,16 +85,12 @@ export function getDynastySuccessionFormView(id?: number, defaults?: Partial<Dyn
           id: succession.id,
           polityId: succession.polityId,
           predecessorDynastyId: succession.predecessorDynastyId,
-          successorDynastyId: succession.successorDynastyId,
-          note: succession.note ?? "",
-          timeExpression: extractTimeExpression("time", succession)
+          successorDynastyId: succession.successorDynastyId
         }
       : {
           polityId: defaults?.polityId ?? 0,
           predecessorDynastyId: defaults?.predecessorDynastyId ?? 0,
-          successorDynastyId: defaults?.successorDynastyId ?? 0,
-          note: defaults?.note ?? "",
-          timeExpression: defaults?.timeExpression
+          successorDynastyId: defaults?.successorDynastyId ?? 0
         }
   };
 }
@@ -155,9 +147,7 @@ export function createPolityTransitionFromInput(input: PolityTransitionInput) {
   return createPolityTransition({
     predecessorPolityId: input.predecessorPolityId,
     successorPolityId: input.successorPolityId,
-    transitionType: input.transitionType,
-    note: nullable(input.note),
-    ...toStoredTime(input.timeExpression)
+    transitionType: input.transitionType
   });
 }
 
@@ -165,9 +155,7 @@ export function updatePolityTransitionFromInput(id: number, input: PolityTransit
   updatePolityTransition(id, {
     predecessorPolityId: input.predecessorPolityId,
     successorPolityId: input.successorPolityId,
-    transitionType: input.transitionType,
-    note: nullable(input.note),
-    ...toStoredTime(input.timeExpression)
+    transitionType: input.transitionType
   });
 }
 
@@ -179,9 +167,7 @@ export function createDynastySuccessionFromInput(input: DynastySuccessionInput) 
   return createDynastySuccession({
     polityId: input.polityId,
     predecessorDynastyId: input.predecessorDynastyId,
-    successorDynastyId: input.successorDynastyId,
-    note: nullable(input.note),
-    ...toStoredTime(input.timeExpression)
+    successorDynastyId: input.successorDynastyId
   });
 }
 
@@ -189,9 +175,7 @@ export function updateDynastySuccessionFromInput(id: number, input: DynastySucce
   updateDynastySuccession(id, {
     polityId: input.polityId,
     predecessorDynastyId: input.predecessorDynastyId,
-    successorDynastyId: input.successorDynastyId,
-    note: nullable(input.note),
-    ...toStoredTime(input.timeExpression)
+    successorDynastyId: input.successorDynastyId
   });
 }
 
@@ -249,8 +233,7 @@ export function getPolityTransitionView(polityId: number) {
   return getPolityTransitionsByPolityIds([polityId]).map((item) => ({
     ...item,
     predecessorName: polities.get(item.predecessorPolityId) ?? `#${item.predecessorPolityId}`,
-    successorName: polities.get(item.successorPolityId) ?? `#${item.successorPolityId}`,
-    timeLabel: formatStoredTime("time", item)
+    successorName: polities.get(item.successorPolityId) ?? `#${item.successorPolityId}`
   }));
 }
 
@@ -260,8 +243,7 @@ export function getDynastySuccessionViewForPolity(polityId: number) {
   return getDynastySuccessionsByPolityIds([polityId]).map((item) => ({
     ...item,
     predecessorName: dynasties.get(item.predecessorDynastyId) ?? `#${item.predecessorDynastyId}`,
-    successorName: dynasties.get(item.successorDynastyId) ?? `#${item.successorDynastyId}`,
-    timeLabel: formatStoredTime("time", item)
+    successorName: dynasties.get(item.successorDynastyId) ?? `#${item.successorDynastyId}`
   }));
 }
 
@@ -271,8 +253,7 @@ export function getDynastySuccessionViewForDynasty(dynastyId: number) {
   return getDynastySuccessionsByDynastyIds([dynastyId]).map((item) => ({
     ...item,
     predecessorName: dynasties.get(item.predecessorDynastyId) ?? `#${item.predecessorDynastyId}`,
-    successorName: dynasties.get(item.successorDynastyId) ?? `#${item.successorDynastyId}`,
-    timeLabel: formatStoredTime("time", item)
+    successorName: dynasties.get(item.successorDynastyId) ?? `#${item.successorDynastyId}`
   }));
 }
 

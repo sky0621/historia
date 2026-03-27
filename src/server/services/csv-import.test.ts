@@ -1233,20 +1233,19 @@ describe("csv import service", () => {
       { id: 2, name: "ローマ帝国" }
     ]);
     const preview = previewPolityTransitionCsvImport(
-      "predecessor_polity,successor_polity,transition_type,time_start_year\nローマ共和国,ローマ帝国,succession,-27"
+      "predecessor_polity,successor_polity,transition_type\nローマ共和国,ローマ帝国,succession"
     );
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
       input: {
         predecessorPolityId: 1,
         successorPolityId: 2,
-        transitionType: "succession",
-        timeExpression: expect.objectContaining({ startYear: -27 })
+        transitionType: "succession"
       }
     });
 
     const result = applyPolityTransitionCsvImport(
-      "predecessor_polity,successor_polity,transition_type,time_start_year\nローマ共和国,ローマ帝国,succession,-27"
+      "predecessor_polity,successor_polity,transition_type\nローマ共和国,ローマ帝国,succession"
     );
     expect(result).toEqual({ kind: "polity-transition", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createPolityTransitionFromInput).toHaveBeenCalled();
@@ -1259,20 +1258,19 @@ describe("csv import service", () => {
       { id: 3, name: "平安朝" }
     ]);
     const preview = previewDynastySuccessionCsvImport(
-      "polity,predecessor_dynasty,successor_dynasty,time_start_year\n日本,奈良朝,平安朝,794"
+      "polity,predecessor_dynasty,successor_dynasty\n日本,奈良朝,平安朝"
     );
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
       input: {
         polityId: 1,
         predecessorDynastyId: 2,
-        successorDynastyId: 3,
-        timeExpression: expect.objectContaining({ startYear: 794 })
+        successorDynastyId: 3
       }
     });
 
     const result = applyDynastySuccessionCsvImport(
-      "polity,predecessor_dynasty,successor_dynasty,time_start_year\n日本,奈良朝,平安朝,794"
+      "polity,predecessor_dynasty,successor_dynasty\n日本,奈良朝,平安朝"
     );
     expect(result).toEqual({ kind: "dynasty-succession", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createDynastySuccessionFromInput).toHaveBeenCalled();
