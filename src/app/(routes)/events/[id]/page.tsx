@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteEventAction } from "@/features/events/actions";
+import {
+  getEraLabel,
+  getEventConflictParticipantRoleLabel,
+  getEventRelationTypeLabel,
+  getEventTypeLabel
+} from "@/lib/master-labels";
 import { getEventDetailView } from "@/server/services/events";
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,7 +41,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <HeroPill label="Type" value={view.event.eventType} />
+              <HeroPill label="種別" value={getEventTypeLabel(view.event.eventType)} />
               <HeroPill label="From" value={view.defaultFromTimeExpression ? formatDisplay(view.defaultFromTimeExpression) : "未設定"} />
               <HeroPill label="To" value={view.defaultToTimeExpression ? formatDisplay(view.defaultToTimeExpression) : "未設定"} />
             </div>
@@ -118,7 +124,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       <div key={item.id} className="rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3">
                         <div className="font-medium text-[var(--foreground-strong)]">
                           {renderParticipantLink(item)}
-                          <span className="ml-2 text-sm text-[var(--muted)]">/ {item.role}</span>
+                          <span className="ml-2 text-sm text-[var(--muted)]">/ {getEventConflictParticipantRoleLabel(item.role)}</span>
                         </div>
                         {item.note ? <div className="mt-2 whitespace-pre-wrap text-sm text-[var(--muted-strong)]">{item.note}</div> : null}
                       </div>
@@ -253,7 +259,7 @@ function formatDisplay(value: { displayLabel?: string; calendarEra: string; star
     return value.displayLabel;
   }
   if (value.startYear) {
-    return `${value.calendarEra === "BCE" ? "BCE " : ""}${value.startYear}`;
+    return `${value.calendarEra === "BCE" ? `${getEraLabel("BCE")} ` : ""}${value.startYear}`;
   }
   return "年未詳";
 }
@@ -434,7 +440,7 @@ function RelationCard({
           href={`/events?relationType=${encodeURIComponent(relationType)}`}
           className="text-xs uppercase tracking-[0.16em] text-[var(--muted)] underline decoration-[var(--border-strong)] underline-offset-4 hover:text-[var(--foreground-strong)]"
         >
-          {relationType}
+          {getEventRelationTypeLabel(relationType)}
         </Link>
       </div>
       <div className="mt-2">
@@ -443,7 +449,7 @@ function RelationCard({
         </Link>
       </div>
       <div className="mt-2 text-[var(--muted-strong)]">
-        {relatedEventType} / {relatedEventTimeLabel}
+        {getEventTypeLabel(relatedEventType)} / {relatedEventTimeLabel}
       </div>
     </div>
   );

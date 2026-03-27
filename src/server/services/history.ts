@@ -1,4 +1,5 @@
 import { createChangeHistory, getChangeHistoriesByTarget } from "@/server/repositories/change-histories";
+import { getChangeHistoryActionLabel } from "@/lib/master-labels";
 
 export type HistoryTargetType = "event" | "person" | "polity" | "historical_period";
 export type HistoryAction = "create" | "update" | "delete" | "import";
@@ -21,6 +22,7 @@ export function recordChangeHistory(params: {
 export function getHistoryView(targetType: HistoryTargetType, targetId: number, limit = 8) {
   return getChangeHistoriesByTarget(targetType, targetId, limit).map((item) => ({
     ...item,
+    action: getChangeHistoryActionLabel(item.action),
     changedAtLabel: item.changedAt.toLocaleString("ja-JP"),
     snapshotPreview: summarizeSnapshot(item.snapshotJson)
   }));

@@ -1,3 +1,4 @@
+import { eraOptions } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Props = {
@@ -28,8 +29,11 @@ export function TimeExpressionInputs({
             defaultValue={defaultValue?.calendarEra ?? "CE"}
             className="rounded-2xl border border-[var(--border)] bg-black/10 px-3 py-2.5 text-[var(--foreground)]"
           >
-            <option value="CE">CE</option>
-            <option value="BCE">BCE</option>
+            {eraOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
         {includePrecision ? (

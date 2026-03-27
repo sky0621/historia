@@ -112,7 +112,7 @@ export default async function PeriodsPage({ searchParams }: PeriodsPageProps) {
                         {period.polityName}
                       </Link>
                     ) : (
-                      period.regionLabel ?? "-"
+                      period.regionNames[0] ?? "-"
                     )}
                   </td>
                   <td className="px-5 py-4">{period.timeLabel}</td>

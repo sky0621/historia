@@ -25,11 +25,11 @@ export default async function EditHistoricalPeriodPage({
         categoryId: view.period.categoryId,
         polityId: view.period.polityId,
         name: view.period.name,
-        regionLabel: view.period.regionLabel ?? "",
         description: view.period.description ?? "",
         note: view.period.note ?? "",
         regionIds: view.regions.map((item) => item.id),
-        timeExpression: view.defaultTimeExpression
+        fromTimeExpression: view.defaultFromTimeExpression,
+        toTimeExpression: view.defaultToTimeExpression
       }}
     />
   );

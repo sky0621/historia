@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteHistoricalPeriodAction } from "@/features/periods/actions";
+import { getHistoricalPeriodRelationTypeLabel } from "@/lib/master-labels";
 import { getHistoricalPeriodDetailView } from "@/server/services/historical-periods";
 
 export default async function HistoricalPeriodDetailPage({
@@ -79,10 +80,6 @@ export default async function HistoricalPeriodDetailPage({
                 view.polityName ?? "-"
               )}
             </dd>
-          </div>
-          <div>
-            <dt className="font-medium text-[var(--muted)]">対象地域名</dt>
-            <dd className="mt-1">{view.period.regionLabel ?? "-"}</dd>
           </div>
           <div>
             <dt className="font-medium text-[var(--muted)]">関連地域</dt>
@@ -169,7 +166,7 @@ export default async function HistoricalPeriodDetailPage({
                     編集
                   </Link>
                 </div>
-                <div className="mt-1 text-[var(--muted)]">{relation.relationType}</div>
+                <div className="mt-1 text-[var(--muted)]">{getHistoricalPeriodRelationTypeLabel(relation.relationType)}</div>
                 {relation.note ? <div className="mt-1 text-[var(--muted)]">{relation.note}</div> : null}
               </div>
             ))

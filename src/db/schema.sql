@@ -228,7 +228,6 @@ CREATE TABLE `historical_periods` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 時代区分ID
   `name` text NOT NULL, -- 時代区分名
   `reading` text, -- 読み方
-  `region_label` text, -- 表示用の地域ラベル
   `description` text, -- 時代区分の説明
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード

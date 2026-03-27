@@ -1135,7 +1135,7 @@ describe("csv import service", () => {
         name: "平安朝",
         polityIds: [1],
         regionIds: [2],
-        timeExpression: expect.objectContaining({ startYear: 794 })
+        fromTimeExpression: expect.objectContaining({ startYear: 794 })
       }
     });
 
@@ -1158,7 +1158,7 @@ describe("csv import service", () => {
         categoryId: 1,
         polityId: 2,
         regionIds: [3],
-        timeExpression: expect.objectContaining({ startYear: 794 })
+        fromTimeExpression: expect.objectContaining({ startYear: 794 })
       }
     });
 
@@ -1233,19 +1233,19 @@ describe("csv import service", () => {
       { id: 2, name: "ローマ帝国" }
     ]);
     const preview = previewPolityTransitionCsvImport(
-      "predecessor_polity,successor_polity,transition_type\nローマ共和国,ローマ帝国,succession"
+      "predecessor_polity,successor_polity,transition_type\nローマ共和国,ローマ帝国,succeeded"
     );
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
       input: {
         predecessorPolityId: 1,
         successorPolityId: 2,
-        transitionType: "succession"
+        transitionType: "succeeded"
       }
     });
 
     const result = applyPolityTransitionCsvImport(
-      "predecessor_polity,successor_polity,transition_type\nローマ共和国,ローマ帝国,succession"
+      "predecessor_polity,successor_polity,transition_type\nローマ共和国,ローマ帝国,succeeded"
     );
     expect(result).toEqual({ kind: "polity-transition", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createPolityTransitionFromInput).toHaveBeenCalled();
@@ -1281,13 +1281,13 @@ describe("csv import service", () => {
       { id: 1, name: "日本" },
       { id: 2, name: "東アジア" }
     ]);
-    const preview = previewRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_sphere");
+    const preview = previewRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_area");
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
-      input: { fromRegionId: 1, toRegionId: 2, relationType: "cultural_sphere" }
+      input: { fromRegionId: 1, toRegionId: 2, relationType: "cultural_area" }
     });
 
-    const result = applyRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_sphere");
+    const result = applyRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_area");
     expect(result).toEqual({ kind: "region-relation", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createRegionRelationFromInput).toHaveBeenCalled();
   });

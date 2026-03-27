@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
+import { eraOptions } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Props = {
@@ -22,8 +23,11 @@ export function TimeExpressionField({ name, label }: Props) {
             className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
             defaultValue="CE"
           >
-            <option value="CE">CE</option>
-            <option value="BCE">BCE</option>
+            {eraOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
         <label className="grid gap-2 text-sm">

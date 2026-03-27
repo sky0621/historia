@@ -22,10 +22,10 @@ export const historicalPeriodSchema = z.object({
   categoryId: z.number().int().positive(),
   polityId: z.number().int().positive().nullable().optional(),
   name: z.string().trim().min(1, "名称は必須です"),
-  regionLabel: z.string().trim().optional(),
   description: z.string().trim().optional(),
   note: z.string().trim().optional(),
-  timeExpression: timeExpressionSchema.optional(),
+  fromTimeExpression: timeExpressionSchema.optional(),
+  toTimeExpression: timeExpressionSchema.optional(),
   regionIds: idsSchema
 });
 
@@ -36,10 +36,10 @@ export function parseHistoricalPeriodFormData(formData: FormData): HistoricalPer
     categoryId: Number(formData.get("categoryId")),
     polityId: normalizeId(formData.get("polityId")),
     name: formData.get("name"),
-    regionLabel: formData.get("regionLabel") ?? undefined,
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
-    timeExpression: parseTimeExpressionFormData(formData, "time"),
+    fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
+    toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
     regionIds: normalizeIds(formData.getAll("regionIds"))
   });
 }

@@ -226,7 +226,6 @@ const HISTORICAL_PERIOD_HEADERS = [
   "name",
   "category",
   "polity",
-  "region_label",
   "description",
   "note",
   "time_label",
@@ -1115,11 +1114,12 @@ export function previewReligionCsvImport(rawCsv: string): CsvPreviewResult<Relig
     const issues: CsvPreviewIssue[] = [];
     const warnings: CsvPreviewIssue[] = [];
     const cells = mapRowToCells(parsed.headers, row.values);
+    const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
     const inputCandidate = {
       name: cells.name.trim(),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
+      ...toBoundaryTimeExpressions(timeExpression),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
       founderIds: resolveReferences("person", cells.founders, references.person, issues)
     };
@@ -1167,11 +1167,12 @@ export function previewDynastyCsvImport(rawCsv: string): CsvPreviewResult<Dynast
     const warnings: CsvPreviewIssue[] = [];
     const cells = mapRowToCells(parsed.headers, row.values);
     const polityNames = normalizeOptionalString(cells.polities) ?? normalizeOptionalString(cells.polity) ?? "";
+    const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
     const inputCandidate = {
       polityIds: resolveReferences("polities", polityNames, references.polities, issues),
       name: cells.name.trim(),
       note: normalizeOptionalString(cells.note),
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
+      ...toBoundaryTimeExpressions(timeExpression),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues)
     };
     const parsedInput = dynastySchema.safeParse(inputCandidate);
@@ -1208,14 +1209,14 @@ export function previewHistoricalPeriodCsvImport(rawCsv: string): CsvPreviewResu
     const issues: CsvPreviewIssue[] = [];
     const warnings: CsvPreviewIssue[] = [];
     const cells = mapRowToCells(parsed.headers, row.values);
+    const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
     const inputCandidate = {
       categoryId: resolveNamedEntity("category", cells.category, categories, issues),
       polityId: resolveNamedEntityOptional("polity", cells.polity, references.polities, issues),
       name: cells.name.trim(),
-      regionLabel: normalizeOptionalString(cells.region_label),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
+      ...toBoundaryTimeExpressions(timeExpression),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues)
     };
     const parsedInput = historicalPeriodSchema.safeParse(inputCandidate);
@@ -1250,13 +1251,14 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
     const issues: CsvPreviewIssue[] = [];
     const warnings: CsvPreviewIssue[] = [];
     const cells = mapRowToCells(parsed.headers, row.values);
+    const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
     const inputCandidate = {
       religionId: resolveSingleReference("religions", cells.religion, references.religions, issues),
       parentSectId: resolveNamedEntityOptional("parent_sect", cells.parent_sect, sectNameMap, issues),
       name: cells.name.trim(),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
-      timeExpression: parseTimeExpressionFromCsv(cells, "time", issues),
+      ...toBoundaryTimeExpressions(timeExpression),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
       founderIds: resolveReferences("person", cells.founders, references.person, issues)
     };
@@ -2369,6 +2371,30 @@ function parsePersonTimeExpressionFromCsv(
     isApproximate: isApproximate ?? false,
     precision: "year",
     displayLabel: label ?? ""
+  };
+}
+
+function toBoundaryTimeExpressions(timeExpression: TimeExpressionInput | undefined) {
+  return {
+    fromTimeExpression: timeExpression
+      ? {
+          calendarEra: timeExpression.calendarEra,
+          startYear: timeExpression.startYear,
+          isApproximate: timeExpression.isApproximate,
+          precision: "year",
+          displayLabel: ""
+        }
+      : undefined,
+    toTimeExpression:
+      timeExpression && timeExpression.endYear !== undefined
+        ? {
+            calendarEra: timeExpression.calendarEra,
+            startYear: timeExpression.endYear,
+            isApproximate: timeExpression.isApproximate,
+            precision: "year",
+            displayLabel: ""
+          }
+        : undefined
   };
 }
 

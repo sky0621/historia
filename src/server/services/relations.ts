@@ -68,7 +68,7 @@ export function getPolityTransitionFormView(id?: number, defaults?: Partial<Poli
       : {
           predecessorPolityId: defaults?.predecessorPolityId ?? 0,
           successorPolityId: defaults?.successorPolityId ?? 0,
-          transitionType: defaults?.transitionType ?? "succession"
+          transitionType: defaults?.transitionType ?? "succeeded"
         }
   };
 }
@@ -113,7 +113,7 @@ export function getRegionRelationFormView(id?: number, defaults?: Partial<Region
       : {
           fromRegionId: defaults?.fromRegionId ?? 0,
           toRegionId: defaults?.toRegionId ?? 0,
-          relationType: defaults?.relationType ?? "contains",
+          relationType: defaults?.relationType ?? "related",
           note: defaults?.note ?? ""
         }
   };

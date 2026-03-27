@@ -4,6 +4,15 @@ import { useActionState, useState } from "react";
 import { importCsvAction } from "@/features/csv-import/actions";
 import type { EventInput } from "@/features/events/schema";
 import type { PersonInput } from "@/features/person/schema";
+import {
+  getEventConflictParticipantRoleLabel,
+  getEventConflictParticipantTypeLabel,
+  getEventRelationTypeLabel,
+  getEventTypeLabel,
+  getHistoricalPeriodRelationTypeLabel,
+  getPolityTransitionTypeLabel,
+  getRegionRelationTypeLabel
+} from "@/lib/master-labels";
 import type {
   CitationCsvInput,
   CsvPreviewResult,
@@ -477,7 +486,7 @@ function renderEventRow(row: CsvPreviewRow<EventInput>) {
       {row.input ? (
         <div className="mt-3 text-xs text-[var(--muted)]">
           <p>
-            eventType: {row.input.eventType}
+            eventType: {getEventTypeLabel(row.input.eventType)}
             {row.input.fromTimeExpression?.startYear ? ` / from: ${row.input.fromTimeExpression.startYear}` : ""}
             {row.input.toTimeExpression?.startYear ? ` / to: ${row.input.toTimeExpression.startYear}` : ""}
           </p>
@@ -554,7 +563,7 @@ function renderEventRelationRow(row: CsvPreviewRow<EventRelationCsvInput>) {
           <p>
             toEventId: {row.input.relation.toEventId}
             {" / "}
-            relationType: {row.input.relation.relationType}
+            relationType: {getEventRelationTypeLabel(row.input.relation.relationType)}
           </p>
         </div>
       ) : null}
@@ -572,11 +581,11 @@ function renderConflictParticipantRow(row: CsvPreviewRow<ConflictParticipantCsvI
         <div className="mt-3 text-xs text-[var(--muted)]">
           <p>event: {row.input.eventTitle}</p>
           <p>
-            participantType: {row.input.participant.participantType}
+            participantType: {getEventConflictParticipantTypeLabel(row.input.participant.participantType)}
             {" / "}
             participantId: {row.input.participant.participantId}
             {" / "}
-            role: {row.input.participant.role}
+            role: {getEventConflictParticipantRoleLabel(row.input.participant.role)}
           </p>
         </div>
       ) : null}
@@ -725,7 +734,7 @@ function renderPolityTransitionRow(row: CsvPreviewRow<PolityTransitionCsvInput>)
       <RowIssues row={row} />
       {row.input ? (
         <div className="mt-3 text-xs text-[var(--muted)]">
-          predecessor: {row.input.predecessorPolityId} / successor: {row.input.successorPolityId} / type: {row.input.transitionType}
+          predecessor: {row.input.predecessorPolityId} / successor: {row.input.successorPolityId} / type: {getPolityTransitionTypeLabel(row.input.transitionType)}
         </div>
       ) : null}
     </article>
@@ -753,7 +762,7 @@ function renderRegionRelationRow(row: CsvPreviewRow<RegionRelationCsvInput>) {
       <RowIssues row={row} />
       {row.input ? (
         <div className="mt-3 text-xs text-[var(--muted)]">
-          from: {row.input.fromRegionId} / to: {row.input.toRegionId} / type: {row.input.relationType}
+          from: {row.input.fromRegionId} / to: {row.input.toRegionId} / type: {getRegionRelationTypeLabel(row.input.relationType)}
         </div>
       ) : null}
     </article>
@@ -767,7 +776,7 @@ function renderHistoricalPeriodRelationRow(row: CsvPreviewRow<HistoricalPeriodRe
       <RowIssues row={row} />
       {row.input ? (
         <div className="mt-3 text-xs text-[var(--muted)]">
-          from: {row.input.fromPeriodId} / to: {row.input.toPeriodId} / type: {row.input.relationType}
+          from: {row.input.fromPeriodId} / to: {row.input.toPeriodId} / type: {getHistoricalPeriodRelationTypeLabel(row.input.relationType)}
         </div>
       ) : null}
     </article>

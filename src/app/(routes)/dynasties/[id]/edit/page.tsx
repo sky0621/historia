@@ -23,7 +23,8 @@ export default async function EditDynastyPage({ params }: { params: Promise<{ id
         name: view.dynasty.name,
         note: view.dynasty.note ?? "",
         regionIds: view.regions.map((region) => region.id),
-        timeExpression: view.defaultTimeExpression
+        fromTimeExpression: view.defaultFromTimeExpression,
+        toTimeExpression: view.defaultToTimeExpression
       }}
     />
   );

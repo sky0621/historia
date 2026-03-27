@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { eventRelationTypeOptions, eventTypeOptions, getEventRelationTypeLabel, getEventTypeLabel } from "@/lib/master-labels";
 import { getEventsListView, getEventFormOptions } from "@/server/services/events";
 
 type EventsPageProps = {
@@ -57,8 +58,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const activeFilters = [
     query ? { label: "キーワード", value: query, href: buildFilterRemovalHref(currentParams, "q") } : null,
     tagId ? { label: "タグ", value: findOptionLabel(options.tags, tagId), href: buildFilterRemovalHref(currentParams, "tagId") } : null,
-    eventType ? { label: "種別", value: eventType, href: buildFilterRemovalHref(currentParams, "eventType") } : null,
-    relationType ? { label: "関係種別", value: relationType, href: buildFilterRemovalHref(currentParams, "relationType") } : null,
+    eventType ? { label: "種別", value: getEventTypeLabel(eventType), href: buildFilterRemovalHref(currentParams, "eventType") } : null,
+    relationType ? { label: "関係種別", value: getEventRelationTypeLabel(relationType), href: buildFilterRemovalHref(currentParams, "relationType") } : null,
     personId ? { label: "関連人物", value: findOptionLabel(options.person, personId), href: buildFilterRemovalHref(currentParams, "personId") } : null,
     polityId ? { label: "関連国家", value: findOptionLabel(options.polities, polityId), href: buildFilterRemovalHref(currentParams, "polityId") } : null,
     dynastyId ? { label: "関連王朝", value: findOptionLabel(options.dynasties, dynastyId), href: buildFilterRemovalHref(currentParams, "dynastyId") } : null,
@@ -104,20 +105,24 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           <span className="font-medium text-[var(--muted)]">種別</span>
           <select name="eventType" defaultValue={eventType ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
-            <option value="general">general</option>
-            <option value="war">war</option>
-            <option value="rebellion">rebellion</option>
-            <option value="civil_war">civil_war</option>
+            {eventTypeOptions
+              .filter((option) => ["general", "war", "rebellion", "civil_war"].includes(option.value))
+              .map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
           </select>
         </label>
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">関係種別</span>
           <select name="relationType" defaultValue={relationType ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
-            <option value="before">before</option>
-            <option value="after">after</option>
-            <option value="cause">cause</option>
-            <option value="related">related</option>
+            {eventRelationTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
         <label className="space-y-2 text-sm">
@@ -300,7 +305,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                     </Link>
                   </td>
                   <td className="px-5 py-4">{event.timeLabel}</td>
-                  <td className="px-5 py-4">{event.eventType}</td>
+                  <td className="px-5 py-4">{getEventTypeLabel(event.eventType)}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">
                     {event.relationTypes.length === 0 ? (
                       "-"
@@ -309,7 +314,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                         <span key={`${event.id}-relation-${type}`}>
                           {index > 0 ? ", " : null}
                           <Link href={`/events?relationType=${encodeURIComponent(type)}`} className="underline-offset-4 hover:underline">
-                            {type}
+                            {getEventRelationTypeLabel(type)}
                           </Link>
                         </span>
                       ))

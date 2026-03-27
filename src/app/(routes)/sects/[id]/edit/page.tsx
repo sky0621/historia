@@ -28,7 +28,8 @@ export default async function EditSectPage({ params }: { params: Promise<{ id: s
         note: view.sect.note ?? "",
         regionIds: view.regions.map((region) => region.id),
         founderIds: view.founders.map((founder) => founder.id),
-        timeExpression: view.defaultTimeExpression
+        fromTimeExpression: view.defaultFromTimeExpression,
+        toTimeExpression: view.defaultToTimeExpression
       }}
     />
   );

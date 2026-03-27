@@ -1,3 +1,4 @@
+import { getEventRelationTypeLabel, getEventTypeLabel } from "@/lib/master-labels";
 import { listDynasties } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPersonDetailed } from "@/server/repositories/person-detail";
@@ -98,7 +99,7 @@ export function getEventGraphView(filters: GraphFilters = {}): EventGraphView {
     kind: "event",
     label: event.title,
     href: `/events/${event.id}`,
-    subtitle: `${event.eventType} / ${event.timeLabel}`,
+    subtitle: `${getEventTypeLabel(event.eventType)} / ${event.timeLabel}`,
     x: 140 + (index % columns) * 260,
     y: 100 + Math.floor(index / columns) * 180
   }));
@@ -107,7 +108,7 @@ export function getEventGraphView(filters: GraphFilters = {}): EventGraphView {
     id: `relation-${relation.id}`,
     from: `event-${relation.fromEventId}`,
     to: `event-${relation.toEventId}`,
-    label: relation.relationType,
+    label: getEventRelationTypeLabel(relation.relationType),
     kind: "relation"
   }));
 

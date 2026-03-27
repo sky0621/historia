@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { eventRelationTypeOptions, eventTypeOptions } from "@/lib/master-labels";
 import { getEventFormOptions } from "@/server/services/events";
 import { getEventGraphView } from "@/server/services/visualizations";
 
@@ -69,20 +70,24 @@ export default async function GraphEventsPage({ searchParams }: GraphEventsPageP
           <span className="font-medium text-[var(--muted)]">種別</span>
           <select name="eventType" defaultValue={eventType ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
-            <option value="general">general</option>
-            <option value="war">war</option>
-            <option value="rebellion">rebellion</option>
-            <option value="civil_war">civil_war</option>
+            {eventTypeOptions
+              .filter((option) => ["general", "war", "rebellion", "civil_war"].includes(option.value))
+              .map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
           </select>
         </label>
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">関係種別</span>
           <select name="relationType" defaultValue={relationType ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
             <option value="">すべて</option>
-            <option value="before">before</option>
-            <option value="after">after</option>
-            <option value="cause">cause</option>
-            <option value="related">related</option>
+            {eventRelationTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
         <label className="space-y-2 text-sm">

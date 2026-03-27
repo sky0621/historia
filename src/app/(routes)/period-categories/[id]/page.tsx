@@ -67,7 +67,7 @@ export default async function PeriodCategoryDetailPage({
                   {period.name}
                 </Link>
                 <div className="mt-1 text-[var(--muted)]">
-                  {(period.polityName ?? period.regionLabel ?? "-")} / {period.timeLabel}
+                  {(period.polityName ?? "-")} / {period.timeLabel}
                 </div>
               </div>
             ))

@@ -172,7 +172,8 @@ export function getDynastyDetailView(id: number) {
     relatedEvents: getRelatedEvents({ dynastyId: id }),
     dynastySuccessions: getDynastySuccessionViewForDynasty(id),
     timeLabel: formatStoredTime("time", dynasty),
-    defaultTimeExpression: extractTimeExpression("time", dynasty)
+    defaultFromTimeExpression: extractBoundaryTime("from", dynasty),
+    defaultToTimeExpression: extractBoundaryTime("to", dynasty)
   };
 }
 
@@ -231,7 +232,8 @@ export function createDynastyFromInput(input: DynastyInput) {
     {
       name: input.name,
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.polityIds,
     input.regionIds
@@ -244,7 +246,8 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
     {
       name: input.name,
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.polityIds,
     input.regionIds
@@ -272,6 +275,18 @@ function toStoredTime(value: TimeExpressionInput | undefined) {
   };
 }
 
+function toStoredBoundaryTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+
+  return {
+    [calendarEraKey]: value?.calendarEra ?? null,
+    [yearKey]: value?.startYear ?? null,
+    [approximateKey]: value?.isApproximate ?? false
+  };
+}
+
 function toStoredPolityTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {
   const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
@@ -293,6 +308,27 @@ function extractTimeExpression(_prefix: string, value: Record<string, unknown>) 
     precision: "year",
     displayLabel: null
   });
+}
+
+function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknown>) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+  const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
+  const startYear = (value[yearKey] as number | null) ?? null;
+  const isApproximate = Boolean(value[approximateKey]);
+
+  if (startYear === null && !isApproximate && calendarEra == null) {
+    return undefined;
+  }
+
+  return {
+    calendarEra: calendarEra ?? "CE",
+    startYear: startYear ?? undefined,
+    isApproximate,
+    precision: "year",
+    displayLabel: ""
+  } satisfies TimeExpressionInput;
 }
 
 function extractPolityTimeExpression(prefix: "from" | "to", value: Record<string, unknown>) {

@@ -9,6 +9,11 @@ import {
   updatePolityTransitionAction,
   updateRegionRelationAction
 } from "@/features/relations/actions";
+import {
+  historicalPeriodRelationTypeOptions,
+  polityTransitionTypeOptions,
+  regionRelationTypeOptions
+} from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 type Option = { id: number; name: string };
 
@@ -27,7 +32,7 @@ export function PolityTransitionForm({
     id?: number;
     predecessorPolityId: number;
     successorPolityId: number;
-    transitionType: "split" | "merge" | "rename" | "succession" | "other";
+    transitionType: "renamed" | "succeeded" | "merged" | "split" | "annexed" | "absorbed" | "restored" | "reorganized" | "other";
   };
 }) {
   const action = defaultValues?.id ? updatePolityTransitionAction : createPolityTransitionAction;
@@ -41,12 +46,12 @@ export function PolityTransitionForm({
           <SelectField name="successorPolityId" label="後国家" options={polityOptions} defaultValue={defaultValues?.successorPolityId} />
           <label className="grid gap-2 text-sm md:col-span-2">
             <span>変遷種別</span>
-            <select name="transitionType" defaultValue={defaultValues?.transitionType ?? "succession"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required>
-              <option value="succession">succession</option>
-              <option value="rename">rename</option>
-              <option value="split">split</option>
-              <option value="merge">merge</option>
-              <option value="other">other</option>
+            <select name="transitionType" defaultValue={defaultValues?.transitionType ?? "succeeded"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required>
+              {polityTransitionTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -109,7 +114,7 @@ export function RegionRelationForm({
     id?: number;
     fromRegionId: number;
     toRegionId: number;
-    relationType: "contains" | "adjacent" | "cultural_sphere";
+    relationType: "adjacent" | "cultural_area" | "trade_zone" | "influences" | "related" | "equivalent";
     note: string;
   };
 }) {
@@ -124,10 +129,12 @@ export function RegionRelationForm({
           <SelectField name="toRegionId" label="終点地域" options={regionOptions} defaultValue={defaultValues?.toRegionId} />
           <label className="grid gap-2 text-sm md:col-span-2">
             <span>関係種別</span>
-            <select name="relationType" defaultValue={defaultValues?.relationType ?? "contains"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required>
-              <option value="contains">contains</option>
-              <option value="adjacent">adjacent</option>
-              <option value="cultural_sphere">cultural_sphere</option>
+            <select name="relationType" defaultValue={defaultValues?.relationType ?? "related"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required>
+              {regionRelationTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -153,7 +160,7 @@ export function HistoricalPeriodRelationForm({
     id?: number;
     fromPeriodId: number;
     toPeriodId: number;
-    relationType: "contains" | "overlaps" | "succeeds";
+    relationType: "precedes" | "succeeds" | "overlaps" | "includes" | "included_in";
     note: string;
   };
 }) {
@@ -169,9 +176,11 @@ export function HistoricalPeriodRelationForm({
           <label className="grid gap-2 text-sm md:col-span-2">
             <span>関係種別</span>
             <select name="relationType" defaultValue={defaultValues?.relationType ?? "succeeds"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required>
-              <option value="contains">contains</option>
-              <option value="overlaps">overlaps</option>
-              <option value="succeeds">succeeds</option>
+              {historicalPeriodRelationTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>

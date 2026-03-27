@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { createEventAction, updateEventAction } from "@/features/events/actions";
+import {
+  eventConflictParticipantRoleOptions,
+  eventConflictParticipantTypeOptions,
+  eventRelationTypeOptions,
+  eventTypeOptions
+} from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Option = { id: number; name: string };
@@ -123,10 +129,13 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
               onChange={(event) => setEventType(event.target.value as "general" | "war" | "rebellion" | "civil_war")}
               className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
             >
-              <option value="general">general</option>
-              <option value="war">war</option>
-              <option value="rebellion">rebellion</option>
-              <option value="civil_war">civil_war</option>
+              {eventTypeOptions
+                .filter((option) => ["general", "war", "rebellion", "civil_war"].includes(option.value))
+                .map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="grid gap-2 text-sm">
@@ -198,10 +207,11 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                       defaultValue={relation?.relationType ?? "related"}
                       className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
                     >
-                      <option value="before">before</option>
-                      <option value="after">after</option>
-                      <option value="cause">cause</option>
-                      <option value="related">related</option>
+                      {eventRelationTypeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </label>
                 </div>
@@ -258,10 +268,11 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                             }
                             className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
                           >
-                            <option value="polity">polity</option>
-                            <option value="person">person</option>
-                            <option value="religion">religion</option>
-                            <option value="sect">sect</option>
+                            {eventConflictParticipantTypeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
                           </select>
                         </label>
                         <label className="grid gap-2 text-sm">
@@ -287,11 +298,11 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                             defaultValue={participant?.role ?? "other"}
                             className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
                           >
-                            <option value="attacker">attacker</option>
-                            <option value="defender">defender</option>
-                            <option value="leader">leader</option>
-                            <option value="ally">ally</option>
-                            <option value="other">other</option>
+                            {eventConflictParticipantRoleOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
                           </select>
                         </label>
                       </div>

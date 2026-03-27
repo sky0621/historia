@@ -184,7 +184,8 @@ export function getReligionDetailView(id: number) {
     relatedPerson: dedupePerson(religionPerson),
     relatedEvents: getRelatedEvents({ religionId: id }),
     timeLabel: formatStoredTime("time", religion),
-    defaultTimeExpression: extractTimeExpression("time", religion),
+    defaultFromTimeExpression: extractBoundaryTime("from", religion),
+    defaultToTimeExpression: extractBoundaryTime("to", religion),
     citations: getCitationListForTarget("religion", id)
   };
 }
@@ -218,7 +219,8 @@ export function getSectDetailView(id: number) {
     relatedPerson: dedupePerson(sectPerson),
     relatedEvents: getRelatedEvents({ sectId: id }),
     timeLabel: formatStoredTime("time", sect),
-    defaultTimeExpression: extractTimeExpression("time", sect)
+    defaultFromTimeExpression: extractBoundaryTime("from", sect),
+    defaultToTimeExpression: extractBoundaryTime("to", sect)
   };
 }
 
@@ -228,7 +230,8 @@ export function createReligionFromInput(input: ReligionInput) {
       name: input.name,
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.regionIds,
     input.founderIds
@@ -242,7 +245,8 @@ export function updateReligionFromInput(id: number, input: ReligionInput) {
       name: input.name,
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.regionIds,
     input.founderIds
@@ -259,7 +263,8 @@ export function createSectFromInput(input: SectInput) {
       name: input.name,
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.religionId,
     input.parentSectId ?? null,
@@ -275,7 +280,8 @@ export function updateSectFromInput(id: number, input: SectInput) {
       name: input.name,
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.religionId,
     input.parentSectId ?? null,
@@ -305,6 +311,18 @@ function toStoredTime(value: TimeExpressionInput | undefined) {
   };
 }
 
+function toStoredBoundaryTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+
+  return {
+    [calendarEraKey]: value?.calendarEra ?? null,
+    [yearKey]: value?.startYear ?? null,
+    [approximateKey]: value?.isApproximate ?? false
+  };
+}
+
 function extractTimeExpression(_prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
     calendarEra: (value.fromCalendarEra as "BCE" | "CE" | null) ?? "CE",
@@ -314,6 +332,27 @@ function extractTimeExpression(_prefix: string, value: Record<string, unknown>) 
     precision: "year",
     displayLabel: null
   });
+}
+
+function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknown>) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+  const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
+  const startYear = (value[yearKey] as number | null) ?? null;
+  const isApproximate = Boolean(value[approximateKey]);
+
+  if (startYear === null && !isApproximate && calendarEra == null) {
+    return undefined;
+  }
+
+  return {
+    calendarEra: calendarEra ?? "CE",
+    startYear: startYear ?? undefined,
+    isApproximate,
+    precision: "year",
+    displayLabel: ""
+  } satisfies TimeExpressionInput;
 }
 
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {

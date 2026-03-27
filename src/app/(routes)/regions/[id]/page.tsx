@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteRegionAction } from "@/features/regions/actions";
+import { getRegionRelationTypeLabel } from "@/lib/master-labels";
 import { getRegionView } from "@/server/services/regions";
 
 export default async function RegionDetailPage({
@@ -242,7 +243,7 @@ export default async function RegionDetailPage({
                     編集
                   </Link>
                 </div>
-                <div className="mt-1 text-[var(--muted)]">{relation.relationType}</div>
+                <div className="mt-1 text-[var(--muted)]">{getRegionRelationTypeLabel(relation.relationType)}</div>
                 {relation.note ? <div className="mt-1 text-[var(--muted)]">{relation.note}</div> : null}
               </div>
             ))

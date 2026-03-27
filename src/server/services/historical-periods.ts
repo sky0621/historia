@@ -71,7 +71,7 @@ export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilte
     })
     .filter((period) =>
       matchesQuery(
-        [period.name, period.description, period.note, period.categoryName, period.polityName, period.regionLabel, period.regionNames.join(", ")],
+        [period.name, period.description, period.note, period.categoryName, period.polityName, period.regionNames.join(", ")],
         normalizedQuery
       )
     );
@@ -102,7 +102,8 @@ export function getHistoricalPeriodDetailView(id: number) {
     relatedEvents: getRelatedEvents({ periodId: id }),
     periodRelations: getHistoricalPeriodRelationView(id),
     timeLabel: formatStoredTime("time", period),
-    defaultTimeExpression: extractTimeExpression("time", period),
+    defaultFromTimeExpression: extractBoundaryTime("from", period),
+    defaultToTimeExpression: extractBoundaryTime("to", period),
     formOptions: options,
     citations: getCitationListForTarget("historical_period", id),
     changeHistory: getHistoryView("historical_period", id)
@@ -113,10 +114,10 @@ export function createHistoricalPeriodFromInput(input: HistoricalPeriodInput) {
   const id = createHistoricalPeriod(
     {
       name: input.name,
-      regionLabel: nullable(input.regionLabel),
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.categoryId,
     input.polityId ?? null,
@@ -137,10 +138,10 @@ export function updateHistoricalPeriodFromInput(id: number, input: HistoricalPer
     id,
     {
       name: input.name,
-      regionLabel: nullable(input.regionLabel),
       description: nullable(input.description),
       note: nullable(input.note),
-      ...toStoredTime(input.timeExpression)
+      ...toStoredBoundaryTime("from", input.fromTimeExpression),
+      ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.categoryId,
     input.polityId ?? null,
@@ -182,6 +183,18 @@ function toStoredTime(value: TimeExpressionInput | undefined) {
   };
 }
 
+function toStoredBoundaryTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+
+  return {
+    [calendarEraKey]: value?.calendarEra ?? null,
+    [yearKey]: value?.startYear ?? null,
+    [approximateKey]: value?.isApproximate ?? false
+  };
+}
+
 function extractTimeExpression(_prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
     calendarEra: (value.fromCalendarEra as "BCE" | "CE" | null) ?? "CE",
@@ -191,6 +204,27 @@ function extractTimeExpression(_prefix: string, value: Record<string, unknown>) 
     precision: "year",
     displayLabel: null
   });
+}
+
+function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknown>) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+  const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
+  const startYear = (value[yearKey] as number | null) ?? null;
+  const isApproximate = Boolean(value[approximateKey]);
+
+  if (startYear === null && !isApproximate && calendarEra == null) {
+    return undefined;
+  }
+
+  return {
+    calendarEra: calendarEra ?? "CE",
+    startYear: startYear ?? undefined,
+    isApproximate,
+    precision: "year",
+    displayLabel: ""
+  } satisfies TimeExpressionInput;
 }
 
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {

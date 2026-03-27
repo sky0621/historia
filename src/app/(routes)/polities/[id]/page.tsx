@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deletePolityAction } from "@/features/polities/actions";
+import { getPolityTransitionTypeLabel } from "@/lib/master-labels";
 import { getPolityDetailView } from "@/server/services/polities";
 
 export default async function PolityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -146,7 +147,7 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
                     編集
                   </Link>
                 </div>
-                <div className="mt-1 text-[var(--muted)]">{transition.transitionType}</div>
+                <div className="mt-1 text-[var(--muted)]">{getPolityTransitionTypeLabel(transition.transitionType)}</div>
               </div>
             ))
           )}

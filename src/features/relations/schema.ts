@@ -5,7 +5,7 @@ import { timeExpressionSchema } from "@/lib/time-expression/schema";
 export const polityTransitionSchema = z.object({
   predecessorPolityId: z.number().int().positive(),
   successorPolityId: z.number().int().positive(),
-  transitionType: z.enum(["split", "merge", "rename", "succession", "other"])
+  transitionType: z.enum(["renamed", "succeeded", "merged", "split", "annexed", "absorbed", "restored", "reorganized", "other"])
 });
 
 export const dynastySuccessionSchema = z.object({
@@ -17,14 +17,14 @@ export const dynastySuccessionSchema = z.object({
 export const regionRelationSchema = z.object({
   fromRegionId: z.number().int().positive(),
   toRegionId: z.number().int().positive(),
-  relationType: z.enum(["contains", "adjacent", "cultural_sphere"]),
+  relationType: z.enum(["adjacent", "cultural_area", "trade_zone", "influences", "related", "equivalent"]),
   note: z.string().trim().optional()
 });
 
 export const historicalPeriodRelationSchema = z.object({
   fromPeriodId: z.number().int().positive(),
   toPeriodId: z.number().int().positive(),
-  relationType: z.enum(["contains", "overlaps", "succeeds"]),
+  relationType: z.enum(["precedes", "succeeds", "overlaps", "includes", "included_in"]),
   note: z.string().trim().optional()
 });
 

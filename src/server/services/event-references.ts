@@ -1,3 +1,4 @@
+import { getEraLabel, getEventTypeLabel } from "@/lib/master-labels";
 import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import { listDynasties } from "@/server/repositories/dynasties";
@@ -47,7 +48,7 @@ export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSumma
     .map((event) => ({
       id: event.id,
       title: event.title,
-      eventType: event.eventType,
+      eventType: getEventTypeLabel(event.eventType),
       timeLabel: formatEventTime(event),
       relationSummary: summarizeEventLinks(event.id, links, {
         personById,
@@ -137,10 +138,12 @@ function toStandaloneYearLabel(
     return null;
   }
 
-  const start = `${startYear}${startEra === "BCE" ? " BCE" : ""}`;
   const resolvedEnd = endYear ?? startYear;
   const resolvedEndEra = endEra ?? startEra;
-  const end = `${resolvedEnd}${resolvedEndEra === "BCE" ? " BCE" : ""}`;
+  const startSuffix = startEra ? ` ${getEraLabel(startEra)}` : "";
+  const endSuffix = resolvedEndEra ? ` ${getEraLabel(resolvedEndEra)}` : "";
+  const start = `${startYear}${startSuffix}`;
+  const end = `${resolvedEnd}${endSuffix}`;
 
   return start === end ? start : `${start} - ${end}`;
 }

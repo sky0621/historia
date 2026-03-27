@@ -24,7 +24,8 @@ export default async function EditReligionPage({ params }: { params: Promise<{ i
         note: view.religion.note ?? "",
         regionIds: view.regions.map((region) => region.id),
         founderIds: view.founders.map((founder) => founder.id),
-        timeExpression: view.defaultTimeExpression
+        fromTimeExpression: view.defaultFromTimeExpression,
+        toTimeExpression: view.defaultToTimeExpression
       }}
     />
   );

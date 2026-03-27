@@ -8,7 +8,8 @@ export const religionSchema = z.object({
   name: z.string().trim().min(1, "名称は必須です"),
   description: z.string().trim().optional(),
   note: z.string().trim().optional(),
-  timeExpression: timeExpressionSchema.optional(),
+  fromTimeExpression: timeExpressionSchema.optional(),
+  toTimeExpression: timeExpressionSchema.optional(),
   regionIds: idsSchema,
   founderIds: idsSchema
 });
@@ -26,7 +27,8 @@ export function parseReligionFormData(formData: FormData): ReligionInput {
     name: formData.get("name"),
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
-    timeExpression: parseTimeExpressionFormData(formData, "time"),
+    fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
+    toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
     regionIds: normalizeIds(formData.getAll("regionIds")),
     founderIds: normalizeIds(formData.getAll("founderIds"))
   });
@@ -39,7 +41,8 @@ export function parseSectFormData(formData: FormData): SectInput {
     name: formData.get("name"),
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
-    timeExpression: parseTimeExpressionFormData(formData, "time"),
+    fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
+    toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
     regionIds: normalizeIds(formData.getAll("regionIds")),
     founderIds: normalizeIds(formData.getAll("founderIds"))
   });

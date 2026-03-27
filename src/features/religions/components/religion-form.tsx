@@ -17,7 +17,8 @@ type Props = {
     note: string;
     regionIds: number[];
     founderIds: number[];
-    timeExpression?: TimeExpressionInput;
+    fromTimeExpression?: TimeExpressionInput;
+    toTimeExpression?: TimeExpressionInput;
   };
 };
 
@@ -52,7 +53,24 @@ export function ReligionForm({
           </label>
         </div>
 
-        <TimeExpressionInputs prefix="time" label="開始・終了年" defaultValue={defaultValues?.timeExpression} />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <TimeExpressionInputs
+            prefix="fromTime"
+            label="開始年"
+            defaultValue={defaultValues?.fromTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
+          <TimeExpressionInputs
+            prefix="toTime"
+            label="終了年"
+            defaultValue={defaultValues?.toTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
+        </div>
 
         <fieldset className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
           <legend className="px-2 text-sm font-semibold text-[var(--muted)]">関連地域</legend>
