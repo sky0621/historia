@@ -24,9 +24,14 @@ export default async function PolitiesPage({ searchParams }: PolitiesPageProps) 
             国家・政体の開始終了年と関連地域を管理します。
           </p>
         </div>
-        <Link href="/polities/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
-          新規国家
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/api/export/polities.csv" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
+            CSV エクスポート
+          </Link>
+          <Link href="/polities/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+            新規国家
+          </Link>
+        </div>
       </div>
 
       <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">

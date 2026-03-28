@@ -34,8 +34,14 @@ export default function ManageDataPage() {
               <Link href="/api/export/person.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Person CSV をダウンロード
               </Link>
+              <Link href="/api/export/polities.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                Polity CSV をダウンロード
+              </Link>
               <Link href="/api/export/period-categories.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Period Category CSV をダウンロード
+              </Link>
+              <Link href="/api/export/historical-periods.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                Historical Period CSV をダウンロード
               </Link>
             </div>
           </div>
