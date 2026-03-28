@@ -58,7 +58,7 @@ export function getEventFormOptions() {
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name })),
     tags: listTags().map((item) => ({ id: item.id, name: item.name })),
-    regions: listRegions().map((item) => ({ id: item.id, name: item.name })),
+    regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     events: listEvents().map((item) => ({ id: item.id, name: item.title }))
   };
 }

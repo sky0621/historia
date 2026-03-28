@@ -32,7 +32,7 @@ export function getPolityOptions() {
 }
 
 export function getRegionOptions() {
-  return listRegions().map((region) => ({ id: region.id, name: region.name }));
+  return listRegions().map((region) => ({ id: region.id, name: region.name, parentRegionId: region.parentRegionId }));
 }
 
 type PolityListFilters = {

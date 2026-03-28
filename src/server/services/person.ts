@@ -33,7 +33,7 @@ export function getPersonOptions() {
 
 export function getPersonFormOptions() {
   return {
-    regions: listRegions().map((item) => ({ id: item.id, name: item.name })),
+    regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name })),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),

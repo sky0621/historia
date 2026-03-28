@@ -16,6 +16,7 @@ import {
   secondaryButtonClassName
 } from "@/components/forms/styles";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
+import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { createEventAction, updateEventAction } from "@/features/events/actions";
@@ -28,7 +29,7 @@ import {
 } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
-type Option = { id: number; name: string };
+type Option = { id: number; name: string; parentRegionId?: number | null };
 type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" };
 type ParticipantDefault = {
   participantType: "polity" | "person" | "religion" | "sect";
@@ -196,7 +197,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
         <SelectionGroup name="religionIds" label="宗教" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
         <SelectionGroup name="sectIds" label="宗派" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
-        <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible />
+        <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible hierarchical />
 
         <section className={formCardClassName}>
           <div className="flex items-center justify-between gap-4">
@@ -512,27 +513,31 @@ function SelectionGroup({
   label,
   options,
   selectedIds,
-  collapsible = false
+  collapsible = false,
+  hierarchical = false
 }: {
   name: string;
   label: string;
   options: Option[];
   selectedIds: number[];
   collapsible?: boolean;
+  hierarchical?: boolean;
 }) {
   const content = (
-    <div className="mt-3 grid gap-3 md:grid-cols-2">
-      {options.length === 0 ? (
-        <p className={emptyStateClassName}>選択肢はまだありません。</p>
-      ) : (
-        options.map((option) => (
+    options.length === 0 ? (
+      <p className={emptyStateClassName}>選択肢はまだありません。</p>
+    ) : hierarchical ? (
+      <RegionCheckboxTree name={name} options={options} selectedIds={selectedIds} itemClassName={checkboxCardClassName} />
+    ) : (
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        {options.map((option) => (
           <label key={option.id} className={checkboxCardClassName}>
             <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
             {option.name}
           </label>
-        ))
-      )}
-    </div>
+        ))}
+      </div>
+    )
   );
 
   if (collapsible) {

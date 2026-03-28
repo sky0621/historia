@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
+import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import {
   checkboxCardClassName,
   fieldLabelClassName,
@@ -22,6 +23,7 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 type RegionOption = {
   id: number;
   name: string;
+  parentRegionId?: number | null;
 };
 
 type PolityOption = {
@@ -120,19 +122,12 @@ export function DynastyForm({
 
         <section className={formCardClassName}>
           <CollapsibleFormSection title="関連地域" defaultOpen={(defaultValues?.regionIds.length ?? 0) > 0}>
-            <div className="grid gap-3 md:grid-cols-2">
-            {regionOptions.map((region) => (
-              <label key={region.id} className={checkboxCardClassName}>
-                <input
-                  type="checkbox"
-                  name="regionIds"
-                  value={region.id}
-                  defaultChecked={defaultValues?.regionIds.includes(region.id) ?? false}
-                />
-                {region.name}
-              </label>
-            ))}
-            </div>
+            <RegionCheckboxTree
+              name="regionIds"
+              options={regionOptions}
+              selectedIds={defaultValues?.regionIds ?? []}
+              itemClassName={checkboxCardClassName}
+            />
           </CollapsibleFormSection>
         </section>
 

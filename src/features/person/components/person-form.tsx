@@ -2,13 +2,14 @@
 
 import { useActionState, useState } from "react";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
+import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import { formErrorClassName, secondaryButtonClassName } from "@/components/forms/styles";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createPersonAction, updatePersonAction } from "@/features/person/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
-type Option = { id: number; name: string };
+type Option = { id: number; name: string; parentRegionId?: number | null };
 type RoleDefault = {
   title: string;
   polityId?: number | null;
@@ -110,7 +111,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible />
+          <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible hierarchical />
           <SelectionGroup name="religionIds" label="宗教" description="信仰や所属する宗教を選択します。" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
           <SelectionGroup name="sectIds" label="宗派" description="宗派や分派が分かる場合のみ追加します。" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
         </div>
@@ -322,7 +323,8 @@ function SelectionGroup({
   description,
   options,
   selectedIds,
-  collapsible = false
+  collapsible = false,
+  hierarchical = false
 }: {
   name: string;
   label: string;
@@ -330,25 +332,35 @@ function SelectionGroup({
   options: Option[];
   selectedIds: number[];
   collapsible?: boolean;
+  hierarchical?: boolean;
 }) {
   const content = (
     <>
       <p className="mt-2 text-sm leading-7 text-[var(--muted-strong)]">{description}</p>
-      <div className="mt-5 grid gap-3 md:grid-cols-2">
+      <div className="mt-5">
         {options.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-4 text-sm text-[var(--muted)]">
             選択肢はまだありません。
           </p>
+        ) : hierarchical ? (
+          <RegionCheckboxTree
+            name={name}
+            options={options}
+            selectedIds={selectedIds}
+            itemClassName="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--foreground)] hover:border-[var(--border-strong)]"
+          />
         ) : (
-          options.map((option) => (
-            <label
-              key={option.id}
-              className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--foreground)] hover:border-[var(--border-strong)]"
-            >
-              <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
-              {option.name}
-            </label>
-          ))
+          <div className="grid gap-3 md:grid-cols-2">
+            {options.map((option) => (
+              <label
+                key={option.id}
+                className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--foreground)] hover:border-[var(--border-strong)]"
+              >
+                <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
+                {option.name}
+              </label>
+            ))}
+          </div>
         )}
       </div>
     </>

@@ -22,7 +22,7 @@ export function getHistoricalPeriodFormOptions() {
   return {
     categories: getPeriodCategoryOptions(),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
-    regions: listRegions().map((item) => ({ id: item.id, name: item.name }))
+    regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId }))
   };
 }
 
