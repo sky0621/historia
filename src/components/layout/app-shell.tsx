@@ -30,8 +30,7 @@ const navigationGroups = [
     title: "Operations",
     items: [
       { href: "/manage/data", label: "データ運用" },
-      { href: "/period-categories", label: "カテゴリ" },
-      { href: "/bootstrap", label: "Bootstrap" }
+      { href: "/period-categories", label: "カテゴリ" }
     ]
   }
 ] as const;
