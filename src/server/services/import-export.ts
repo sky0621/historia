@@ -75,6 +75,24 @@ export function buildHistoricalPeriodsCsv() {
   ]);
 }
 
+export function buildHistoricalPeriodCategoryLinksCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         c.id AS category_id,
+         c.name AS category_name,
+         p.id AS period_id,
+         p.name AS period_name
+       FROM historical_period_category_links hpcl
+       INNER JOIN period_categories c ON hpcl.category_id = c.id
+       INNER JOIN historical_periods p ON hpcl.period_id = p.id
+       ORDER BY c.id, p.id`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["category_id", "category_name", "period_id", "period_name"]);
+}
+
 export function buildPolitiesCsv() {
   const rows = sqlite
     .prepare(
