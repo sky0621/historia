@@ -3,11 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteEventAction } from "@/features/events/actions";
 import {
-  getEraLabel,
   getEventConflictParticipantRoleLabel,
   getEventRelationTypeLabel,
   getEventTypeLabel
 } from "@/lib/master-labels";
+import { formatYearWithEra } from "@/lib/time-expression/format";
 import { getEventDetailView } from "@/server/services/events";
 
 export const metadata: Metadata = { title: "event" };
@@ -25,7 +25,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     view.linkedPerson.length +
     view.linkedPolities.length +
     view.linkedDynasties.length +
-    view.linkedPeriods.length +
     view.linkedReligions.length +
     view.linkedSects.length +
     view.linkedRegions.length;
@@ -96,7 +95,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               <DetailItem label="人物">{renderLinkedItems(view.linkedPerson, "person")}</DetailItem>
               <DetailItem label="国家">{renderLinkedItems(view.linkedPolities, "polities")}</DetailItem>
               <DetailItem label="王朝">{renderLinkedItems(view.linkedDynasties, "dynasties")}</DetailItem>
-              <DetailItem label="時代区分">{renderLinkedItems(view.linkedPeriods, "periods")}</DetailItem>
               <DetailItem label="宗教 / 宗派">
                 {view.linkedReligions.length === 0 && view.linkedSects.length === 0 ? (
                   "-"
@@ -262,14 +260,14 @@ function formatDisplay(value: { displayLabel?: string; calendarEra: string; star
     return value.displayLabel;
   }
   if (value.startYear) {
-    return `${value.calendarEra === "BCE" ? `${getEraLabel("BCE")} ` : ""}${value.startYear}`;
+    return formatYearWithEra(value.calendarEra, value.startYear) ?? "年未詳";
   }
   return "年未詳";
 }
 
 function renderLinkedItems(
   items: Array<{ id: number; name: string }>,
-  route: "person" | "polities" | "dynasties" | "periods" | "religions" | "sects" | "regions" | "tags"
+  route: "person" | "polities" | "dynasties" | "religions" | "sects" | "regions" | "tags"
 ) {
   if (items.length === 0) {
     return "-";

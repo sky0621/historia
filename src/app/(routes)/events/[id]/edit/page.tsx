@@ -30,7 +30,6 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         personIds: view.linkedPerson.map((item) => item.id),
         polityIds: view.linkedPolities.map((item) => item.id),
         dynastyIds: view.linkedDynasties.map((item) => item.id),
-        periodIds: view.linkedPeriods.map((item) => item.id),
         religionIds: view.linkedReligions.map((item) => item.id),
         sectIds: view.linkedSects.map((item) => item.id),
         regionIds: view.linkedRegions.map((item) => item.id),

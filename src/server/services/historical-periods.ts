@@ -2,7 +2,6 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { HistoricalPeriodInput } from "@/features/periods/schema";
-import { getPersonPeriodLinks, listPersonDetailed } from "@/server/repositories/person-detail";
 import {
   createHistoricalPeriod,
   deleteHistoricalPeriod,
@@ -25,6 +24,15 @@ export function getHistoricalPeriodFormOptions() {
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     regions: listRegions().map((item) => ({ id: item.id, name: item.name }))
   };
+}
+
+export function getHistoricalPeriodSelectionOptions() {
+  const categoryNameById = new Map(getPeriodCategoryOptions().map((item) => [item.id, item.name]));
+
+  return listHistoricalPeriods().map((item) => ({
+    id: item.id,
+    name: `${categoryNameById.get(item.categoryId) ?? "不明"}: ${item.name}`
+  }));
 }
 
 type HistoricalPeriodsListFilters = {
@@ -85,11 +93,6 @@ export function getHistoricalPeriodDetailView(id: number) {
 
   const options = getHistoricalPeriodFormOptions();
   const linkedRegionIds = getHistoricalPeriodRegionIds([id]).map((link) => link.regionId);
-  const person = listPersonDetailed();
-  const relatedPerson = getPersonPeriodLinks(person.map((person) => person.id))
-    .filter((link) => link.periodId === id)
-    .map((link) => person.find((person) => person.id === link.personId))
-    .filter((person): person is NonNullable<typeof person> => Boolean(person));
 
   return {
     period,
@@ -98,7 +101,7 @@ export function getHistoricalPeriodDetailView(id: number) {
     polity: period.polityId ? options.polities.find((item) => item.id === period.polityId) ?? null : null,
     category: options.categories.find((item) => item.id === period.categoryId) ?? null,
     regions: options.regions.filter((item) => linkedRegionIds.includes(item.id)),
-    relatedPerson: dedupePerson(relatedPerson),
+    relatedPerson: [] as Array<{ id: number; name: string }>,
     relatedEvents: getRelatedEvents({ periodId: id }),
     periodRelations: getHistoricalPeriodRelationView(id),
     timeLabel: formatStoredTime("time", period),
@@ -242,19 +245,6 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
-}
-
-function dedupePerson(person: Array<{ id: number; name: string }>) {
-  const seen = new Set<number>();
-
-  return person.filter((person) => {
-    if (seen.has(person.id)) {
-      return false;
-    }
-
-    seen.add(person.id);
-    return true;
-  });
 }
 
 function buildHistoricalPeriodHistorySnapshot(id: number) {

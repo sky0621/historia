@@ -26,7 +26,6 @@ type Props = {
     regions: Option[];
     religions: Option[];
     sects: Option[];
-    periods: Option[];
     polities: Option[];
     dynasties: Option[];
   };
@@ -39,7 +38,6 @@ type Props = {
     regionIds: number[];
     religionIds: number[];
     sectIds: number[];
-    periodIds: number[];
     birthTimeExpression?: TimeExpressionInput;
     deathTimeExpression?: TimeExpressionInput;
     roles: RoleDefault[];
@@ -112,7 +110,6 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
 
         <div className="grid gap-6 xl:grid-cols-2">
           <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} />
-          <SelectionGroup name="periodIds" label="時代区分" description="主要な時代区分を紐づけます。" options={options.periods} selectedIds={defaultValues?.periodIds ?? []} />
           <SelectionGroup name="religionIds" label="宗教" description="信仰や所属する宗教を選択します。" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
           <SelectionGroup name="sectIds" label="宗派" description="宗派や分派が分かる場合のみ追加します。" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
         </div>

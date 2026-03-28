@@ -1,4 +1,5 @@
 import { db } from "@/db/client";
+import { formatYearWithEra } from "@/lib/time-expression/format";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { EventInput } from "@/features/events/schema";
 import {
@@ -24,7 +25,6 @@ import {
   updateEvent
 } from "@/server/repositories/events";
 import { listDynasties } from "@/server/repositories/dynasties";
-import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
@@ -46,7 +46,6 @@ type EventListFilters = {
   religionId?: number;
   sectId?: number;
   regionId?: number;
-  periodId?: number;
   fromYear?: number;
   toYear?: number;
 };
@@ -56,7 +55,6 @@ export function getEventFormOptions() {
     person: listPersonDetailed().map((item) => ({ id: item.id, name: item.name })),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name })),
-    periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name })),
     tags: listTags().map((item) => ({ id: item.id, name: item.name })),
@@ -74,7 +72,6 @@ export function getEventsListView(filters: EventListFilters = {}) {
   const personById = new Map(listPersonDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const dynastiesById = new Map(listDynasties().map((item) => [item.id, item.name]));
-  const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
   const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
   const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
   const regionsById = new Map(listRegions().map((item) => [item.id, item.name]));
@@ -95,10 +92,6 @@ export function getEventsListView(filters: EventListFilters = {}) {
           .filter((link) => link.eventId === event.id)
           .map((link) => ({ type: "dynasties" as const, id: link.dynastyId, name: dynastiesById.get(link.dynastyId) }))
           .filter((item): item is { type: "dynasties"; id: number; name: string } => Boolean(item.name)),
-        ...links.periodLinks
-          .filter((link) => link.eventId === event.id)
-          .map((link) => ({ type: "periods" as const, id: link.periodId, name: periodsById.get(link.periodId) }))
-          .filter((item): item is { type: "periods"; id: number; name: string } => Boolean(item.name)),
         ...links.religionLinks
           .filter((link) => link.eventId === event.id)
           .map((link) => ({ type: "religions" as const, id: link.religionId, name: religionsById.get(link.religionId) }))
@@ -135,7 +128,6 @@ export function getEventsListView(filters: EventListFilters = {}) {
         religionIds: links.religionLinks.filter((link) => link.eventId === event.id).map((link) => link.religionId),
         sectIds: links.sectLinks.filter((link) => link.eventId === event.id).map((link) => link.sectId),
         regionIds: links.regionLinks.filter((link) => link.eventId === event.id).map((link) => link.regionId),
-        periodIds: links.periodLinks.filter((link) => link.eventId === event.id).map((link) => link.periodId),
         tagIds: links.tagLinks.filter((link) => link.eventId === event.id).map((link) => link.tagId)
       };
     })
@@ -176,10 +168,6 @@ export function getEventsListView(filters: EventListFilters = {}) {
         return false;
       }
 
-      if (filters.periodId && !event.periodIds.includes(filters.periodId)) {
-        return false;
-      }
-
       if (!matchesYearRange(event, filters.fromYear, filters.toYear)) {
         return false;
       }
@@ -217,7 +205,6 @@ export function getEventDetailView(id: number) {
     linkedPerson: options.person.filter((item) => links.personLinks.some((link) => link.eventId === id && link.personId === item.id)),
     linkedPolities: options.polities.filter((item) => links.polityLinks.some((link) => link.eventId === id && link.polityId === item.id)),
     linkedDynasties: options.dynasties.filter((item) => links.dynastyLinks.some((link) => link.eventId === id && link.dynastyId === item.id)),
-    linkedPeriods: options.periods.filter((item) => links.periodLinks.some((link) => link.eventId === id && link.periodId === item.id)),
     linkedReligions: options.religions.filter((item) => links.religionLinks.some((link) => link.eventId === id && link.religionId === item.id)),
     linkedSects: options.sects.filter((item) => links.sectLinks.some((link) => link.eventId === id && link.sectId === item.id)),
     linkedRegions: options.regions.filter((item) => links.regionLinks.some((link) => link.eventId === id && link.regionId === item.id)),
@@ -295,7 +282,6 @@ export function createEventFromInput(input: EventInput) {
       personIds: input.personIds,
       polityIds: input.polityIds,
       dynastyIds: input.dynastyIds,
-      periodIds: input.periodIds,
       religionIds: input.religionIds,
       sectIds: input.sectIds,
       regionIds: input.regionIds,
@@ -372,7 +358,6 @@ export function updateEventFromInput(id: number, input: EventInput) {
       personIds: input.personIds,
       polityIds: input.polityIds,
       dynastyIds: input.dynastyIds,
-      periodIds: input.periodIds,
       religionIds: input.religionIds,
       sectIds: input.sectIds,
       regionIds: input.regionIds,
@@ -793,7 +778,6 @@ function buildEventHistorySnapshot(id: number) {
     personIds: links.personLinks.map((link) => link.personId),
     polityIds: links.polityLinks.map((link) => link.polityId),
     dynastyIds: links.dynastyLinks.map((link) => link.dynastyId),
-    periodIds: links.periodLinks.map((link) => link.periodId),
     religionIds: links.religionLinks.map((link) => link.religionId),
     sectIds: links.sectLinks.map((link) => link.sectId),
     regionIds: links.regionLinks.map((link) => link.regionId),
@@ -835,10 +819,14 @@ function toStandaloneYearLabel(
     return null;
   }
 
-  const start = `${startYear}${startEra === "BCE" ? " BCE" : ""}`;
+  const start = formatYearWithEra(startEra, startYear);
   const resolvedEndYear = endYear ?? startYear;
   const resolvedEndEra = endEra ?? startEra;
-  const end = `${resolvedEndYear}${resolvedEndEra === "BCE" ? " BCE" : ""}`;
+  const end = formatYearWithEra(resolvedEndEra, resolvedEndYear);
+
+  if (!start || !end) {
+    return null;
+  }
 
   return start === end ? start : `${start} - ${end}`;
 }

@@ -21,7 +21,6 @@ export default function NewEventPage() {
         personIds: [],
         polityIds: [],
         dynastyIds: [],
-        periodIds: [],
         religionIds: [],
         sectIds: [],
         regionIds: [],

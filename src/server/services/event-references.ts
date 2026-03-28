@@ -1,8 +1,7 @@
-import { getEraLabel, getEventTypeLabel } from "@/lib/master-labels";
-import { formatTimeExpression } from "@/lib/time-expression/format";
+import { getEventTypeLabel } from "@/lib/master-labels";
+import { formatTimeExpression, formatYearWithEra } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import { listDynasties } from "@/server/repositories/dynasties";
-import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
@@ -37,7 +36,6 @@ export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSumma
   const personById = new Map(listPersonDetailed().map((item) => [item.id, item.name]));
   const politiesById = new Map(listPolities().map((item) => [item.id, item.name]));
   const dynastiesById = new Map(listDynasties().map((item) => [item.id, item.name]));
-  const periodsById = new Map(listHistoricalPeriods().map((item) => [item.id, item.name]));
   const religionsById = new Map(listReligions().map((item) => [item.id, item.name]));
   const sectsById = new Map(listSects().map((item) => [item.id, item.name]));
   const regionsById = new Map(listRegions().map((item) => [item.id, item.name]));
@@ -54,7 +52,6 @@ export function getRelatedEvents(filter: RelatedEventsFilter): RelatedEventSumma
         personById,
         politiesById,
         dynastiesById,
-        periodsById,
         religionsById,
         sectsById,
         regionsById,
@@ -84,7 +81,7 @@ function matchesEventFilter(
     return false;
   }
 
-  if (filter.periodId && !links.periodLinks.some((link) => link.eventId === eventId && link.periodId === filter.periodId)) {
+  if (filter.periodId) {
     return false;
   }
 
@@ -140,10 +137,12 @@ function toStandaloneYearLabel(
 
   const resolvedEnd = endYear ?? startYear;
   const resolvedEndEra = endEra ?? startEra;
-  const startSuffix = startEra ? ` ${getEraLabel(startEra)}` : "";
-  const endSuffix = resolvedEndEra ? ` ${getEraLabel(resolvedEndEra)}` : "";
-  const start = `${startYear}${startSuffix}`;
-  const end = `${resolvedEnd}${endSuffix}`;
+  const start = formatYearWithEra(startEra, startYear);
+  const end = formatYearWithEra(resolvedEndEra, resolvedEnd);
+
+  if (!start || !end) {
+    return null;
+  }
 
   return start === end ? start : `${start} - ${end}`;
 }
@@ -155,7 +154,6 @@ function summarizeEventLinks(
     personById: Map<number, string>;
     politiesById: Map<number, string>;
     dynastiesById: Map<number, string>;
-    periodsById: Map<number, string>;
     religionsById: Map<number, string>;
     sectsById: Map<number, string>;
     regionsById: Map<number, string>;
@@ -172,9 +170,6 @@ function summarizeEventLinks(
     ...links.dynastyLinks
       .filter((link) => link.eventId === eventId)
       .map((link) => dictionaries.dynastiesById.get(link.dynastyId)),
-    ...links.periodLinks
-      .filter((link) => link.eventId === eventId)
-      .map((link) => dictionaries.periodsById.get(link.periodId)),
     ...links.religionLinks
       .filter((link) => link.eventId === eventId)
       .map((link) => dictionaries.religionsById.get(link.religionId)),

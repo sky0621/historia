@@ -22,14 +22,6 @@ CREATE TABLE `event_dynasty_links` (
 CREATE INDEX `idx_event_dynasty_links_event_id` ON `event_dynasty_links` (`event_id`);
 CREATE INDEX `idx_event_dynasty_links_dynasty_id` ON `event_dynasty_links` (`dynasty_id`);
 
--- 出来事と時代区分の関連
-CREATE TABLE `event_period_links` (
-  `event_id` integer NOT NULL REFERENCES `events`(`id`), -- 出来事ID
-  `period_id` integer NOT NULL REFERENCES `historical_periods`(`id`) -- 時代区分ID
-);
-CREATE INDEX `idx_event_period_links_event_id` ON `event_period_links` (`event_id`);
-CREATE INDEX `idx_event_period_links_period_id` ON `event_period_links` (`period_id`);
-
 -- 出来事と宗教の関連
 CREATE TABLE `event_religion_links` (
   `event_id` integer NOT NULL REFERENCES `events`(`id`), -- 出来事ID

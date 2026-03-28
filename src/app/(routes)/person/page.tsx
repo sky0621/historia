@@ -14,11 +14,10 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
   const regionId = getNumericParam(params.regionId);
   const religionId = getNumericParam(params.religionId);
   const sectId = getNumericParam(params.sectId);
-  const periodId = getNumericParam(params.periodId);
   const polityId = getNumericParam(params.polityId);
   const dynastyId = getNumericParam(params.dynastyId);
   const hasRoles = getSingleParam(params.hasRoles) === "1";
-  const person = getPersonListView({ query, regionId, religionId, sectId, periodId, polityId, dynastyId, hasRoles });
+  const person = getPersonListView({ query, regionId, religionId, sectId, polityId, dynastyId, hasRoles });
   const options = getPersonFormOptions();
 
   return (
@@ -27,7 +26,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
         <div>
           <h1 className="text-3xl font-semibold">人物</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            生没年、役職履歴、関連地域、宗教、時代区分を管理します。
+            生没年、役職履歴、関連地域、宗教を管理します。
           </p>
         </div>
         <Link href="/person/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
@@ -69,17 +68,6 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
             {options.sects.map((sect) => (
               <option key={sect.id} value={sect.id}>
                 {sect.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">時代区分</span>
-          <select name="periodId" defaultValue={periodId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
-            <option value="">すべて</option>
-            {options.periods.map((period) => (
-              <option key={period.id} value={period.id}>
-                {period.name}
               </option>
             ))}
           </select>
@@ -131,7 +119,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">読み方</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">生没年</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">役職</th>
-              <th className="px-5 py-4 font-semibold text-[var(--muted)]">宗教・時代区分</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">宗教・宗派</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">地域</th>
             </tr>
           </thead>
@@ -184,8 +172,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
                   <td className="px-5 py-4 text-[var(--muted)]">
                     {renderLinkedNames([
                       ...person.religionIds.map((id, index) => ({ id, name: person.religionNames[index], route: "religions" as const })),
-                      ...person.sectIds.map((id, index) => ({ id, name: person.sectNames[index], route: "sects" as const })),
-                      ...person.periodIds.map((id, index) => ({ id, name: person.periodNames[index], route: "periods" as const }))
+                      ...person.sectIds.map((id, index) => ({ id, name: person.sectNames[index], route: "sects" as const }))
                     ])}
                   </td>
                   <td className="px-5 py-4 text-[var(--muted)]">
@@ -221,10 +208,10 @@ function renderLinkedNames(
   items: Array<{
     id: number;
     name: string | undefined;
-    route: "religions" | "sects" | "periods" | "regions";
+    route: "religions" | "sects" | "regions";
   }>
 ) {
-  const filtered = items.filter((item): item is { id: number; name: string; route: "religions" | "sects" | "periods" | "regions" } => Boolean(item.name));
+  const filtered = items.filter((item): item is { id: number; name: string; route: "religions" | "sects" | "regions" } => Boolean(item.name));
 
   if (filtered.length === 0) {
     return "-";

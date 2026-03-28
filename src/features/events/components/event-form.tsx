@@ -49,7 +49,6 @@ type Props = {
     person: Option[];
     polities: Option[];
     dynasties: Option[];
-    periods: Option[];
     religions: Option[];
     sects: Option[];
     tags: Option[];
@@ -67,7 +66,6 @@ type Props = {
     personIds: number[];
     polityIds: number[];
     dynastyIds: number[];
-    periodIds: number[];
     religionIds: number[];
     sectIds: number[];
     regionIds: number[];
@@ -195,7 +193,6 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
         <SelectionGroup name="polityIds" label="国家" options={options.polities} selectedIds={defaultValues?.polityIds ?? []} />
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
-        <SelectionGroup name="periodIds" label="時代区分" options={options.periods} selectedIds={defaultValues?.periodIds ?? []} />
         <SelectionGroup name="religionIds" label="宗教" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
         <SelectionGroup name="sectIds" label="宗派" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
         <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} />

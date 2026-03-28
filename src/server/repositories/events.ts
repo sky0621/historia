@@ -5,7 +5,6 @@ import {
   eventConflictOutcomes,
   eventConflictParticipants,
   eventDynastyLinks,
-  eventPeriodLinks,
   eventPersonLinks,
   eventPolityLinks,
   eventRegionLinks,
@@ -49,7 +48,6 @@ export function replaceEventLinks(
     personIds: number[];
     polityIds: number[];
     dynastyIds: number[];
-    periodIds: number[];
     religionIds: number[];
     sectIds: number[];
     regionIds: number[];
@@ -59,7 +57,6 @@ export function replaceEventLinks(
   db.delete(eventPersonLinks).where(eq(eventPersonLinks.eventId, eventId)).run();
   db.delete(eventPolityLinks).where(eq(eventPolityLinks.eventId, eventId)).run();
   db.delete(eventDynastyLinks).where(eq(eventDynastyLinks.eventId, eventId)).run();
-  db.delete(eventPeriodLinks).where(eq(eventPeriodLinks.eventId, eventId)).run();
   db.delete(eventReligionLinks).where(eq(eventReligionLinks.eventId, eventId)).run();
   db.delete(eventSectLinks).where(eq(eventSectLinks.eventId, eventId)).run();
   db.delete(eventRegionLinks).where(eq(eventRegionLinks.eventId, eventId)).run();
@@ -73,9 +70,6 @@ export function replaceEventLinks(
   }
   if (links.dynastyIds.length > 0) {
     db.insert(eventDynastyLinks).values(links.dynastyIds.map((dynastyId) => ({ eventId, dynastyId }))).run();
-  }
-  if (links.periodIds.length > 0) {
-    db.insert(eventPeriodLinks).values(links.periodIds.map((periodId) => ({ eventId, periodId }))).run();
   }
   if (links.religionIds.length > 0) {
     db.insert(eventReligionLinks).values(links.religionIds.map((religionId) => ({ eventId, religionId }))).run();
@@ -151,7 +145,6 @@ export function getEventLinks(eventIds: number[]) {
       personLinks: [],
       polityLinks: [],
       dynastyLinks: [],
-      periodLinks: [],
       religionLinks: [],
       sectLinks: [],
       regionLinks: [],
@@ -163,7 +156,6 @@ export function getEventLinks(eventIds: number[]) {
     personLinks: db.select().from(eventPersonLinks).where(inArray(eventPersonLinks.eventId, eventIds)).all(),
     polityLinks: db.select().from(eventPolityLinks).where(inArray(eventPolityLinks.eventId, eventIds)).all(),
     dynastyLinks: db.select().from(eventDynastyLinks).where(inArray(eventDynastyLinks.eventId, eventIds)).all(),
-    periodLinks: db.select().from(eventPeriodLinks).where(inArray(eventPeriodLinks.eventId, eventIds)).all(),
     religionLinks: db.select().from(eventReligionLinks).where(inArray(eventReligionLinks.eventId, eventIds)).all(),
     sectLinks: db.select().from(eventSectLinks).where(inArray(eventSectLinks.eventId, eventIds)).all(),
     regionLinks: db.select().from(eventRegionLinks).where(inArray(eventRegionLinks.eventId, eventIds)).all(),
@@ -228,7 +220,6 @@ export function deleteEventLinksAndRelations(eventId: number) {
   db.delete(eventPersonLinks).where(eq(eventPersonLinks.eventId, eventId)).run();
   db.delete(eventPolityLinks).where(eq(eventPolityLinks.eventId, eventId)).run();
   db.delete(eventDynastyLinks).where(eq(eventDynastyLinks.eventId, eventId)).run();
-  db.delete(eventPeriodLinks).where(eq(eventPeriodLinks.eventId, eventId)).run();
   db.delete(eventReligionLinks).where(eq(eventReligionLinks.eventId, eventId)).run();
   db.delete(eventSectLinks).where(eq(eventSectLinks.eventId, eventId)).run();
   db.delete(eventRegionLinks).where(eq(eventRegionLinks.eventId, eventId)).run();

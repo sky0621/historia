@@ -27,21 +27,7 @@ export default async function HistoricalPeriodDetailPage({
           <h1 className="mt-2 text-3xl font-semibold">{view.period.name}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">期間: {view.timeLabel}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {view.relatedEvents.length > 0 ? (
-              <Link href={`/events?periodId=${view.period.id}`} className="underline-offset-4 hover:underline">
-                関連イベント {view.relatedEvents.length} 件
-              </Link>
-            ) : (
-              "関連イベント 0 件"
-            )}{" "}
-            /{" "}
-            {view.relatedPerson.length > 0 ? (
-              <Link href={`/person?periodId=${view.period.id}`} className="underline-offset-4 hover:underline">
-                関連人物 {view.relatedPerson.length} 件
-              </Link>
-            ) : (
-              "関連人物 0 件"
-            )}
+            関連イベント {view.relatedEvents.length} 件 / 関連人物 {view.relatedPerson.length} 件
           </p>
         </div>
         <div className="flex gap-3">

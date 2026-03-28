@@ -65,11 +65,6 @@ export const eventDynastyLinks = sqliteTable("event_dynasty_links", {
   dynastyId: integer("dynasty_id").notNull()
 });
 
-export const eventPeriodLinks = sqliteTable("event_period_links", {
-  eventId: integer("event_id").notNull(),
-  periodId: integer("period_id").notNull()
-});
-
 export const eventReligionLinks = sqliteTable("event_religion_links", {
   eventId: integer("event_id").notNull(),
   religionId: integer("religion_id").notNull()
@@ -128,11 +123,6 @@ export const personReligionLinks = sqliteTable("person_religion_links", {
 export const personSectLinks = sqliteTable("person_sect_links", {
   personId: integer("person_id").notNull(),
   sectId: integer("sect_id").notNull()
-});
-
-export const personPeriodLinks = sqliteTable("person_period_links", {
-  personId: integer("person_id").notNull(),
-  periodId: integer("period_id").notNull()
 });
 
 export const religionFounderLinks = sqliteTable("religion_founder_links", {

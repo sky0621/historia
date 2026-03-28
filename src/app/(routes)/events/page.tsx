@@ -22,7 +22,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const religionId = getNumericParam(params.religionId);
   const sectId = getNumericParam(params.sectId);
   const regionId = getNumericParam(params.regionId);
-  const periodId = getNumericParam(params.periodId);
   const fromYear = getNumericParam(params.fromYear);
   const toYear = getNumericParam(params.toYear);
   const events = getEventsListView({
@@ -37,7 +36,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     religionId,
     sectId,
     regionId,
-    periodId,
     fromYear,
     toYear
   });
@@ -54,7 +52,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     religionId,
     sectId,
     regionId,
-    periodId,
     fromYear,
     toYear
   });
@@ -69,7 +66,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     religionId ? { label: "関連宗教", value: findOptionLabel(options.religions, religionId), href: buildFilterRemovalHref(currentParams, "religionId") } : null,
     sectId ? { label: "関連宗派", value: findOptionLabel(options.sects, sectId), href: buildFilterRemovalHref(currentParams, "sectId") } : null,
     regionId ? { label: "関連地域", value: findOptionLabel(options.regions, regionId), href: buildFilterRemovalHref(currentParams, "regionId") } : null,
-    periodId ? { label: "関連時代区分", value: findOptionLabel(options.periods, periodId), href: buildFilterRemovalHref(currentParams, "periodId") } : null,
     fromYear !== undefined ? { label: "開始年", value: String(fromYear), href: buildFilterRemovalHref(currentParams, "fromYear") } : null,
     toYear !== undefined ? { label: "終了年", value: String(toYear), href: buildFilterRemovalHref(currentParams, "toYear") } : null
   ].filter((item): item is { label: string; value: string; href: string } => Boolean(item?.value));
@@ -199,17 +195,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             {options.sects.map((sect) => (
               <option key={sect.id} value={sect.id}>
                 {sect.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">関連時代区分</span>
-          <select name="periodId" defaultValue={periodId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
-            <option value="">すべて</option>
-            {options.periods.map((period) => (
-              <option key={period.id} value={period.id}>
-                {period.name}
               </option>
             ))}
           </select>

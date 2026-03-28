@@ -3,18 +3,15 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { PersonInput, RoleAssignmentInput } from "@/features/person/schema";
-import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listDynasties } from "@/server/repositories/dynasties";
 import {
   createPerson,
   deletePerson,
   getPersonById,
-  getPersonPeriodLinks,
   getPersonRegionLinks,
   getPersonReligionLinks,
   getPersonSectLinks,
   listPersonDetailed,
-  replacePersonPeriodLinks,
   replacePersonRegionLinks,
   replacePersonReligionLinks,
   replacePersonSectLinks,
@@ -39,7 +36,6 @@ export function getPersonFormOptions() {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name })),
-    periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name })),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name }))
   };
@@ -50,7 +46,6 @@ type PersonListFilters = {
   regionId?: number;
   religionId?: number;
   sectId?: number;
-  periodId?: number;
   polityId?: number;
   dynastyId?: number;
   hasRoles?: boolean;
@@ -64,18 +59,15 @@ export function getPersonListView(filters: PersonListFilters = {}) {
   const regionLinks = getPersonRegionLinks(person.map((person) => person.id));
   const religionLinks = getPersonReligionLinks(person.map((person) => person.id));
   const sectLinks = getPersonSectLinks(person.map((person) => person.id));
-  const periodLinks = getPersonPeriodLinks(person.map((person) => person.id));
   const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
   const polities = listPolities();
   const dynasties = listDynasties();
   const religions = listReligions();
   const sects = listSects();
-  const periods = listHistoricalPeriods();
   const polityById = new Map(polities.map((polity) => [polity.id, polity.name]));
   const dynastyById = new Map(dynasties.map((dynasty) => [dynasty.id, dynasty.name]));
   const religionById = new Map(religions.map((religion) => [religion.id, religion.name]));
   const sectById = new Map(sects.map((sect) => [sect.id, sect.name]));
-  const periodById = new Map(periods.map((period) => [period.id, period.name]));
 
   return person
     .map((person) => ({
@@ -98,11 +90,6 @@ export function getPersonListView(filters: PersonListFilters = {}) {
         .map((link) => sectById.get(link.sectId))
         .filter((name): name is string => Boolean(name)),
       sectIds: sectLinks.filter((link) => link.personId === person.id).map((link) => link.sectId),
-      periodNames: periodLinks
-        .filter((link) => link.personId === person.id)
-        .map((link) => periodById.get(link.periodId))
-        .filter((name): name is string => Boolean(name)),
-      periodIds: periodLinks.filter((link) => link.personId === person.id).map((link) => link.periodId),
     roles: roles.filter((role) => role.personId === person.id).map((role) => ({
       ...role,
       affiliationName:
@@ -126,7 +113,6 @@ export function getPersonDetailView(id: number) {
   const regionLinks = getPersonRegionLinks([id]).map((link) => link.regionId);
   const religionLinks = getPersonReligionLinks([id]).map((link) => link.religionId);
   const sectLinks = getPersonSectLinks([id]).map((link) => link.sectId);
-  const periodLinks = getPersonPeriodLinks([id]).map((link) => link.periodId);
   const roles = getRoleAssignmentsByPersonIds([id]);
 
   return {
@@ -134,7 +120,6 @@ export function getPersonDetailView(id: number) {
     regions: options.regions.filter((item) => regionLinks.includes(item.id)),
     religions: options.religions.filter((item) => religionLinks.includes(item.id)),
     sects: options.sects.filter((item) => sectLinks.includes(item.id)),
-    periods: options.periods.filter((item) => periodLinks.includes(item.id)),
     relatedEvents: getRelatedEvents({ personId: id }),
     roles: roles.map((role) => ({
       ...role,
@@ -167,7 +152,6 @@ export function createPersonFromInput(input: PersonInput) {
     replacePersonRegionLinks(personId, input.regionIds);
     replacePersonReligionLinks(personId, input.religionIds);
     replacePersonSectLinks(personId, input.sectIds);
-    replacePersonPeriodLinks(personId, input.periodIds);
     replaceRoleAssignments(personId, input.roles.map((role) => ({
       personId,
       title: role.title,
@@ -205,7 +189,6 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
     replacePersonRegionLinks(id, input.regionIds);
     replacePersonReligionLinks(id, input.religionIds);
     replacePersonSectLinks(id, input.sectIds);
-    replacePersonPeriodLinks(id, input.periodIds);
     replaceRoleAssignments(id, input.roles.map((role) => ({
       personId: id,
       title: role.title,
@@ -232,7 +215,6 @@ export function removePerson(id: number) {
     replacePersonRegionLinks(id, []);
     replacePersonReligionLinks(id, []);
     replacePersonSectLinks(id, []);
-    replacePersonPeriodLinks(id, []);
     replaceRoleAssignments(id, []);
     deletePerson(id);
     recordChangeHistory({
@@ -438,7 +420,6 @@ function buildPersonHistorySnapshot(id: number) {
     regionIds: getPersonRegionLinks([id]).map((link) => link.regionId),
     religionIds: getPersonReligionLinks([id]).map((link) => link.religionId),
     sectIds: getPersonSectLinks([id]).map((link) => link.sectId),
-    periodIds: getPersonPeriodLinks([id]).map((link) => link.periodId),
     roles: getRoleAssignmentsByPersonIds([id])
   };
 }
@@ -452,11 +433,9 @@ function matchesPersonFilters(
     regionNames: string[];
     religionNames: string[];
     sectNames: string[];
-    periodNames: string[];
     regionIds: number[];
     religionIds: number[];
     sectIds: number[];
-    periodIds: number[];
     roles: Array<{ title: string; affiliationName: string; polityId: number | null; dynastyId: number | null }>;
     id: number;
   },
@@ -473,7 +452,6 @@ function matchesPersonFilters(
         person.regionNames.join(", "),
         person.religionNames.join(", "),
         person.sectNames.join(", "),
-        person.periodNames.join(", "),
         person.roles.map((role) => `${role.title} ${role.affiliationName}`.trim()).join(", ")
       ],
       query
@@ -495,10 +473,6 @@ function matchesPersonFilters(
   }
 
   if (filters.sectId && !person.sectIds.includes(filters.sectId)) {
-    return false;
-  }
-
-  if (filters.periodId && !person.periodIds.includes(filters.periodId)) {
     return false;
   }
 

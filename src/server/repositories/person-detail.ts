@@ -2,7 +2,6 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   persons,
-  personPeriodLinks,
   personRegionLinks,
   personReligionLinks,
   personSectLinks,
@@ -53,13 +52,6 @@ export function replacePersonSectLinks(personId: number, sectIds: number[]) {
   db.delete(personSectLinks).where(eq(personSectLinks.personId, personId)).run();
   if (sectIds.length > 0) {
     db.insert(personSectLinks).values(sectIds.map((sectId) => ({ personId, sectId }))).run();
-  }
-}
-
-export function replacePersonPeriodLinks(personId: number, periodIds: number[]) {
-  db.delete(personPeriodLinks).where(eq(personPeriodLinks.personId, personId)).run();
-  if (periodIds.length > 0) {
-    db.insert(personPeriodLinks).values(periodIds.map((periodId) => ({ personId, periodId }))).run();
   }
 }
 
@@ -114,9 +106,4 @@ export function getPersonReligionLinks(personIds: number[]) {
 export function getPersonSectLinks(personIds: number[]) {
   if (personIds.length === 0) return [];
   return db.select().from(personSectLinks).where(inArray(personSectLinks.personId, personIds)).all();
-}
-
-export function getPersonPeriodLinks(personIds: number[]) {
-  if (personIds.length === 0) return [];
-  return db.select().from(personPeriodLinks).where(inArray(personPeriodLinks.personId, personIds)).all();
 }

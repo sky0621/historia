@@ -459,7 +459,6 @@ export function previewEventCsvImport(rawCsv: string): CsvPreviewResult<EventInp
       personIds: resolveReferences("person", cells.person, references.person, issues),
       polityIds: resolveReferences("polities", cells.polities, references.polities, issues),
       dynastyIds: resolveReferences("dynasties", cells.dynasties, references.dynasties, issues),
-      periodIds: resolveReferences("periods", cells.periods, references.periods, issues),
       religionIds: resolveReferences("religions", cells.religions, references.religions, issues),
       sectIds: resolveReferences("sects", cells.sects, references.sects, issues),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
@@ -547,7 +546,6 @@ export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonI
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
       religionIds: resolveReferences("religions", cells.religions, references.religions, issues),
       sectIds: resolveReferences("sects", cells.sects, references.sects, issues),
-      periodIds: resolveReferences("periods", cells.periods, references.periods, issues),
       roles: []
     };
 

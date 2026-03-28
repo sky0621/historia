@@ -1,4 +1,5 @@
 import { getEventRelationTypeLabel, getEventTypeLabel } from "@/lib/master-labels";
+import { formatCalendarEraPrefix } from "@/lib/time-expression/format";
 import { listDynasties } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listPersonDetailed } from "@/server/repositories/person-detail";
@@ -416,7 +417,7 @@ function formatEmbeddedRange(
   if (startYear == null) {
     return "年未詳";
   }
-  const prefix = era === "BCE" ? "BCE " : "";
+  const prefix = formatCalendarEraPrefix(era);
   return endYear && endYear !== startYear ? `${prefix}${startYear}-${endYear}` : `${prefix}${startYear}`;
 }
 

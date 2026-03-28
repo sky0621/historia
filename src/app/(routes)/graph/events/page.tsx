@@ -18,7 +18,6 @@ export default async function GraphEventsPage({ searchParams }: GraphEventsPageP
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
   const regionId = getNumericParam(params.regionId);
-  const periodId = getNumericParam(params.periodId);
   const religionId = getNumericParam(params.religionId);
   const sectId = getNumericParam(params.sectId);
   const dynastyId = getNumericParam(params.dynastyId);
@@ -34,7 +33,6 @@ export default async function GraphEventsPage({ searchParams }: GraphEventsPageP
     personId,
     polityId,
     regionId,
-    periodId,
     religionId,
     sectId,
     dynastyId,
