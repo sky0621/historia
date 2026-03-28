@@ -35,7 +35,7 @@ export function getPersonFormOptions() {
   return {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
-    sects: listSects().map((item) => ({ id: item.id, name: item.name })),
+    sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name }))
   };

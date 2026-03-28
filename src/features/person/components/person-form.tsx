@@ -10,6 +10,8 @@ import { createPersonAction, updatePersonAction } from "@/features/person/action
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Option = { id: number; name: string; parentRegionId?: number | null };
+type ReligionOption = { id: number; name: string };
+type SectOption = { id: number; name: string; religionId: number };
 type RoleDefault = {
   title: string;
   polityId?: number | null;
@@ -26,8 +28,8 @@ type Props = {
   submitLabel: string;
   options: {
     regions: Option[];
-    religions: Option[];
-    sects: Option[];
+    religions: ReligionOption[];
+    sects: SectOption[];
     polities: Option[];
     dynasties: Option[];
   };
@@ -112,8 +114,12 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
 
         <div className="grid gap-6 xl:grid-cols-2">
           <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible hierarchical />
-          <SelectionGroup name="religionIds" label="宗教" description="信仰や所属する宗教を選択します。" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
-          <SelectionGroup name="sectIds" label="宗派" description="宗派や分派が分かる場合のみ追加します。" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
+          <ReligionSectSelectionGroup
+            religions={options.religions}
+            sects={options.sects}
+            selectedReligionIds={defaultValues?.religionIds ?? []}
+            selectedSectIds={defaultValues?.sectIds ?? []}
+          />
         </div>
 
         <SectionCard
@@ -380,6 +386,62 @@ function SelectionGroup({
     <fieldset className="historia-card rounded-[14px] p-5 sm:p-6">
       <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
       {content}
+    </fieldset>
+  );
+}
+
+function ReligionSectSelectionGroup({
+  religions,
+  sects,
+  selectedReligionIds,
+  selectedSectIds
+}: {
+  religions: ReligionOption[];
+  sects: SectOption[];
+  selectedReligionIds: number[];
+  selectedSectIds: number[];
+}) {
+  return (
+    <fieldset className="historia-card rounded-[14px] p-5 sm:p-6">
+      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">宗教</legend>
+      <p className="mt-2 text-sm leading-7 text-[var(--muted-strong)]">信仰や所属する宗教を選択し、分かる場合のみ対応する宗派を追加します。</p>
+      <div className="mt-5">
+        {religions.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-4 text-sm text-[var(--muted)]">
+            選択肢はまだありません。
+          </p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {religions.map((religion) => {
+              const relatedSects = sects.filter((sect) => sect.religionId === religion.id);
+
+              return (
+                <div key={religion.id} className="rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3">
+                  <label className="flex items-center gap-3 text-sm text-[var(--foreground)]">
+                    <input
+                      type="checkbox"
+                      name="religionIds"
+                      value={religion.id}
+                      defaultChecked={selectedReligionIds.includes(religion.id)}
+                    />
+                    {religion.name}
+                  </label>
+                  {relatedSects.length > 0 ? (
+                    <div className="mt-3 ml-6 grid gap-2 border-l border-[var(--border)] pl-4">
+                      {relatedSects.map((sect) => (
+                        <label key={sect.id} className="flex items-center gap-3 text-sm text-[var(--muted-strong)]">
+                          <input type="checkbox" name="sectIds" value={sect.id} defaultChecked={selectedSectIds.includes(sect.id)} />
+                          {sect.name}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </fieldset>
   );
 }

@@ -30,6 +30,8 @@ import {
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type Option = { id: number; name: string; parentRegionId?: number | null };
+type ReligionOption = { id: number; name: string };
+type SectOption = { id: number; name: string; religionId: number };
 type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" };
 type ParticipantDefault = {
   participantType: "polity" | "person" | "religion" | "sect";
@@ -51,8 +53,8 @@ type Props = {
     person: Option[];
     polities: Option[];
     dynasties: Option[];
-    religions: Option[];
-    sects: Option[];
+    religions: ReligionOption[];
+    sects: SectOption[];
     tags: Option[];
     regions: Option[];
     events: Option[];
@@ -195,8 +197,12 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
         <SelectionGroup name="polityIds" label="国家" options={options.polities} selectedIds={defaultValues?.polityIds ?? []} />
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
-        <SelectionGroup name="religionIds" label="宗教" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
-        <SelectionGroup name="sectIds" label="宗派" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
+        <ReligionSectSelectionGroup
+          religions={options.religions}
+          sects={options.sects}
+          selectedReligionIds={defaultValues?.religionIds ?? []}
+          selectedSectIds={defaultValues?.sectIds ?? []}
+        />
         <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible hierarchical />
 
         <section className={formCardClassName}>
@@ -554,6 +560,61 @@ function SelectionGroup({
     <fieldset className={formCardClassName}>
       <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
       {content}
+    </fieldset>
+  );
+}
+
+function ReligionSectSelectionGroup({
+  religions,
+  sects,
+  selectedReligionIds,
+  selectedSectIds
+}: {
+  religions: ReligionOption[];
+  sects: SectOption[];
+  selectedReligionIds: number[];
+  selectedSectIds: number[];
+}) {
+  return (
+    <fieldset className={formCardClassName}>
+      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">宗教</legend>
+      <div className="mt-3">
+        {religions.length === 0 ? (
+          <p className={emptyStateClassName}>選択肢はまだありません。</p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {religions.map((religion) => {
+              const relatedSects = sects.filter((sect) => sect.religionId === religion.id);
+
+              return (
+                <div key={religion.id} className={checkboxCardClassName}>
+                  <div className="w-full">
+                    <label className="flex items-center gap-3 text-sm text-[var(--foreground)]">
+                      <input
+                        type="checkbox"
+                        name="religionIds"
+                        value={religion.id}
+                        defaultChecked={selectedReligionIds.includes(religion.id)}
+                      />
+                      {religion.name}
+                    </label>
+                    {relatedSects.length > 0 ? (
+                      <div className="mt-3 ml-6 grid gap-2 border-l border-[var(--border)] pl-4">
+                        {relatedSects.map((sect) => (
+                          <label key={sect.id} className="flex items-center gap-3 text-sm text-[var(--muted-strong)]">
+                            <input type="checkbox" name="sectIds" value={sect.id} defaultChecked={selectedSectIds.includes(sect.id)} />
+                            {sect.name}
+                          </label>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </fieldset>
   );
 }
