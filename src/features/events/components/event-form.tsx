@@ -575,16 +575,18 @@ function ReligionSectSelectionGroup({
   selectedReligionIds: number[];
   selectedSectIds: number[];
 }) {
+  const defaultOpen = selectedReligionIds.length > 0 || selectedSectIds.length > 0;
+
   return (
-    <fieldset className={formCardClassName}>
-      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">宗教</legend>
-      <div className="mt-3">
+    <section className={formCardClassName}>
+      <CollapsibleFormSection title="宗教" defaultOpen={defaultOpen}>
         {religions.length === 0 ? (
           <p className={emptyStateClassName}>選択肢はまだありません。</p>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
             {religions.map((religion) => {
               const relatedSects = sects.filter((sect) => sect.religionId === religion.id);
+              const hasSelectedChild = relatedSects.some((sect) => selectedSectIds.includes(sect.id));
 
               return (
                 <div key={religion.id} className={checkboxCardClassName}>
@@ -599,14 +601,16 @@ function ReligionSectSelectionGroup({
                       {religion.name}
                     </label>
                     {relatedSects.length > 0 ? (
-                      <div className="mt-3 ml-6 grid gap-2 border-l border-[var(--border)] pl-4">
-                        {relatedSects.map((sect) => (
-                          <label key={sect.id} className="flex items-center gap-3 text-sm text-[var(--muted-strong)]">
-                            <input type="checkbox" name="sectIds" value={sect.id} defaultChecked={selectedSectIds.includes(sect.id)} />
-                            {sect.name}
-                          </label>
-                        ))}
-                      </div>
+                      <CollapsibleFormSection title="宗派" defaultOpen={hasSelectedChild} className="mt-3 ml-6 border-l border-[var(--border)] pl-4">
+                        <div className="grid gap-2">
+                          {relatedSects.map((sect) => (
+                            <label key={sect.id} className="flex items-center gap-3 text-sm text-[var(--muted-strong)]">
+                              <input type="checkbox" name="sectIds" value={sect.id} defaultChecked={selectedSectIds.includes(sect.id)} />
+                              {sect.name}
+                            </label>
+                          ))}
+                        </div>
+                      </CollapsibleFormSection>
                     ) : null}
                   </div>
                 </div>
@@ -614,7 +618,7 @@ function ReligionSectSelectionGroup({
             })}
           </div>
         )}
-      </div>
-    </fieldset>
+      </CollapsibleFormSection>
+    </section>
   );
 }
