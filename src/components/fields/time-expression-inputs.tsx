@@ -8,6 +8,7 @@ type Props = {
   includePrecision?: boolean;
   includeDisplayLabel?: boolean;
   includeEndYear?: boolean;
+  startYearLabel?: string;
 };
 
 export function TimeExpressionInputs({
@@ -16,7 +17,8 @@ export function TimeExpressionInputs({
   defaultValue,
   includePrecision = true,
   includeDisplayLabel = true,
-  includeEndYear = true
+  includeEndYear = true,
+  startYearLabel = "開始年"
 }: Props) {
   return (
     <fieldset className="historia-inset rounded-[14px] p-5 sm:p-6">
@@ -47,7 +49,7 @@ export function TimeExpressionInputs({
           </label>
         ) : null}
         <label className="grid gap-2 text-sm text-[var(--muted-strong)]">
-          <span className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">開始年</span>
+          <span className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">{startYearLabel}</span>
           <input
             name={`${prefix}.startYear`}
             defaultValue={defaultValue?.startYear ?? ""}

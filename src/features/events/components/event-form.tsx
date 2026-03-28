@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
+import {
+  checkboxCardClassName,
+  emptyStateClassName,
+  fieldLabelClassName,
+  fieldMetaClassName,
+  formCardClassName,
+  formErrorClassName,
+  formHeroClassName,
+  formHeroTextClassName,
+  formInsetClassName,
+  inputClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName
+} from "@/components/forms/styles";
+import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { createEventAction, updateEventAction } from "@/features/events/actions";
 import {
   eventConflictParticipantRoleOptions,
   eventConflictParticipantTypeOptions,
   eventRelationTypeOptions,
+  getEventTypeLabel,
   eventTypeOptions
 } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
@@ -69,7 +85,8 @@ type Props = {
 };
 
 export function EventForm({ title, description, submitLabel, options, defaultValues }: Props) {
-  const action = defaultValues?.id ? updateEventAction : createEventAction;
+  const [createState, createAction] = useActionState(createEventAction, initialCreateFormState);
+  const action = defaultValues?.id ? updateEventAction : createAction;
   const [eventType, setEventType] = useState<"general" | "war" | "rebellion" | "civil_war">(
     defaultValues?.eventType ?? "general"
   );
@@ -106,28 +123,29 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+      <div className={formHeroClassName}>
         <h1 className="text-3xl font-semibold">{title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">{description}</p>
+        <p className={formHeroTextClassName}>{description}</p>
       </div>
 
-      <form action={action} className="space-y-6 rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+      <form action={action} className="space-y-6">
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
         <input type="hidden" name="relationCount" value={relationCount} />
         <input type="hidden" name="participantCount" value={participantCount} />
 
+        <section className={formCardClassName}>
         <div className="grid gap-5">
-          <label className="grid gap-2 text-sm">
-            <span>タイトル</span>
-            <input name="title" defaultValue={defaultValues?.title ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>タイトル</span>
+            <input name="title" defaultValue={defaultValues?.title ?? ""} className={inputClassName} required />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>種別</span>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>種別</span>
             <select
               name="eventType"
               value={eventType}
               onChange={(event) => setEventType(event.target.value as "general" | "war" | "rebellion" | "civil_war")}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
             >
               {eventTypeOptions
                 .filter((option) => ["general", "war", "rebellion", "civil_war"].includes(option.value))
@@ -138,24 +156,40 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                 ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>説明</span>
-            <textarea name="description" defaultValue={defaultValues?.description ?? ""} className="min-h-36 rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>説明</span>
+            <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-36 ${inputClassName}`} />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>タグ</span>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>タグ</span>
             <input
               name="tags"
               defaultValue={defaultValues?.tags.join(", ") ?? ""}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               placeholder="戦争, 宗教, 文化"
             />
           </label>
         </div>
+        </section>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <TimeExpressionInputs prefix="fromTime" label="開始年" defaultValue={defaultValues?.fromTimeExpression} includeEndYear={false} />
-          <TimeExpressionInputs prefix="toTime" label="終了年" defaultValue={defaultValues?.toTimeExpression} includeEndYear={false} />
+          <TimeExpressionInputs
+            prefix="fromTime"
+            label="開始年"
+            defaultValue={defaultValues?.fromTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
+          <TimeExpressionInputs
+            prefix="toTime"
+            label="終了年"
+            defaultValue={defaultValues?.toTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+            startYearLabel="終了年"
+          />
         </div>
 
         <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
@@ -166,16 +200,16 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <SelectionGroup name="sectIds" label="宗派" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
         <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} />
 
-        <section className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
+        <section className={formCardClassName}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-[var(--muted)]">関連イベント</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">前後関係や因果関係を登録します。</p>
+              <h2 className="text-lg font-semibold text-[var(--foreground-strong)]">関連イベント</h2>
+              <p className="mt-1 text-sm text-[var(--muted-strong)]">前後関係や因果関係を登録します。</p>
             </div>
             <button
               type="button"
               onClick={() => setRelationCount((count) => count + 1)}
-              className="rounded-full border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground-contrast)] hover:border-[var(--accent-strong)]"
+              className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground)] hover:border-[var(--accent-strong)]"
             >
               関係を追加
             </button>
@@ -184,13 +218,13 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             {Array.from({ length: relationCount }).map((_, index) => {
               const relation = defaultValues?.relations[index];
               return (
-                <div key={index} className="grid gap-4 rounded-2xl border border-[var(--border)] p-4 lg:grid-cols-[1fr,200px]">
-                  <label className="grid gap-2 text-sm">
-                    <span>対象イベント</span>
+                <div key={index} className={`${formInsetClassName} grid gap-4 lg:grid-cols-[1fr,200px]`}>
+                  <label className={fieldLabelClassName}>
+                    <span className={fieldMetaClassName}>対象イベント</span>
                     <select
                       name={`relations.${index}.toEventId`}
                       defaultValue={relation?.toEventId ?? ""}
-                      className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      className={inputClassName}
                     >
                       <option value="">未設定</option>
                       {options.events.map((item) => (
@@ -200,12 +234,12 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                       ))}
                     </select>
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>関係種別</span>
+                  <label className={fieldLabelClassName}>
+                    <span className={fieldMetaClassName}>関係種別</span>
                     <select
                       name={`relations.${index}.relationType`}
                       defaultValue={relation?.relationType ?? "related"}
-                      className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      className={inputClassName}
                     >
                       {eventRelationTypeOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -220,18 +254,20 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
+        <section className={formCardClassName}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-[var(--muted)]">戦争・乱の専用項目</h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {isConflictEvent ? "参加勢力と結果要約を登録します。" : "種別を war / rebellion / civil_war にすると入力できます。"}
+              <h2 className="text-lg font-semibold text-[var(--foreground-strong)]">戦争・乱の専用項目</h2>
+              <p className="mt-1 text-sm text-[var(--muted-strong)]">
+                {isConflictEvent
+                  ? "参加勢力と結果要約を登録します。"
+                  : `種別を ${getEventTypeLabel("war")} / ${getEventTypeLabel("rebellion")} / ${getEventTypeLabel("civil_war")} にすると入力できます。`}
               </p>
             </div>
           </div>
 
           {!isConflictEvent ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-[var(--border)] px-4 py-6 text-sm text-[var(--muted)]">
+            <div className={`mt-4 ${emptyStateClassName}`}>
               通常イベントでは戦争・乱の専用項目は使用しません。
             </div>
           ) : (
@@ -239,13 +275,13 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-[var(--muted)]">参加勢力</h3>
-                    <p className="mt-1 text-sm text-[var(--muted)]">国家、人物、宗教、宗派から参加主体を選択します。</p>
+                    <h3 className="text-base font-semibold text-[var(--foreground-strong)]">参加勢力</h3>
+                    <p className="mt-1 text-sm text-[var(--muted-strong)]">国家、人物、宗教、宗派から参加主体を選択します。</p>
                   </div>
                   <button
                     type="button"
                     onClick={addParticipant}
-                    className="rounded-full border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground-contrast)] hover:border-[var(--accent-strong)]"
+                    className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground)] hover:border-[var(--accent-strong)]"
                   >
                     参加者を追加
                   </button>
@@ -256,17 +292,17 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                   const participantOptions = getParticipantOptions(participantType, options);
 
                   return (
-                    <div key={index} className="space-y-4 rounded-2xl border border-[var(--border)] p-4">
+                    <div key={index} className={`space-y-4 ${formInsetClassName}`}>
                       <div className="grid gap-4 lg:grid-cols-3">
-                        <label className="grid gap-2 text-sm">
-                          <span>主体種別</span>
+                        <label className={fieldLabelClassName}>
+                          <span className={fieldMetaClassName}>主体種別</span>
                           <select
                             name={`participants.${index}.participantType`}
                             value={participantType}
                             onChange={(event) =>
                               updateParticipantType(index, event.target.value as ParticipantDefault["participantType"])
                             }
-                            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                            className={inputClassName}
                           >
                             {eventConflictParticipantTypeOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -275,13 +311,13 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                             ))}
                           </select>
                         </label>
-                        <label className="grid gap-2 text-sm">
-                          <span>対象</span>
+                        <label className={fieldLabelClassName}>
+                          <span className={fieldMetaClassName}>対象</span>
                           <select
                             name={`participants.${index}.participantId`}
                             value={participantIds[index] > 0 ? String(participantIds[index]) : ""}
                             onChange={(event) => updateParticipantId(index, Number(event.target.value) || 0)}
-                            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                            className={inputClassName}
                           >
                             <option value="">未設定</option>
                             {participantOptions.map((item) => (
@@ -291,12 +327,12 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                             ))}
                           </select>
                         </label>
-                        <label className="grid gap-2 text-sm">
-                          <span>役割</span>
+                        <label className={fieldLabelClassName}>
+                          <span className={fieldMetaClassName}>役割</span>
                           <select
                             name={`participants.${index}.role`}
                             defaultValue={participant?.role ?? "other"}
-                            className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                            className={inputClassName}
                           >
                             {eventConflictParticipantRoleOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -306,12 +342,12 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                           </select>
                         </label>
                       </div>
-                      <label className="grid gap-2 text-sm">
-                        <span>メモ</span>
+                      <label className={fieldLabelClassName}>
+                        <span className={fieldMetaClassName}>メモ</span>
                         <textarea
                           name={`participants.${index}.note`}
                           defaultValue={participant?.note ?? ""}
-                          className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                          className={`min-h-24 ${inputClassName}`}
                         />
                       </label>
                     </div>
@@ -320,7 +356,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-[var(--muted)]">結果要約</h3>
+                <h3 className="text-base font-semibold text-[var(--foreground-strong)]">結果要約</h3>
                 <div className="grid gap-6 lg:grid-cols-2">
                   <OutcomeParticipantSelection
                     label="勝者側参加勢力"
@@ -336,36 +372,36 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
                   />
                 </div>
                 <div className="grid gap-4">
-                  <label className="grid gap-2 text-sm">
-                    <span>勝者側</span>
+                  <label className={fieldLabelClassName}>
+                    <span className={fieldMetaClassName}>勝者側</span>
                     <textarea
                       name="conflictOutcome.winnerSummary"
                       defaultValue={defaultValues?.conflictOutcome?.winnerSummary ?? ""}
-                      className="min-h-20 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      className={`min-h-20 ${inputClassName}`}
                     />
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>敗者側</span>
+                  <label className={fieldLabelClassName}>
+                    <span className={fieldMetaClassName}>敗者側</span>
                     <textarea
                       name="conflictOutcome.loserSummary"
                       defaultValue={defaultValues?.conflictOutcome?.loserSummary ?? ""}
-                      className="min-h-20 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      className={`min-h-20 ${inputClassName}`}
                     />
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>決着要約</span>
+                  <label className={fieldLabelClassName}>
+                    <span className={fieldMetaClassName}>決着要約</span>
                     <textarea
                       name="conflictOutcome.resolutionSummary"
                       defaultValue={defaultValues?.conflictOutcome?.resolutionSummary ?? ""}
-                      className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      className={`min-h-24 ${inputClassName}`}
                     />
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span>補足メモ</span>
+                  <label className={fieldLabelClassName}>
+                    <span className={fieldMetaClassName}>補足メモ</span>
                     <textarea
                       name="conflictOutcome.note"
                       defaultValue={defaultValues?.conflictOutcome?.note ?? ""}
-                      className="min-h-24 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+                      className={`min-h-24 ${inputClassName}`}
                     />
                   </label>
                 </div>
@@ -374,11 +410,15 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           )}
         </section>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-[var(--button-foreground-contrast)]"
-          >
+        {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}
+
+        <div className="flex justify-end gap-3">
+          {!defaultValues?.id ? (
+            <button type="submit" name="intent" value="create-and-continue" className={secondaryButtonClassName}>
+              続けて作成
+            </button>
+          ) : null}
+          <button type="submit" className={primaryButtonClassName}>
             {submitLabel}
           </button>
         </div>
@@ -451,14 +491,14 @@ function OutcomeParticipantSelection({
   selectedValues: string[];
 }) {
   return (
-    <fieldset className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
-      <legend className="px-2 text-sm font-semibold text-[var(--muted)]">{label}</legend>
+    <fieldset className={formCardClassName}>
+      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
       <div className="mt-3 grid gap-3">
         {participants.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">先に参加勢力を選択してください。</p>
+          <p className={emptyStateClassName}>先に参加勢力を選択してください。</p>
         ) : (
           participants.map((participant) => (
-            <label key={participant.value} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+            <label key={participant.value} className={checkboxCardClassName}>
               <input type="checkbox" name={name} value={participant.value} defaultChecked={selectedValues.includes(participant.value)} />
               {participant.label}
             </label>
@@ -481,14 +521,14 @@ function SelectionGroup({
   selectedIds: number[];
 }) {
   return (
-    <fieldset className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
-      <legend className="px-2 text-sm font-semibold text-[var(--muted)]">{label}</legend>
+    <fieldset className={formCardClassName}>
+      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         {options.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">選択肢はまだありません。</p>
+          <p className={emptyStateClassName}>選択肢はまだありません。</p>
         ) : (
           options.map((option) => (
-            <label key={option.id} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+            <label key={option.id} className={checkboxCardClassName}>
               <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
               {option.name}
             </label>

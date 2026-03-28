@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { shouldContinueCreating } from "@/features/actions/create-intent";
+import type { CreateFormState } from "@/features/actions/create-form-state";
 import { parseHistoricalPeriodFormData, parsePeriodCategoryFormData } from "@/features/periods/schema";
+import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
+import { listPeriodCategories } from "@/server/repositories/period-categories";
 import {
   createHistoricalPeriodFromInput,
   removeHistoricalPeriod,
@@ -14,9 +18,17 @@ import {
   updatePeriodCategoryFromInput
 } from "@/server/services/period-categories";
 
-export async function createPeriodCategoryAction(formData: FormData) {
-  const id = createPeriodCategoryFromInput(parsePeriodCategoryFormData(formData));
+export async function createPeriodCategoryAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
+  const input = parsePeriodCategoryFormData(formData);
+  if (listPeriodCategories().some((category) => category.name === input.name)) {
+    return { error: "同じ名称のカテゴリが登録済みです。" };
+  }
+
+  const id = createPeriodCategoryFromInput(input);
   revalidatePath("/period-categories");
+  if (shouldContinueCreating(formData)) {
+    redirect("/period-categories/new");
+  }
   redirect(`/period-categories/${id}`);
 }
 
@@ -34,9 +46,17 @@ export async function deletePeriodCategoryAction(formData: FormData) {
   redirect("/period-categories");
 }
 
-export async function createHistoricalPeriodAction(formData: FormData) {
-  const id = createHistoricalPeriodFromInput(parseHistoricalPeriodFormData(formData));
+export async function createHistoricalPeriodAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
+  const input = parseHistoricalPeriodFormData(formData);
+  if (listHistoricalPeriods().some((period) => period.name === input.name)) {
+    return { error: "同じ名称の時代区分が登録済みです。" };
+  }
+
+  const id = createHistoricalPeriodFromInput(input);
   revalidatePath("/periods");
+  if (shouldContinueCreating(formData)) {
+    redirect("/periods/new");
+  }
   redirect(`/periods/${id}`);
 }
 

@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { shouldContinueCreating } from "@/features/actions/create-intent";
+import type { CreateFormState } from "@/features/actions/create-form-state";
 import { parseCitationFormData, parseSourceFormData } from "@/features/sources/schema";
+import { listSources } from "@/server/repositories/sources";
 import { applyImportPayload, previewImportPayload } from "@/server/services/import-export";
 import { recordImportRun } from "@/server/services/import-runs";
 import {
@@ -14,9 +17,17 @@ import {
   updateSourceFromInput
 } from "@/server/services/sources";
 
-export async function createSourceAction(formData: FormData) {
-  const id = createSourceFromInput(parseSourceFormData(formData));
+export async function createSourceAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
+  const input = parseSourceFormData(formData);
+  if (listSources().some((source) => source.title === input.title)) {
+    return { error: "同じタイトルの出典が登録済みです。" };
+  }
+
+  const id = createSourceFromInput(input);
   revalidatePath("/sources");
+  if (shouldContinueCreating(formData)) {
+    redirect("/sources/new");
+  }
   redirect(`/sources/${id}`);
 }
 
@@ -39,6 +50,9 @@ export async function createCitationAction(formData: FormData) {
   const id = createCitationFromInput(input);
   revalidatePath("/sources");
   revalidatePath(targetPath(input.targetType, input.targetId));
+  if (shouldContinueCreating(formData)) {
+    redirect(buildCitationNewPath(input.sourceId, input.targetType, input.targetId));
+  }
   redirect(`/citations/${id}/edit`);
 }
 
@@ -146,4 +160,13 @@ function targetPath(targetType: string, targetId: number) {
     default:
       return "/sources";
   }
+}
+
+function buildCitationNewPath(sourceId: number, targetType: string, targetId: number) {
+  const params = new URLSearchParams({
+    sourceId: String(sourceId),
+    targetType,
+    targetId: String(targetId)
+  });
+  return `/citations/new?${params.toString()}`;
 }

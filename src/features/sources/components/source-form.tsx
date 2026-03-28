@@ -1,3 +1,18 @@
+"use client";
+
+import { useActionState } from "react";
+import {
+  fieldLabelClassName,
+  fieldMetaClassName,
+  formCardClassName,
+  formErrorClassName,
+  formHeroClassName,
+  formHeroTextClassName,
+  inputClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName
+} from "@/components/forms/styles";
+import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createSourceAction, updateSourceAction } from "@/features/sources/actions";
 
 type SourceFormProps = {
@@ -16,52 +31,60 @@ type SourceFormProps = {
 };
 
 export function SourceForm({ title, description, submitLabel, defaultValues }: SourceFormProps) {
-  const action = defaultValues?.id ? updateSourceAction : createSourceAction;
+  const [createState, createAction] = useActionState(createSourceAction, initialCreateFormState);
+  const action = defaultValues?.id ? updateSourceAction : createAction;
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+      <div className={formHeroClassName}>
         <h1 className="text-3xl font-semibold">{title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">{description}</p>
+        <p className={formHeroTextClassName}>{description}</p>
       </div>
 
-      <form action={action} className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+      <form action={action} className={formCardClassName}>
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
 
         <div className="grid gap-5 md:grid-cols-2">
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>タイトル</span>
+          <label className={`${fieldLabelClassName} md:col-span-2`}>
+            <span className={fieldMetaClassName}>タイトル</span>
             <input
               name="title"
               defaultValue={defaultValues?.title ?? ""}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               required
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>著者</span>
-            <input name="author" defaultValue={defaultValues?.author ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>著者</span>
+            <input name="author" defaultValue={defaultValues?.author ?? ""} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>出版社 / 媒体</span>
-            <input name="publisher" defaultValue={defaultValues?.publisher ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>出版社 / 媒体</span>
+            <input name="publisher" defaultValue={defaultValues?.publisher ?? ""} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>刊行情報</span>
-            <input name="publishedAtLabel" defaultValue={defaultValues?.publishedAtLabel ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>刊行情報</span>
+            <input name="publishedAtLabel" defaultValue={defaultValues?.publishedAtLabel ?? ""} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>URL</span>
-            <input name="url" defaultValue={defaultValues?.url ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>URL</span>
+            <input name="url" defaultValue={defaultValues?.url ?? ""} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>メモ</span>
-            <textarea name="note" defaultValue={defaultValues?.note ?? ""} rows={6} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={`${fieldLabelClassName} md:col-span-2`}>
+            <span className={fieldMetaClassName}>メモ</span>
+            <textarea name="note" defaultValue={defaultValues?.note ?? ""} rows={6} className={inputClassName} />
           </label>
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <button type="submit" className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+        {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}
+
+        <div className="mt-8 flex justify-end gap-3">
+          {!defaultValues?.id ? (
+            <button type="submit" name="intent" value="create-and-continue" className={secondaryButtonClassName}>
+              続けて作成
+            </button>
+          ) : null}
+          <button type="submit" className={primaryButtonClassName}>
             {submitLabel}
           </button>
         </div>

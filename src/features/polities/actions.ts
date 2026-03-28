@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { shouldContinueCreating } from "@/features/actions/create-intent";
+import type { CreateFormState } from "@/features/actions/create-form-state";
 import { parseDynastyFormData, parsePolityFormData } from "@/features/polities/schema";
+import { listDynasties } from "@/server/repositories/dynasties";
+import { listPolities } from "@/server/repositories/polities";
 import {
   createDynastyFromInput,
   createPolityFromInput,
@@ -12,9 +16,17 @@ import {
   updatePolityFromInput
 } from "@/server/services/polities";
 
-export async function createPolityAction(formData: FormData) {
-  const id = createPolityFromInput(parsePolityFormData(formData));
+export async function createPolityAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
+  const input = parsePolityFormData(formData);
+  if (listPolities().some((polity) => polity.name === input.name)) {
+    return { error: "同じ名称の国家が登録済みです。" };
+  }
+
+  const id = createPolityFromInput(input);
   revalidatePath("/polities");
+  if (shouldContinueCreating(formData)) {
+    redirect("/polities/new");
+  }
   redirect(`/polities/${id}`);
 }
 
@@ -33,9 +45,17 @@ export async function deletePolityAction(formData: FormData) {
   redirect("/polities");
 }
 
-export async function createDynastyAction(formData: FormData) {
-  const id = createDynastyFromInput(parseDynastyFormData(formData));
+export async function createDynastyAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
+  const input = parseDynastyFormData(formData);
+  if (listDynasties().some((dynasty) => dynasty.name === input.name)) {
+    return { error: "同じ名称の王朝が登録済みです。" };
+  }
+
+  const id = createDynastyFromInput(input);
   revalidatePath("/dynasties");
+  if (shouldContinueCreating(formData)) {
+    redirect("/dynasties/new");
+  }
   redirect(`/dynasties/${id}`);
 }
 

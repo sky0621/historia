@@ -1,3 +1,13 @@
+import {
+  fieldLabelClassName,
+  fieldMetaClassName,
+  formCardClassName,
+  formHeroClassName,
+  formHeroTextClassName,
+  inputClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName
+} from "@/components/forms/styles";
 import { createCitationAction, updateCitationAction } from "@/features/sources/actions";
 import type { getCitationFormView } from "@/server/services/sources";
 
@@ -13,21 +23,21 @@ export function CitationForm({ title, description, submitLabel, view }: Citation
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+      <div className={formHeroClassName}>
         <h1 className="text-3xl font-semibold">{title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">{description}</p>
+        <p className={formHeroTextClassName}>{description}</p>
       </div>
 
-      <form action={action} className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+      <form action={action} className={formCardClassName}>
         {view.citation ? <input type="hidden" name="id" value={view.citation.id} /> : null}
 
         <div className="grid gap-5 md:grid-cols-2">
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>出典</span>
+          <label className={`${fieldLabelClassName} md:col-span-2`}>
+            <span className={fieldMetaClassName}>出典</span>
             <select
               name="sourceId"
               defaultValue={String(view.defaults.sourceId ?? "")}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               required
             >
               <option value="">選択してください</option>
@@ -38,12 +48,12 @@ export function CitationForm({ title, description, submitLabel, view }: Citation
               ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>対象種別</span>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>対象種別</span>
             <select
               name="targetType"
               defaultValue={String(view.defaults.targetType ?? "event")}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               required
             >
               {view.options.targetTypes.map((type) => (
@@ -53,48 +63,53 @@ export function CitationForm({ title, description, submitLabel, view }: Citation
               ))}
             </select>
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>対象 ID</span>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>対象 ID</span>
             <input
               name="targetId"
               type="number"
               min={1}
               defaultValue={view.defaults.targetId ?? ""}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               required
             />
           </label>
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>位置情報</span>
+          <label className={`${fieldLabelClassName} md:col-span-2`}>
+            <span className={fieldMetaClassName}>位置情報</span>
             <input
               name="locator"
               defaultValue={view.citation?.locator ?? ""}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               placeholder="ページ番号、章、節など"
             />
           </label>
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>引用メモ</span>
+          <label className={`${fieldLabelClassName} md:col-span-2`}>
+            <span className={fieldMetaClassName}>引用メモ</span>
             <textarea
               name="quote"
               defaultValue={view.citation?.quote ?? ""}
               rows={4}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
             />
           </label>
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>補足</span>
+          <label className={`${fieldLabelClassName} md:col-span-2`}>
+            <span className={fieldMetaClassName}>補足</span>
             <textarea
               name="note"
               defaultValue={view.citation?.note ?? ""}
               rows={4}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
             />
           </label>
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <button type="submit" className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+        <div className="mt-8 flex justify-end gap-3">
+          {!view.citation ? (
+            <button type="submit" name="intent" value="create-and-continue" className={secondaryButtonClassName}>
+              続けて作成
+            </button>
+          ) : null}
+          <button type="submit" className={primaryButtonClassName}>
             {submitLabel}
           </button>
         </div>

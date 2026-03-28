@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { HistoricalPeriodForm } from "@/features/periods/components/historical-period-form";
 import { getHistoricalPeriodFormOptions } from "@/server/services/historical-periods";
+
+export const metadata: Metadata = {
+  title: "period"
+};
 
 export default function NewPeriodPage() {
   return (

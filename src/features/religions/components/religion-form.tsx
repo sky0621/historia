@@ -1,4 +1,21 @@
+"use client";
+
+import { useActionState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
+import {
+  checkboxCardClassName,
+  emptyStateClassName,
+  fieldLabelClassName,
+  fieldMetaClassName,
+  formCardClassName,
+  formErrorClassName,
+  formHeroClassName,
+  formHeroTextClassName,
+  inputClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName
+} from "@/components/forms/styles";
+import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createReligionAction, updateReligionAction } from "@/features/religions/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
@@ -30,28 +47,31 @@ export function ReligionForm({
   founderOptions,
   defaultValues
 }: Props) {
-  const action = defaultValues?.id ? updateReligionAction : createReligionAction;
+  const [createState, createAction] = useActionState(createReligionAction, initialCreateFormState);
+  const action = defaultValues?.id ? updateReligionAction : createAction;
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+      <div className={formHeroClassName}>
         <h1 className="text-3xl font-semibold">{title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">{description}</p>
+        <p className={formHeroTextClassName}>{description}</p>
       </div>
 
-      <form action={action} className="space-y-6 rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+      <form action={action} className="space-y-6">
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
 
-        <div className="grid gap-5">
-          <label className="grid gap-2 text-sm">
-            <span>名称</span>
-            <input name="name" defaultValue={defaultValues?.name ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required />
+        <section className={formCardClassName}>
+          <div className="grid gap-5">
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>名称</span>
+            <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
           </label>
-          <label className="grid gap-2 text-sm">
-            <span>説明</span>
-            <textarea name="description" defaultValue={defaultValues?.description ?? ""} className="min-h-28 rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>説明</span>
+            <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
           </label>
-        </div>
+          </div>
+        </section>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <TimeExpressionInputs
@@ -69,14 +89,15 @@ export function ReligionForm({
             includePrecision={false}
             includeDisplayLabel={false}
             includeEndYear={false}
+            startYearLabel="終了年"
           />
         </div>
 
-        <fieldset className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
-          <legend className="px-2 text-sm font-semibold text-[var(--muted)]">関連地域</legend>
+        <fieldset className={formCardClassName}>
+          <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">関連地域</legend>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {regionOptions.map((region) => (
-              <label key={region.id} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+              <label key={region.id} className={checkboxCardClassName}>
                 <input type="checkbox" name="regionIds" value={region.id} defaultChecked={defaultValues?.regionIds.includes(region.id) ?? false} />
                 {region.name}
               </label>
@@ -84,14 +105,14 @@ export function ReligionForm({
           </div>
         </fieldset>
 
-        <fieldset className="rounded-[24px] border border-[var(--border)] bg-white/80 p-5">
-          <legend className="px-2 text-sm font-semibold text-[var(--muted)]">開祖</legend>
+        <fieldset className={formCardClassName}>
+          <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">開祖</legend>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {founderOptions.length === 0 ? (
-              <p className="text-sm text-[var(--muted)]">人物が未登録のため、開祖は後から追加できます。</p>
+              <p className={emptyStateClassName}>人物が未登録のため、開祖は後から追加できます。</p>
             ) : (
               founderOptions.map((person) => (
-                <label key={person.id} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                <label key={person.id} className={checkboxCardClassName}>
                   <input type="checkbox" name="founderIds" value={person.id} defaultChecked={defaultValues?.founderIds.includes(person.id) ?? false} />
                   {person.name}
                 </label>
@@ -100,13 +121,22 @@ export function ReligionForm({
           </div>
         </fieldset>
 
-        <label className="grid gap-2 text-sm">
-          <span>メモ</span>
-          <textarea name="note" defaultValue={defaultValues?.note ?? ""} className="min-h-32 rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
+        <section className={formCardClassName}>
+        <label className={fieldLabelClassName}>
+          <span className={fieldMetaClassName}>メモ</span>
+          <textarea name="note" defaultValue={defaultValues?.note ?? ""} className={`min-h-32 ${inputClassName}`} />
         </label>
+        </section>
 
-        <div className="flex justify-end">
-          <button type="submit" className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+        {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}
+
+        <div className="flex justify-end gap-3">
+          {!defaultValues?.id ? (
+            <button type="submit" name="intent" value="create-and-continue" className={secondaryButtonClassName}>
+              続けて作成
+            </button>
+          ) : null}
+          <button type="submit" className={primaryButtonClassName}>
             {submitLabel}
           </button>
         </div>

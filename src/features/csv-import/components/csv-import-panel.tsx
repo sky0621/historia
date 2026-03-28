@@ -535,8 +535,8 @@ function renderRoleAssignmentRow(row: CsvPreviewRow<RoleAssignmentCsvInput>) {
         <div className="mt-3 text-xs text-[var(--muted)]">
           <p>
             person: {row.input.personName}
-            {row.input.role.timeExpression?.startYear ? ` / from: ${row.input.role.timeExpression.startYear}` : ""}
-            {row.input.role.timeExpression?.endYear ? ` / to: ${row.input.role.timeExpression.endYear}` : ""}
+            {row.input.role.fromTimeExpression?.startYear ? ` / from: ${row.input.role.fromTimeExpression.startYear}` : ""}
+            {row.input.role.toTimeExpression?.startYear ? ` / to: ${row.input.role.toTimeExpression.startYear}` : ""}
           </p>
           <p>
             polity: {row.input.role.polityId ?? "-"}

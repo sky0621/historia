@@ -103,9 +103,9 @@ export function getPersonListView(filters: PersonListFilters = {}) {
         .map((link) => periodById.get(link.periodId))
         .filter((name): name is string => Boolean(name)),
       periodIds: periodLinks.filter((link) => link.personId === person.id).map((link) => link.periodId),
-      roles: roles.filter((role) => role.personId === person.id).map((role) => ({
-        ...role,
-        affiliationName:
+    roles: roles.filter((role) => role.personId === person.id).map((role) => ({
+      ...role,
+      affiliationName:
           (role.dynastyId ? dynastyById.get(role.dynastyId) : undefined) ??
           (role.polityId ? polityById.get(role.polityId) : undefined) ??
           ""
@@ -141,7 +141,8 @@ export function getPersonDetailView(id: number) {
       polityName: options.polities.find((item) => item.id === role.polityId)?.name ?? null,
       dynastyName: options.dynasties.find((item) => item.id === role.dynastyId)?.name ?? null,
       timeLabel: formatStoredTime("time", role),
-      defaultTimeExpression: extractTimeExpression("time", role)
+      defaultFromTimeExpression: extractRoleBoundaryTime("from", role),
+      defaultToTimeExpression: extractRoleBoundaryTime("to", role)
     })),
     defaultBirthTimeExpression: extractPersonTimeExpression("birth", person),
     defaultDeathTimeExpression: extractPersonTimeExpression("death", person),
@@ -174,7 +175,8 @@ export function createPersonFromInput(input: PersonInput) {
       dynastyId: role.dynastyId ?? null,
       note: nullable(role.note),
       isIncumbent: role.isIncumbent,
-      ...toStoredTime(role.timeExpression)
+      ...toStoredRoleTime("from", role.fromTimeExpression),
+      ...toStoredRoleTime("to", role.toTimeExpression)
     })));
 
     recordChangeHistory({
@@ -211,7 +213,8 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
       dynastyId: role.dynastyId ?? null,
       note: nullable(role.note),
       isIncumbent: role.isIncumbent,
-      ...toStoredTime(role.timeExpression)
+      ...toStoredRoleTime("from", role.fromTimeExpression),
+      ...toStoredRoleTime("to", role.toTimeExpression)
     })));
 
     recordChangeHistory({
@@ -261,7 +264,8 @@ export function appendRoleAssignmentsToPerson(id: number, roles: RoleAssignmentI
         dynastyId: role.dynastyId ?? null,
         note: nullable(role.note),
         isIncumbent: role.isIncumbent,
-        ...toStoredTime(role.timeExpression)
+        ...toStoredRoleTime("from", role.fromTimeExpression),
+        ...toStoredRoleTime("to", role.toTimeExpression)
       }))
     ]
   );
@@ -290,7 +294,8 @@ export function replaceRoleAssignmentsOnPerson(id: number, roles: RoleAssignment
       dynastyId: role.dynastyId ?? null,
       note: nullable(role.note),
       isIncumbent: role.isIncumbent,
-      ...toStoredTime(role.timeExpression)
+      ...toStoredRoleTime("from", role.fromTimeExpression),
+      ...toStoredRoleTime("to", role.toTimeExpression)
     }))
   );
 
@@ -323,6 +328,18 @@ function toStoredTime(value: TimeExpressionInput | undefined) {
   };
 }
 
+function toStoredRoleTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+
+  return {
+    [calendarEraKey]: value?.calendarEra ?? null,
+    [yearKey]: value?.startYear ?? null,
+    [approximateKey]: value?.isApproximate ?? false
+  };
+}
+
 function toStoredPersonTime(prefix: "birth" | "death", value: TimeExpressionInput | undefined) {
   const calendarEraKey = prefix === "birth" ? "fromCalendarEra" : "toCalendarEra";
   const yearKey = prefix === "birth" ? "fromYear" : "toYear";
@@ -344,6 +361,27 @@ function extractTimeExpression(_prefix: string, value: Record<string, unknown>) 
     precision: "year",
     displayLabel: null
   });
+}
+
+function extractRoleBoundaryTime(prefix: "from" | "to", value: Record<string, unknown>) {
+  const calendarEraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
+  const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
+  const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
+  const startYear = (value[yearKey] as number | null) ?? null;
+  const isApproximate = Boolean(value[approximateKey]);
+
+  if (startYear === null && !isApproximate && calendarEra == null) {
+    return undefined;
+  }
+
+  return {
+    calendarEra: calendarEra ?? "CE",
+    startYear: startYear ?? undefined,
+    isApproximate,
+    precision: "year",
+    displayLabel: ""
+  } satisfies TimeExpressionInput;
 }
 
 function extractPersonTimeExpression(prefix: "birth" | "death", value: Record<string, unknown>) {

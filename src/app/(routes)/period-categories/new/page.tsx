@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { PeriodCategoryForm } from "@/features/periods/components/period-category-form";
+
+export const metadata: Metadata = {
+  title: "category"
+};
 
 export default function NewPeriodCategoryPage() {
   return (

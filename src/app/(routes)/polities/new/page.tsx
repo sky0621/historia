@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { PolityForm } from "@/features/polities/components/polity-form";
 import { getRegionOptions } from "@/server/services/polities";
+
+export const metadata: Metadata = {
+  title: "polity"
+};
 
 export default function NewPolityPage() {
   return (

@@ -1,3 +1,18 @@
+"use client";
+
+import { useActionState } from "react";
+import {
+  fieldLabelClassName,
+  fieldMetaClassName,
+  formCardClassName,
+  formErrorClassName,
+  formHeroClassName,
+  formHeroTextClassName,
+  inputClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName
+} from "@/components/forms/styles";
+import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createPeriodCategoryAction, updatePeriodCategoryAction } from "@/features/periods/actions";
 
 type PeriodCategoryFormProps = {
@@ -17,44 +32,49 @@ export function PeriodCategoryForm({
   submitLabel,
   defaultValues
 }: PeriodCategoryFormProps) {
-  const action = defaultValues?.id ? updatePeriodCategoryAction : createPeriodCategoryAction;
+  const [createState, createAction] = useActionState(createPeriodCategoryAction, initialCreateFormState);
+  const action = defaultValues?.id ? updatePeriodCategoryAction : createAction;
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+      <div className={formHeroClassName}>
         <h1 className="text-3xl font-semibold">{title}</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">{description}</p>
+        <p className={formHeroTextClassName}>{description}</p>
       </div>
 
-      <form action={action} className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
+      <form action={action} className={formCardClassName}>
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
 
         <div className="grid gap-5">
-          <label className="grid gap-2 text-sm">
-            <span>名称</span>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>名称</span>
             <input
               name="name"
               defaultValue={defaultValues?.name ?? ""}
-              className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={inputClassName}
               required
             />
           </label>
 
-          <label className="grid gap-2 text-sm">
-            <span>説明</span>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>説明</span>
             <textarea
               name="description"
               defaultValue={defaultValues?.description ?? ""}
-              className="min-h-36 rounded-2xl border border-[var(--border)] bg-white px-3 py-2"
+              className={`min-h-36 ${inputClassName}`}
             />
           </label>
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <button
-            type="submit"
-            className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white"
-          >
+        {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}
+
+        <div className="mt-8 flex justify-end gap-3">
+          {!defaultValues?.id ? (
+            <button type="submit" name="intent" value="create-and-continue" className={secondaryButtonClassName}>
+              続けて作成
+            </button>
+          ) : null}
+          <button type="submit" className={primaryButtonClassName}>
             {submitLabel}
           </button>
         </div>

@@ -34,7 +34,8 @@ export default async function EditPersonPage({ params }: { params: Promise<{ id:
           dynastyId: role.dynastyId,
           note: role.note ?? "",
           isIncumbent: Boolean(role.isIncumbent),
-          timeExpression: role.defaultTimeExpression
+          fromTimeExpression: role.defaultFromTimeExpression,
+          toTimeExpression: role.defaultToTimeExpression
         }))
       }}
     />

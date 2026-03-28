@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { DynastyForm } from "@/features/polities/components/dynasty-form";
 import { getPolityOptions, getRegionOptions } from "@/server/services/polities";
+
+export const metadata: Metadata = {
+  title: "dynasty"
+};
 
 export default function NewDynastyPage() {
   return (

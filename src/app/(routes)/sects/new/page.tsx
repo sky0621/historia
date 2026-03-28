@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { SectForm } from "@/features/religions/components/sect-form";
 import { getFounderOptions, getParentSectOptions, getRegionOptions, getReligionOptions } from "@/server/services/religions";
+
+export const metadata: Metadata = {
+  title: "sect"
+};
 
 type NewSectPageProps = {
   searchParams?: Promise<{ religionId?: string; parentSectId?: string }>;

@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { PersonForm } from "@/features/person/components/person-form";
 import { getPersonFormOptions } from "@/server/services/person";
+
+export const metadata: Metadata = {
+  title: "person"
+};
 
 export default function NewPersonPage() {
   return (

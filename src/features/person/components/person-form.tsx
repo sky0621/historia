@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
+import { formErrorClassName, secondaryButtonClassName } from "@/components/forms/styles";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
+import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createPersonAction, updatePersonAction } from "@/features/person/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
@@ -12,7 +14,8 @@ type RoleDefault = {
   dynastyId?: number | null;
   note: string;
   isIncumbent: boolean;
-  timeExpression?: TimeExpressionInput;
+  fromTimeExpression?: TimeExpressionInput;
+  toTimeExpression?: TimeExpressionInput;
 };
 
 type Props = {
@@ -44,7 +47,8 @@ type Props = {
 };
 
 export function PersonForm({ title, description, submitLabel, options, defaultValues }: Props) {
-  const action = defaultValues?.id ? updatePersonAction : createPersonAction;
+  const [createState, createAction] = useActionState(createPersonAction, initialCreateFormState);
+  const action = defaultValues?.id ? updatePersonAction : createAction;
   const [roleCount, setRoleCount] = useState(Math.max(defaultValues?.roles.length ?? 0, 1));
 
   return (
@@ -189,11 +193,25 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
                   </div>
 
                   <div className="mt-5">
-                    <TimeExpressionInputs
-                      prefix={`roles.${index}.time`}
-                      label="在任期間"
-                      defaultValue={role?.timeExpression}
-                    />
+                    <div className="grid gap-6 xl:grid-cols-2">
+                      <TimeExpressionInputs
+                        prefix={`roles.${index}.fromTime`}
+                        label="開始年"
+                        defaultValue={role?.fromTimeExpression}
+                        includePrecision={false}
+                        includeDisplayLabel={false}
+                        includeEndYear={false}
+                      />
+                      <TimeExpressionInputs
+                        prefix={`roles.${index}.toTime`}
+                        label="終了年"
+                        defaultValue={role?.toTimeExpression}
+                        includePrecision={false}
+                        includeDisplayLabel={false}
+                        includeEndYear={false}
+                        startYearLabel="終了年"
+                      />
+                    </div>
                   </div>
 
                   <div className="mt-5">
@@ -225,7 +243,19 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
           </Field>
         </SectionCard>
 
-        <div className="flex justify-end">
+        {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}
+
+        <div className="flex justify-end gap-3">
+          {!defaultValues?.id ? (
+            <button
+              type="submit"
+              name="intent"
+              value="create-and-continue"
+              className={secondaryButtonClassName}
+            >
+              続けて作成
+            </button>
+          ) : null}
           <button
             type="submit"
             className="rounded-[14px] border border-[var(--accent-strong)] bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-[var(--button-foreground-contrast)] hover:bg-[var(--accent-strong)]"

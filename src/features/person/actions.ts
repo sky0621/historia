@@ -2,12 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { shouldContinueCreating } from "@/features/actions/create-intent";
+import type { CreateFormState } from "@/features/actions/create-form-state";
 import { parsePersonFormData } from "@/features/person/schema";
+import { listPerson } from "@/server/repositories/person";
 import { createPersonFromInput, removePerson, updatePersonFromInput } from "@/server/services/person";
 
-export async function createPersonAction(formData: FormData) {
-  const id = createPersonFromInput(parsePersonFormData(formData));
+export async function createPersonAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
+  const input = parsePersonFormData(formData);
+  if (listPerson().some((person) => person.name === input.name)) {
+    return { error: "同じ氏名の人物が登録済みです。" };
+  }
+
+  const id = createPersonFromInput(input);
   revalidatePath("/person");
+  if (shouldContinueCreating(formData)) {
+    redirect("/person/new");
+  }
   redirect(`/person/${id}`);
 }
 

@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { ReligionForm } from "@/features/religions/components/religion-form";
 import { getFounderOptions, getRegionOptions } from "@/server/services/religions";
+
+export const metadata: Metadata = {
+  title: "religion"
+};
 
 export default function NewReligionPage() {
   return (

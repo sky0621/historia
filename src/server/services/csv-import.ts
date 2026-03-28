@@ -2233,9 +2233,10 @@ function buildRoleAssignmentSyncKey(input: RoleAssignmentCsvInput) {
     input.role.title,
     input.role.polityId ?? "",
     input.role.dynastyId ?? "",
-    input.role.timeExpression?.calendarEra ?? "",
-    input.role.timeExpression?.startYear ?? "",
-    input.role.timeExpression?.endYear ?? ""
+    input.role.fromTimeExpression?.calendarEra ?? "",
+    input.role.fromTimeExpression?.startYear ?? "",
+    input.role.toTimeExpression?.calendarEra ?? "",
+    input.role.toTimeExpression?.startYear ?? ""
   ].join(":");
 }
 
@@ -2669,7 +2670,7 @@ function findRoleAssignmentDuplicateCandidates(
           : typeof roleRecord.timeStartYear === "number"
             ? roleRecord.timeStartYear
             : null;
-      if (existingStartYear !== (input.role.timeExpression?.startYear ?? null)) {
+      if (existingStartYear !== (input.role.fromTimeExpression?.startYear ?? null)) {
         return false;
       }
 
@@ -2679,7 +2680,7 @@ function findRoleAssignmentDuplicateCandidates(
           : typeof roleRecord.timeEndYear === "number"
             ? roleRecord.timeEndYear
             : null;
-      if (existingEndYear !== (input.role.timeExpression?.endYear ?? null)) {
+      if (existingEndYear !== (input.role.toTimeExpression?.startYear ?? null)) {
         return false;
       }
 

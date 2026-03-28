@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { CitationForm } from "@/features/sources/components/citation-form";
 import { getCitationFormView } from "@/server/services/sources";
+
+export const metadata: Metadata = {
+  title: "citation"
+};
 
 type CitationNewPageProps = {
   searchParams?: Promise<{ sourceId?: string; targetType?: string; targetId?: string }>;

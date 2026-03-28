@@ -10,7 +10,8 @@ export const roleAssignmentSchema = z.object({
   dynastyId: z.number().int().positive().nullable().optional(),
   note: z.string().trim().optional(),
   isIncumbent: z.boolean().default(false),
-  timeExpression: timeExpressionSchema.optional()
+  fromTimeExpression: timeExpressionSchema.optional(),
+  toTimeExpression: timeExpressionSchema.optional()
 });
 
 export const personSchema = z.object({
@@ -56,7 +57,8 @@ function parseRoles(formData: FormData) {
     const dynastyId = normalizeId(formData.get(`roles.${index}.dynastyId`));
     const note = asString(formData.get(`roles.${index}.note`)).trim();
     const isIncumbent = formData.get(`roles.${index}.isIncumbent`) === "on";
-    const timeExpression = parseTimeExpressionFormData(formData, `roles.${index}.time`);
+    const fromTimeExpression = parseTimeExpressionFormData(formData, `roles.${index}.fromTime`);
+    const toTimeExpression = parseTimeExpressionFormData(formData, `roles.${index}.toTime`);
 
     if (!title) {
       continue;
@@ -68,7 +70,8 @@ function parseRoles(formData: FormData) {
       dynastyId,
       note,
       isIncumbent,
-      timeExpression
+      fromTimeExpression,
+      toTimeExpression
     });
   }
 

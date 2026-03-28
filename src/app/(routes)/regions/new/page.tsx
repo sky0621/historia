@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { RegionForm } from "@/features/regions/components/region-form";
 import { getRegionOptions } from "@/server/services/regions";
+
+export const metadata: Metadata = {
+  title: "region"
+};
 
 export default function NewRegionPage() {
   return (
