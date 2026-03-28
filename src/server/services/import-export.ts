@@ -60,6 +60,7 @@ export function buildHistoricalPeriodsCsv() {
   }));
 
   return toCsv(normalizedRows, [
+    "id",
     "name",
     "category",
     "polity",
@@ -105,6 +106,7 @@ export function buildPolitiesCsv() {
   }));
 
   return toCsv(normalizedRows, [
+    "id",
     "name",
     "note",
     "from_label",
