@@ -247,7 +247,6 @@ export default async function RegionDetailPage({
                   </Link>
                 </div>
                 <div className="mt-1 text-[var(--muted)]">{getRegionRelationTypeLabel(relation.relationType)}</div>
-                {relation.note ? <div className="mt-1 text-[var(--muted)]">{relation.note}</div> : null}
               </div>
             ))
           )}

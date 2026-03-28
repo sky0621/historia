@@ -115,7 +115,6 @@ export function RegionRelationForm({
     fromRegionId: number;
     toRegionId: number;
     relationType: "adjacent" | "cultural_area" | "trade_zone" | "influences" | "related" | "equivalent";
-    note: string;
   };
 }) {
   const action = defaultValues?.id ? updateRegionRelationAction : createRegionRelationAction;
@@ -138,7 +137,6 @@ export function RegionRelationForm({
             </select>
           </label>
         </div>
-        <TextAreaField name="note" label="メモ" defaultValue={defaultValues?.note} />
         <SubmitButton label={submitLabel} />
       </form>
     </RelationFormShell>

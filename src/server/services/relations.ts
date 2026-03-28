@@ -107,14 +107,12 @@ export function getRegionRelationFormView(id?: number, defaults?: Partial<Region
           id: relation.id,
           fromRegionId: relation.fromRegionId,
           toRegionId: relation.toRegionId,
-          relationType: relation.relationType as RegionRelationInput["relationType"],
-          note: relation.note ?? ""
+          relationType: relation.relationType as RegionRelationInput["relationType"]
         }
       : {
           fromRegionId: defaults?.fromRegionId ?? 0,
           toRegionId: defaults?.toRegionId ?? 0,
-          relationType: defaults?.relationType ?? "related",
-          note: defaults?.note ?? ""
+          relationType: defaults?.relationType ?? "related"
         }
   };
 }
@@ -187,8 +185,7 @@ export function createRegionRelationFromInput(input: RegionRelationInput) {
   return createRegionRelation({
     fromRegionId: input.fromRegionId,
     toRegionId: input.toRegionId,
-    relationType: input.relationType,
-    note: nullable(input.note)
+    relationType: input.relationType
   });
 }
 
@@ -196,8 +193,7 @@ export function updateRegionRelationFromInput(id: number, input: RegionRelationI
   updateRegionRelation(id, {
     fromRegionId: input.fromRegionId,
     toRegionId: input.toRegionId,
-    relationType: input.relationType,
-    note: nullable(input.note)
+    relationType: input.relationType
   });
 }
 

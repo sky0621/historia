@@ -17,8 +17,7 @@ export const dynastySuccessionSchema = z.object({
 export const regionRelationSchema = z.object({
   fromRegionId: z.number().int().positive(),
   toRegionId: z.number().int().positive(),
-  relationType: z.enum(["adjacent", "cultural_area", "trade_zone", "influences", "related", "equivalent"]),
-  note: z.string().trim().optional()
+  relationType: z.enum(["adjacent", "cultural_area", "trade_zone", "influences", "related", "equivalent"])
 });
 
 export const historicalPeriodRelationSchema = z.object({
@@ -53,8 +52,7 @@ export function parseRegionRelationFormData(formData: FormData): RegionRelationI
   return regionRelationSchema.parse({
     fromRegionId: Number(formData.get("fromRegionId")),
     toRegionId: Number(formData.get("toRegionId")),
-    relationType: formData.get("relationType"),
-    note: formData.get("note") ?? undefined
+    relationType: formData.get("relationType")
   });
 }
 

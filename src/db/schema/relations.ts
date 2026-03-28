@@ -54,9 +54,7 @@ export const regionRelations = sqliteTable("region_relations", {
     .references(() => regions.id),
   relationType: text("relation_type")
     .notNull()
-    .references(() => regionRelationTypes.code),
-  description: text("description"),
-  note: text("note")
+    .references(() => regionRelationTypes.code)
 });
 
 export const regionRelationTypes = sqliteTable("region_relation_types", {
