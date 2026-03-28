@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
+import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import {
   checkboxCardClassName,
   emptyStateClassName,
@@ -93,17 +94,18 @@ export function ReligionForm({
           />
         </div>
 
-        <fieldset className={formCardClassName}>
-          <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">関連地域</legend>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <section className={formCardClassName}>
+          <CollapsibleFormSection title="関連地域" defaultOpen={(defaultValues?.regionIds.length ?? 0) > 0}>
+            <div className="grid gap-3 md:grid-cols-2">
             {regionOptions.map((region) => (
               <label key={region.id} className={checkboxCardClassName}>
                 <input type="checkbox" name="regionIds" value={region.id} defaultChecked={defaultValues?.regionIds.includes(region.id) ?? false} />
                 {region.name}
               </label>
             ))}
-          </div>
-        </fieldset>
+            </div>
+          </CollapsibleFormSection>
+        </section>
 
         <fieldset className={formCardClassName}>
           <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">開祖</legend>

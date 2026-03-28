@@ -15,6 +15,7 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName
 } from "@/components/forms/styles";
+import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { createEventAction, updateEventAction } from "@/features/events/actions";
@@ -195,7 +196,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
         <SelectionGroup name="religionIds" label="宗教" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
         <SelectionGroup name="sectIds" label="宗派" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
-        <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} />
+        <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible />
 
         <section className={formCardClassName}>
           <div className="flex items-center justify-between gap-4">
@@ -510,28 +511,44 @@ function SelectionGroup({
   name,
   label,
   options,
-  selectedIds
+  selectedIds,
+  collapsible = false
 }: {
   name: string;
   label: string;
   options: Option[];
   selectedIds: number[];
+  collapsible?: boolean;
 }) {
+  const content = (
+    <div className="mt-3 grid gap-3 md:grid-cols-2">
+      {options.length === 0 ? (
+        <p className={emptyStateClassName}>選択肢はまだありません。</p>
+      ) : (
+        options.map((option) => (
+          <label key={option.id} className={checkboxCardClassName}>
+            <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
+            {option.name}
+          </label>
+        ))
+      )}
+    </div>
+  );
+
+  if (collapsible) {
+    return (
+      <section className={formCardClassName}>
+        <CollapsibleFormSection title={label} defaultOpen={selectedIds.length > 0}>
+          {content}
+        </CollapsibleFormSection>
+      </section>
+    );
+  }
+
   return (
     <fieldset className={formCardClassName}>
       <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
-        {options.length === 0 ? (
-          <p className={emptyStateClassName}>選択肢はまだありません。</p>
-        ) : (
-          options.map((option) => (
-            <label key={option.id} className={checkboxCardClassName}>
-              <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
-              {option.name}
-            </label>
-          ))
-        )}
-      </div>
+      {content}
     </fieldset>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { formErrorClassName, secondaryButtonClassName } from "@/components/forms/styles";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { initialCreateFormState } from "@/features/actions/create-form-state";
@@ -109,7 +110,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} />
+          <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible />
           <SelectionGroup name="religionIds" label="宗教" description="信仰や所属する宗教を選択します。" options={options.religions} selectedIds={defaultValues?.religionIds ?? []} />
           <SelectionGroup name="sectIds" label="宗派" description="宗派や分派が分かる場合のみ追加します。" options={options.sects} selectedIds={defaultValues?.sectIds ?? []} />
         </div>
@@ -320,17 +321,18 @@ function SelectionGroup({
   label,
   description,
   options,
-  selectedIds
+  selectedIds,
+  collapsible = false
 }: {
   name: string;
   label: string;
   description: string;
   options: Option[];
   selectedIds: number[];
+  collapsible?: boolean;
 }) {
-  return (
-    <fieldset className="historia-card rounded-[14px] p-5 sm:p-6">
-      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
+  const content = (
+    <>
       <p className="mt-2 text-sm leading-7 text-[var(--muted-strong)]">{description}</p>
       <div className="mt-5 grid gap-3 md:grid-cols-2">
         {options.length === 0 ? (
@@ -349,6 +351,23 @@ function SelectionGroup({
           ))
         )}
       </div>
+    </>
+  );
+
+  if (collapsible) {
+    return (
+      <section className="historia-card rounded-[14px] p-5 sm:p-6">
+        <CollapsibleFormSection title={label} defaultOpen={selectedIds.length > 0}>
+          {content}
+        </CollapsibleFormSection>
+      </section>
+    );
+  }
+
+  return (
+    <fieldset className="historia-card rounded-[14px] p-5 sm:p-6">
+      <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">{label}</legend>
+      {content}
     </fieldset>
   );
 }
