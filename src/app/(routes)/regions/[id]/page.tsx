@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteRegionAction } from "@/features/regions/actions";
 import { getRegionRelationTypeLabel } from "@/lib/master-labels";
 import { getRegionView } from "@/server/services/regions";
+
+export const metadata: Metadata = { title: "region" };
 
 export default async function RegionDetailPage({
   params

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getPolityListView, getRegionOptions } from "@/server/services/polities";
+
+export const metadata: Metadata = { title: "polity" };
 
 type PolitiesPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

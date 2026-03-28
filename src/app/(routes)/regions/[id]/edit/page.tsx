@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RegionForm } from "@/features/regions/components/region-form";
 import { getRegionOptions, getRegionView } from "@/server/services/regions";
+
+export const metadata: Metadata = { title: "region" };
 
 export default async function EditRegionPage({
   params

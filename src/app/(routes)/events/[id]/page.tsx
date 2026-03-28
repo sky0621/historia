@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteEventAction } from "@/features/events/actions";
@@ -8,6 +9,8 @@ import {
   getEventTypeLabel
 } from "@/lib/master-labels";
 import { getEventDetailView } from "@/server/services/events";
+
+export const metadata: Metadata = { title: "event" };
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

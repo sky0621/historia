@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { RegionRelationForm } from "@/features/relations/components/relation-forms";
 import { getRegionRelationFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "region-relation" };
 
 type NewRegionRelationPageProps = {
   searchParams?: Promise<{ fromRegionId?: string; toRegionId?: string }>;

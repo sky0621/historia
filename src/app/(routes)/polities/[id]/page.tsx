@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deletePolityAction } from "@/features/polities/actions";
 import { getPolityTransitionTypeLabel } from "@/lib/master-labels";
 import { getPolityDetailView } from "@/server/services/polities";
+
+export const metadata: Metadata = { title: "polity" };
 
 export default async function PolityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

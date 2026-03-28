@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PersonForm } from "@/features/person/components/person-form";
 import { getPersonDetailView } from "@/server/services/person";
+
+export const metadata: Metadata = { title: "person" };
 
 export default async function EditPersonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

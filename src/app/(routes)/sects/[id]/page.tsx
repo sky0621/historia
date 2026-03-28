@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteSectAction } from "@/features/religions/actions";
 import { getSectDetailView } from "@/server/services/religions";
+
+export const metadata: Metadata = { title: "sect" };
 
 export default async function SectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

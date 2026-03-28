@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteTagAction } from "@/features/tags/actions";
 import { getTagView } from "@/server/services/tags";
+
+export const metadata: Metadata = { title: "tag" };
 
 export default async function TagDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

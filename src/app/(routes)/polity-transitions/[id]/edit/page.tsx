@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PolityTransitionForm } from "@/features/relations/components/relation-forms";
 import { getPolityTransitionFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "polity-transition" };
 
 export default async function EditPolityTransitionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

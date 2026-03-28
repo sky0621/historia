@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteCitationAction, deleteSourceAction } from "@/features/sources/actions";
 import { getSourceView } from "@/server/services/sources";
+
+export const metadata: Metadata = { title: "source" };
 
 export default async function SourceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { eventRelationTypeOptions, eventTypeOptions } from "@/lib/master-labels";
 import { getEventFormOptions } from "@/server/services/events";
 import { getEventGraphView } from "@/server/services/visualizations";
+
+export const metadata: Metadata = { title: "graph" };
 
 type GraphEventsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

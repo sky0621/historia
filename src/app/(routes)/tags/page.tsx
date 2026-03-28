@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getTagList } from "@/server/services/tags";
+
+export const metadata: Metadata = {
+  title: "tag"
+};
 
 type TagsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

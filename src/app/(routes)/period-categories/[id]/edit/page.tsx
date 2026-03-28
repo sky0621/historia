@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PeriodCategoryForm } from "@/features/periods/components/period-category-form";
 import { getPeriodCategoryView } from "@/server/services/period-categories";
+
+export const metadata: Metadata = { title: "category" };
 
 export default async function EditPeriodCategoryPage({
   params

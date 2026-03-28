@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EventForm } from "@/features/events/components/event-form";
 import { getEventDetailView } from "@/server/services/events";
+
+export const metadata: Metadata = { title: "event" };
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SectForm } from "@/features/religions/components/sect-form";
 import { getFounderOptions, getParentSectOptions, getRegionOptions, getReligionOptions, getSectDetailView } from "@/server/services/religions";
+
+export const metadata: Metadata = { title: "sect" };
 
 export default async function EditSectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

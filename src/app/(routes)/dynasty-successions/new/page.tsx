@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { DynastySuccessionForm } from "@/features/relations/components/relation-forms";
 import { getDynastySuccessionFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "dynasty-succession" };
 
 type NewDynastySuccessionPageProps = {
   searchParams?: Promise<{ polityId?: string; predecessorDynastyId?: string; successorDynastyId?: string }>;

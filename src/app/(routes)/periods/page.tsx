@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getHistoricalPeriodFormOptions, getHistoricalPeriodsListView } from "@/server/services/historical-periods";
+
+export const metadata: Metadata = { title: "period" };
 
 type PeriodsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

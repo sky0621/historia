@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getHistoricalPeriodFormOptions } from "@/server/services/historical-periods";
 import { getPolityOptions, getRegionOptions } from "@/server/services/polities";
 import { getTimelineView } from "@/server/services/visualizations";
+
+export const metadata: Metadata = { title: "timeline" };
 
 type TimelinePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getPersonListView, getPersonFormOptions } from "@/server/services/person";
+
+export const metadata: Metadata = { title: "person" };
 
 type PersonPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

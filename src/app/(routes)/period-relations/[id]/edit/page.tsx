@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { HistoricalPeriodRelationForm } from "@/features/relations/components/relation-forms";
 import { getHistoricalPeriodRelationFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "period-relation" };
 
 export default async function EditHistoricalPeriodRelationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

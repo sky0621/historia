@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getRegionOptions, getReligionOptions, getSectListView } from "@/server/services/religions";
+
+export const metadata: Metadata = { title: "sect" };
 
 type SectsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

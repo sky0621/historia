@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RegionRelationForm } from "@/features/relations/components/relation-forms";
 import { getRegionRelationFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "region-relation" };
 
 export default async function EditRegionRelationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

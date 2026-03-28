@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReligionForm } from "@/features/religions/components/religion-form";
 import { getFounderOptions, getRegionOptions, getReligionDetailView } from "@/server/services/religions";
+
+export const metadata: Metadata = { title: "religion" };
 
 export default async function EditReligionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getDynastyListView, getPolityOptions, getRegionOptions } from "@/server/services/polities";
+
+export const metadata: Metadata = { title: "dynasty" };
 
 type DynastiesPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

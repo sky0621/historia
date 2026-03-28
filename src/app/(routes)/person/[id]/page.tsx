@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deletePersonAction } from "@/features/person/actions";
 import { getPersonDetailView } from "@/server/services/person";
+
+export const metadata: Metadata = { title: "person" };
 
 export default async function PersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteReligionAction } from "@/features/religions/actions";
 import { getReligionDetailView } from "@/server/services/religions";
+
+export const metadata: Metadata = { title: "religion" };
 
 export default async function ReligionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

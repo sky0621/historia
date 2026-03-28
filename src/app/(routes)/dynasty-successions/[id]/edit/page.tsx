@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DynastySuccessionForm } from "@/features/relations/components/relation-forms";
 import { getDynastySuccessionFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "dynasty-succession" };
 
 export default async function EditDynastySuccessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PolityForm } from "@/features/polities/components/polity-form";
 import { getPolityDetailView, getRegionOptions } from "@/server/services/polities";
+
+export const metadata: Metadata = { title: "polity" };
 
 export default async function EditPolityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

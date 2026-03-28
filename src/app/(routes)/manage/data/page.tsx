@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CsvImportPanel } from "@/features/csv-import/components/csv-import-panel";
 import { ImportWorkspacePanel } from "@/features/sources/components/import-workspace-panel";
 import { getRecentImportRuns } from "@/server/services/import-runs";
+
+export const metadata: Metadata = {
+  title: "data"
+};
 
 export default function ManageDataPage() {
   const recentImportRuns = getRecentImportRuns();
@@ -28,6 +33,9 @@ export default function ManageDataPage() {
               </Link>
               <Link href="/api/export/person.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Person CSV をダウンロード
+              </Link>
+              <Link href="/api/export/period-categories.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                Period Category CSV をダウンロード
               </Link>
             </div>
           </div>

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { PolityTransitionForm } from "@/features/relations/components/relation-forms";
 import { getPolityTransitionFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "polity-transition" };
 
 type NewPolityTransitionPageProps = {
   searchParams?: Promise<{ predecessorPolityId?: string; successorPolityId?: string }>;

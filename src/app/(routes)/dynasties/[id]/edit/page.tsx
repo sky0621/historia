@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DynastyForm } from "@/features/polities/components/dynasty-form";
 import { getDynastyDetailView, getPolityOptions, getRegionOptions } from "@/server/services/polities";
+
+export const metadata: Metadata = { title: "dynasty" };
 
 export default async function EditDynastyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteDynastyAction } from "@/features/polities/actions";
 import { getDynastyDetailView } from "@/server/services/polities";
+
+export const metadata: Metadata = { title: "dynasty" };
 
 export default async function DynastyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

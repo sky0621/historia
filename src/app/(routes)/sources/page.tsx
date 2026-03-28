@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getSourceListView } from "@/server/services/sources";
+
+export const metadata: Metadata = {
+  title: "source"
+};
 
 type SourcesPageProps = {
   searchParams?: Promise<{ q?: string }>;

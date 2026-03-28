@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getPeriodCategoryList } from "@/server/services/period-categories";
+
+export const metadata: Metadata = { title: "category" };
 
 type PeriodCategoriesPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,6 +30,12 @@ export default async function PeriodCategoriesPage({ searchParams }: PeriodCateg
           className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white"
         >
           新規カテゴリ
+        </Link>
+        <Link
+          href="/api/export/period-categories.csv"
+          className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium"
+        >
+          CSV エクスポート
         </Link>
       </div>
 

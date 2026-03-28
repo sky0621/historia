@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteHistoricalPeriodAction } from "@/features/periods/actions";
 import { getHistoricalPeriodRelationTypeLabel } from "@/lib/master-labels";
 import { getHistoricalPeriodDetailView } from "@/server/services/historical-periods";
+
+export const metadata: Metadata = { title: "period" };
 
 export default async function HistoricalPeriodDetailPage({
   params

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { HistoricalPeriodRelationForm } from "@/features/relations/components/relation-forms";
 import { getHistoricalPeriodRelationFormView } from "@/server/services/relations";
+
+export const metadata: Metadata = { title: "period-relation" };
 
 type NewHistoricalPeriodRelationPageProps = {
   searchParams?: Promise<{ fromPeriodId?: string; toPeriodId?: string }>;

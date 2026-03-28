@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getRegionListView, getRegionOptions } from "@/server/services/regions";
+
+export const metadata: Metadata = { title: "region" };
 
 type RegionsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

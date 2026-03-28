@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deletePeriodCategoryAction } from "@/features/periods/actions";
 import { getPeriodCategoryView } from "@/server/services/period-categories";
+
+export const metadata: Metadata = { title: "category" };
 
 export default async function PeriodCategoryDetailPage({
   params
