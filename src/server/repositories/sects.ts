@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { religionSectLinks, sectFounderLinks, sectParentLinks, sectRegionLinks, sects } from "@/db/schema";
+import { religionSectLinks, sectFounderLinks, sectParentLinks, sects } from "@/db/schema";
 
 export type SectInsert = typeof sects.$inferInsert;
 export type SectRecord = typeof sects.$inferSelect & {
@@ -53,7 +53,6 @@ export function createSect(
   input: SectInsert,
   religionId: number,
   parentSectId: number | null,
-  regionIds: number[],
   founderIds: number[]
 ) {
   return db.transaction((tx) => {
@@ -63,10 +62,6 @@ export function createSect(
     tx.insert(religionSectLinks).values({ religionId, sectId }).run();
     if (parentSectId != null) {
       tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
-    }
-
-    if (regionIds.length > 0) {
-      tx.insert(sectRegionLinks).values(regionIds.map((regionId) => ({ sectId, regionId }))).run();
     }
 
     if (founderIds.length > 0) {
@@ -82,22 +77,16 @@ export function updateSect(
   input: Omit<SectInsert, "id">,
   religionId: number,
   parentSectId: number | null,
-  regionIds: number[],
   founderIds: number[]
 ) {
   db.transaction((tx) => {
     tx.update(sects).set(input).where(eq(sects.id, id)).run();
     tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
     tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
-    tx.delete(sectRegionLinks).where(eq(sectRegionLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
     tx.insert(religionSectLinks).values({ religionId, sectId: id }).run();
     if (parentSectId != null) {
       tx.insert(sectParentLinks).values({ sectId: id, parentSectId }).run();
-    }
-
-    if (regionIds.length > 0) {
-      tx.insert(sectRegionLinks).values(regionIds.map((regionId) => ({ sectId: id, regionId }))).run();
     }
 
     if (founderIds.length > 0) {
@@ -111,22 +100,9 @@ export function deleteSect(id: number) {
     tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
     tx.delete(sectParentLinks).where(eq(sectParentLinks.parentSectId, id)).run();
     tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
-    tx.delete(sectRegionLinks).where(eq(sectRegionLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
     tx.delete(sects).where(eq(sects.id, id)).run();
   });
-}
-
-export function getSectRegionIds(sectIds: number[]) {
-  if (sectIds.length === 0) {
-    return [];
-  }
-
-  return db
-    .select()
-    .from(sectRegionLinks)
-    .where(inArray(sectRegionLinks.sectId, sectIds))
-    .all();
 }
 
 export function getSectFounderIds(sectIds: number[]) {

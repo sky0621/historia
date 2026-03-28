@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SectForm } from "@/features/religions/components/sect-form";
-import { getFounderOptions, getParentSectOptions, getRegionOptions, getReligionOptions, getSectDetailView } from "@/server/services/religions";
+import { getFounderOptions, getParentSectOptions, getReligionOptions, getSectDetailView } from "@/server/services/religions";
 
 export const metadata: Metadata = { title: "sect" };
 
@@ -20,7 +20,6 @@ export default async function EditSectPage({ params }: { params: Promise<{ id: s
       submitLabel="宗派を更新"
       religionOptions={getReligionOptions()}
       parentSectOptions={getParentSectOptions(view.sect.id)}
-      regionOptions={getRegionOptions()}
       founderOptions={getFounderOptions()}
       defaultValues={{
         id: view.sect.id,
@@ -29,7 +28,6 @@ export default async function EditSectPage({ params }: { params: Promise<{ id: s
         name: view.sect.name,
         description: view.sect.description ?? "",
         note: view.sect.note ?? "",
-        regionIds: view.regions.map((region) => region.id),
         founderIds: view.founders.map((founder) => founder.id),
         fromTimeExpression: view.defaultFromTimeExpression,
         toTimeExpression: view.defaultToTimeExpression

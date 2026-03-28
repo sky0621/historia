@@ -10,8 +10,6 @@ import { listPersonDetailed, getPersonRegionLinks } from "@/server/repositories/
 import { listPolities, getPolityRegionIds } from "@/server/repositories/polities";
 import { listDynasties, getDynastyRegionIds } from "@/server/repositories/dynasties";
 import { listHistoricalPeriods, getHistoricalPeriodRegionIds } from "@/server/repositories/historical-periods";
-import { listReligions, getReligionRegionIds } from "@/server/repositories/religions";
-import { listSects, getSectRegionIds } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getRegionRelationView } from "@/server/services/relations";
 
@@ -76,15 +74,11 @@ export function getRegionView(id: number) {
   const polities = listPolities();
   const dynasties = listDynasties();
   const periods = listHistoricalPeriods();
-  const religions = listReligions();
-  const sects = listSects();
 
   const personLinks = getPersonRegionLinks(person.map((item) => item.id));
   const polityLinks = getPolityRegionIds(polities.map((item) => item.id));
   const dynastyLinks = getDynastyRegionIds(dynasties.map((item) => item.id));
   const periodLinks = getHistoricalPeriodRegionIds(periods.map((item) => item.id));
-  const religionLinks = getReligionRegionIds(religions.map((item) => item.id));
-  const sectLinks = getSectRegionIds(sects.map((item) => item.id));
 
   return {
     region,
@@ -95,8 +89,6 @@ export function getRegionView(id: number) {
     relatedPolities: polities.filter((item) => polityLinks.some((link) => link.polityId === item.id && link.regionId === id)),
     relatedDynasties: dynasties.filter((item) => dynastyLinks.some((link) => link.dynastyId === item.id && link.regionId === id)),
     relatedPeriods: periods.filter((item) => periodLinks.some((link) => link.periodId === item.id && link.regionId === id)),
-    relatedReligions: religions.filter((item) => religionLinks.some((link) => link.religionId === item.id && link.regionId === id)),
-    relatedSects: sects.filter((item) => sectLinks.some((link) => link.sectId === item.id && link.regionId === id)),
     regionRelations: getRegionRelationView(id)
   };
 }

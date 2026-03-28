@@ -56,8 +56,6 @@ function clearTables() {
     "religion_founder_links",
     "person_sect_links",
     "person_religion_links",
-    "sect_region_links",
-    "religion_region_links",
     "historical_period_region_links",
     "dynasty_region_links",
     "polity_region_links",

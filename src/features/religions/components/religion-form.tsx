@@ -2,8 +2,6 @@
 
 import { useActionState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
-import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
-import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import {
   checkboxCardClassName,
   emptyStateClassName,
@@ -21,20 +19,18 @@ import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createReligionAction, updateReligionAction } from "@/features/religions/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
-type Option = { id: number; name: string; parentRegionId?: number | null };
+type Option = { id: number; name: string };
 
 type Props = {
   title: string;
   description: string;
   submitLabel: string;
-  regionOptions: Option[];
   founderOptions: Option[];
   defaultValues?: {
     id?: number;
     name: string;
     description: string;
     note: string;
-    regionIds: number[];
     founderIds: number[];
     fromTimeExpression?: TimeExpressionInput;
     toTimeExpression?: TimeExpressionInput;
@@ -45,7 +41,6 @@ export function ReligionForm({
   title,
   description,
   submitLabel,
-  regionOptions,
   founderOptions,
   defaultValues
 }: Props) {
@@ -64,14 +59,14 @@ export function ReligionForm({
 
         <section className={formCardClassName}>
           <div className="grid gap-5">
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>名称</span>
-            <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
-          </label>
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>説明</span>
-            <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
-          </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>名称</span>
+              <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
+            </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>説明</span>
+              <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
+            </label>
           </div>
         </section>
 
@@ -95,17 +90,6 @@ export function ReligionForm({
           />
         </div>
 
-        <section className={formCardClassName}>
-          <CollapsibleFormSection title="関連地域" defaultOpen={(defaultValues?.regionIds.length ?? 0) > 0}>
-            <RegionCheckboxTree
-              name="regionIds"
-              options={regionOptions}
-              selectedIds={defaultValues?.regionIds ?? []}
-              itemClassName={checkboxCardClassName}
-            />
-          </CollapsibleFormSection>
-        </section>
-
         <fieldset className={formCardClassName}>
           <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">開祖</legend>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -123,10 +107,10 @@ export function ReligionForm({
         </fieldset>
 
         <section className={formCardClassName}>
-        <label className={fieldLabelClassName}>
-          <span className={fieldMetaClassName}>メモ</span>
-          <textarea name="note" defaultValue={defaultValues?.note ?? ""} className={`min-h-32 ${inputClassName}`} />
-        </label>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>メモ</span>
+            <textarea name="note" defaultValue={defaultValues?.note ?? ""} className={`min-h-32 ${inputClassName}`} />
+          </label>
         </section>
 
         {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}

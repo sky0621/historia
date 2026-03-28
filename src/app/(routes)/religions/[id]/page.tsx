@@ -70,19 +70,6 @@ export default async function ReligionDetailPage({ params }: { params: Promise<{
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-[var(--muted)]">関連地域</dt>
-              <dd className="mt-1">
-                {view.regions.length === 0 ? "-" : view.regions.map((region, index) => (
-                  <span key={region.id}>
-                    {index > 0 ? ", " : null}
-                    <Link href={`/regions/${region.id}`} className="underline-offset-4 hover:underline">
-                      {region.name}
-                    </Link>
-                  </span>
-                ))}
-              </dd>
-            </div>
-            <div>
               <dt className="font-medium text-[var(--muted)]">説明</dt>
               <dd className="mt-1 whitespace-pre-wrap">{view.religion.description ?? "-"}</dd>
             </div>

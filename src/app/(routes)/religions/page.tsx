@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getRegionOptions, getReligionListView } from "@/server/services/religions";
+import { getReligionListView } from "@/server/services/religions";
 
 export const metadata: Metadata = { title: "religion" };
 
@@ -11,10 +11,8 @@ type ReligionsPageProps = {
 export default async function ReligionsPage({ searchParams }: ReligionsPageProps) {
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
-  const regionId = getNumericParam(params.regionId);
   const hasFounders = getSingleParam(params.hasFounders) === "1";
-  const religions = getReligionListView({ query, regionId, hasFounders });
-  const regions = getRegionOptions();
+  const religions = getReligionListView({ query, hasFounders });
 
   return (
     <section className="space-y-6">
@@ -22,7 +20,7 @@ export default async function ReligionsPage({ searchParams }: ReligionsPageProps
         <div>
           <h1 className="text-3xl font-semibold">宗教</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            宗教本体の期間、開祖、関連地域を管理します。
+            宗教本体の期間と開祖を管理します。
           </p>
         </div>
         <Link href="/religions/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
@@ -33,18 +31,7 @@ export default async function ReligionsPage({ searchParams }: ReligionsPageProps
       <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">
         <label className="space-y-2 text-sm md:col-span-2 xl:col-span-4">
           <span className="font-medium text-[var(--muted)]">名称検索</span>
-          <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="宗教名・開祖・地域" />
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">地域</span>
-          <select name="regionId" defaultValue={regionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
-            <option value="">すべて</option>
-            {regions.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
-              </option>
-            ))}
-          </select>
+          <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="宗教名・開祖" />
         </label>
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">開祖</span>
@@ -70,13 +57,12 @@ export default async function ReligionsPage({ searchParams }: ReligionsPageProps
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">名称</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">期間</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">開祖</th>
-              <th className="px-5 py-4 font-semibold text-[var(--muted)]">地域</th>
             </tr>
           </thead>
           <tbody>
             {religions.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={3} className="px-5 py-6 text-[var(--muted)]">
                   まだ宗教はありません。
                 </td>
               </tr>
@@ -92,11 +78,6 @@ export default async function ReligionsPage({ searchParams }: ReligionsPageProps
                   <td className="px-5 py-4">
                     {renderLinkedNames(
                       religion.founderIds.map((id, index) => ({ id, name: religion.founderNames[index], route: "person" as const }))
-                    )}
-                  </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">
-                    {renderLinkedNames(
-                      religion.regionIds.map((id, index) => ({ id, name: religion.regionNames[index], route: "regions" as const }))
                     )}
                   </td>
                 </tr>
@@ -127,10 +108,10 @@ function renderLinkedNames(
   items: Array<{
     id: number;
     name: string | undefined;
-    route: "person" | "regions";
+    route: "person";
   }>
 ) {
-  const filtered = items.filter((item): item is { id: number; name: string; route: "person" | "regions" } => Boolean(item.name));
+  const filtered = items.filter((item): item is { id: number; name: string; route: "person" } => Boolean(item.name));
 
   if (filtered.length === 0) {
     return "-";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getRegionOptions, getReligionOptions, getSectListView } from "@/server/services/religions";
+import { getReligionOptions, getSectListView } from "@/server/services/religions";
 
 export const metadata: Metadata = { title: "sect" };
 
@@ -12,11 +12,9 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
   const religionId = getNumericParam(params.religionId);
-  const regionId = getNumericParam(params.regionId);
   const hasFounders = getSingleParam(params.hasFounders) === "1";
-  const sects = getSectListView({ query, religionId, regionId, hasFounders });
+  const sects = getSectListView({ query, religionId, hasFounders });
   const religions = getReligionOptions();
-  const regions = getRegionOptions();
 
   return (
     <section className="space-y-6">
@@ -35,7 +33,7 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
       <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">
         <label className="space-y-2 text-sm md:col-span-2 xl:col-span-4">
           <span className="font-medium text-[var(--muted)]">名称検索</span>
-          <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="宗派名・別名・宗教・開祖・地域" />
+          <input name="q" defaultValue={query} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="宗派名・別名・宗教・開祖" />
         </label>
         <label className="space-y-2 text-sm">
           <span className="font-medium text-[var(--muted)]">宗教</span>
@@ -44,17 +42,6 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
             {religions.map((religion) => (
               <option key={religion.id} value={religion.id}>
                 {religion.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">地域</span>
-          <select name="regionId" defaultValue={regionId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
-            <option value="">すべて</option>
-            {regions.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
               </option>
             ))}
           </select>
@@ -84,13 +71,12 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">宗教</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">期間</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">開祖</th>
-              <th className="px-5 py-4 font-semibold text-[var(--muted)]">地域</th>
             </tr>
           </thead>
           <tbody>
             {sects.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">
                   まだ宗派はありません。
                 </td>
               </tr>
@@ -111,11 +97,6 @@ export default async function SectsPage({ searchParams }: SectsPageProps) {
                   <td className="px-5 py-4">
                     {renderLinkedNames(
                       sect.founderIds.map((id, index) => ({ id, name: sect.founderNames[index], route: "person" as const }))
-                    )}
-                  </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">
-                    {renderLinkedNames(
-                      sect.regionIds.map((id, index) => ({ id, name: sect.regionNames[index], route: "regions" as const }))
                     )}
                   </td>
                 </tr>
@@ -146,10 +127,10 @@ function renderLinkedNames(
   items: Array<{
     id: number;
     name: string | undefined;
-    route: "person" | "regions";
+    route: "person";
   }>
 ) {
-  const filtered = items.filter((item): item is { id: number; name: string; route: "person" | "regions" } => Boolean(item.name));
+  const filtered = items.filter((item): item is { id: number; name: string; route: "person" } => Boolean(item.name));
 
   if (filtered.length === 0) {
     return "-";

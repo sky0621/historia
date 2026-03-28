@@ -205,7 +205,6 @@ const RELIGION_HEADERS = [
   "time_start_year",
   "time_end_year",
   "time_is_approximate",
-  "regions",
   "founders"
 ] as const;
 const REQUIRED_RELIGION_HEADERS = ["name"] as const;
@@ -247,7 +246,6 @@ const SECT_HEADERS = [
   "time_start_year",
   "time_end_year",
   "time_is_approximate",
-  "regions",
   "founders"
 ] as const;
 const REQUIRED_SECT_HEADERS = ["name", "religion"] as const;
@@ -1118,7 +1116,6 @@ export function previewReligionCsvImport(rawCsv: string): CsvPreviewResult<Relig
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
       ...toBoundaryTimeExpressions(timeExpression),
-      regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
       founderIds: resolveReferences("person", cells.founders, references.person, issues)
     };
 
@@ -1263,7 +1260,6 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
       ...toBoundaryTimeExpressions(timeExpression),
-      regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
       founderIds: resolveReferences("person", cells.founders, references.person, issues)
     };
     const parsedInput = sectSchema.safeParse(inputCandidate);

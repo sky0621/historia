@@ -10,7 +10,6 @@ export const religionSchema = z.object({
   note: z.string().trim().optional(),
   fromTimeExpression: timeExpressionSchema.optional(),
   toTimeExpression: timeExpressionSchema.optional(),
-  regionIds: idsSchema,
   founderIds: idsSchema
 });
 
@@ -29,7 +28,6 @@ export function parseReligionFormData(formData: FormData): ReligionInput {
     note: formData.get("note") ?? undefined,
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
-    regionIds: normalizeIds(formData.getAll("regionIds")),
     founderIds: normalizeIds(formData.getAll("founderIds"))
   });
 }
@@ -43,7 +41,6 @@ export function parseSectFormData(formData: FormData): SectInput {
     note: formData.get("note") ?? undefined,
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
-    regionIds: normalizeIds(formData.getAll("regionIds")),
     founderIds: normalizeIds(formData.getAll("founderIds"))
   });
 }

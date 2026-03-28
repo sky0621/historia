@@ -105,16 +105,6 @@ export const historicalPeriodRegionLinks = sqliteTable("historical_period_region
   regionId: integer("region_id").notNull()
 });
 
-export const religionRegionLinks = sqliteTable("religion_region_links", {
-  religionId: integer("religion_id").notNull(),
-  regionId: integer("region_id").notNull()
-});
-
-export const sectRegionLinks = sqliteTable("sect_region_links", {
-  sectId: integer("sect_id").notNull(),
-  regionId: integer("region_id").notNull()
-});
-
 export const personReligionLinks = sqliteTable("person_religion_links", {
   personId: integer("person_id").notNull(),
   religionId: integer("religion_id").notNull()

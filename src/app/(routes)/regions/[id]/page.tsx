@@ -172,32 +172,6 @@ export default async function RegionDetailPage({
                 ))}
               </dd>
             </div>
-            <div>
-              <dt className="font-medium text-[var(--muted)]">宗教</dt>
-              <dd className="mt-1">
-                {view.relatedReligions.length === 0 ? "-" : view.relatedReligions.map((item, index) => (
-                  <span key={item.id}>
-                    {index > 0 ? ", " : null}
-                    <Link href={`/religions/${item.id}`} className="underline-offset-4 hover:underline">
-                      {item.name}
-                    </Link>
-                  </span>
-                ))}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-[var(--muted)]">宗派</dt>
-              <dd className="mt-1">
-                {view.relatedSects.length === 0 ? "-" : view.relatedSects.map((item, index) => (
-                  <span key={item.id}>
-                    {index > 0 ? ", " : null}
-                    <Link href={`/sects/${item.id}`} className="underline-offset-4 hover:underline">
-                      {item.name}
-                    </Link>
-                  </span>
-                ))}
-              </dd>
-            </div>
           </dl>
         </div>
 

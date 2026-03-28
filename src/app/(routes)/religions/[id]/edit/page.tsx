@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReligionForm } from "@/features/religions/components/religion-form";
-import { getFounderOptions, getRegionOptions, getReligionDetailView } from "@/server/services/religions";
+import { getFounderOptions, getReligionDetailView } from "@/server/services/religions";
 
 export const metadata: Metadata = { title: "religion" };
 
@@ -18,14 +18,12 @@ export default async function EditReligionPage({ params }: { params: Promise<{ i
       title="宗教編集"
       description="既存の宗教情報を更新します。"
       submitLabel="宗教を更新"
-      regionOptions={getRegionOptions()}
       founderOptions={getFounderOptions()}
       defaultValues={{
         id: view.religion.id,
         name: view.religion.name,
         description: view.religion.description ?? "",
         note: view.religion.note ?? "",
-        regionIds: view.regions.map((region) => region.id),
         founderIds: view.founders.map((founder) => founder.id),
         fromTimeExpression: view.defaultFromTimeExpression,
         toTimeExpression: view.defaultToTimeExpression

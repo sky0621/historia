@@ -2,8 +2,6 @@
 
 import { useActionState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
-import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
-import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import {
   checkboxCardClassName,
   emptyStateClassName,
@@ -21,7 +19,7 @@ import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createSectAction, updateSectAction } from "@/features/religions/actions";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
-type Option = { id: number; name: string; parentRegionId?: number | null };
+type Option = { id: number; name: string };
 
 type Props = {
   title: string;
@@ -29,7 +27,6 @@ type Props = {
   submitLabel: string;
   religionOptions: Option[];
   parentSectOptions: Option[];
-  regionOptions: Option[];
   founderOptions: Option[];
   defaultValues?: {
     id?: number;
@@ -38,7 +35,6 @@ type Props = {
     name: string;
     description: string;
     note: string;
-    regionIds: number[];
     founderIds: number[];
     fromTimeExpression?: TimeExpressionInput;
     toTimeExpression?: TimeExpressionInput;
@@ -51,7 +47,6 @@ export function SectForm({
   submitLabel,
   religionOptions,
   parentSectOptions,
-  regionOptions,
   founderOptions,
   defaultValues
 }: Props) {
@@ -70,38 +65,38 @@ export function SectForm({
 
         <section className={formCardClassName}>
           <div className="grid gap-5">
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>宗教</span>
-            <select name="religionId" defaultValue={defaultValues?.religionId ?? ""} className={inputClassName} required>
-              <option value="" disabled>
-                宗教を選択
-              </option>
-              {religionOptions.map((religion) => (
-                <option key={religion.id} value={religion.id}>
-                  {religion.name}
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>宗教</span>
+              <select name="religionId" defaultValue={defaultValues?.religionId ?? ""} className={inputClassName} required>
+                <option value="" disabled>
+                  宗教を選択
                 </option>
-              ))}
-            </select>
-          </label>
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>名称</span>
-            <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
-          </label>
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>親宗派</span>
-            <select name="parentSectId" defaultValue={defaultValues?.parentSectId ?? ""} className={inputClassName}>
-              <option value="">親宗派なし</option>
-              {parentSectOptions.map((sect) => (
-                <option key={sect.id} value={sect.id}>
-                  {sect.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>説明</span>
-            <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
-          </label>
+                {religionOptions.map((religion) => (
+                  <option key={religion.id} value={religion.id}>
+                    {religion.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>名称</span>
+              <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
+            </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>親宗派</span>
+              <select name="parentSectId" defaultValue={defaultValues?.parentSectId ?? ""} className={inputClassName}>
+                <option value="">親宗派なし</option>
+                {parentSectOptions.map((sect) => (
+                  <option key={sect.id} value={sect.id}>
+                    {sect.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>説明</span>
+              <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
+            </label>
           </div>
         </section>
 
@@ -125,17 +120,6 @@ export function SectForm({
           />
         </div>
 
-        <section className={formCardClassName}>
-          <CollapsibleFormSection title="関連地域" defaultOpen={(defaultValues?.regionIds.length ?? 0) > 0}>
-            <RegionCheckboxTree
-              name="regionIds"
-              options={regionOptions}
-              selectedIds={defaultValues?.regionIds ?? []}
-              itemClassName={checkboxCardClassName}
-            />
-          </CollapsibleFormSection>
-        </section>
-
         <fieldset className={formCardClassName}>
           <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">開祖</legend>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -153,10 +137,10 @@ export function SectForm({
         </fieldset>
 
         <section className={formCardClassName}>
-        <label className={fieldLabelClassName}>
-          <span className={fieldMetaClassName}>メモ</span>
-          <textarea name="note" defaultValue={defaultValues?.note ?? ""} className={`min-h-32 ${inputClassName}`} />
-        </label>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>メモ</span>
+            <textarea name="note" defaultValue={defaultValues?.note ?? ""} className={`min-h-32 ${inputClassName}`} />
+          </label>
         </section>
 
         {!defaultValues?.id && createState.error ? <p className={formErrorClassName}>{createState.error}</p> : null}

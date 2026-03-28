@@ -8,13 +8,11 @@ import {
   getPersonSectLinks,
   listPersonDetailed
 } from "@/server/repositories/person-detail";
-import { listRegions } from "@/server/repositories/regions";
 import {
   createReligion,
   deleteReligion,
   getReligionById,
   getReligionFounderIds,
-  getReligionRegionIds,
   listReligions,
   updateReligion
 } from "@/server/repositories/religions";
@@ -23,7 +21,6 @@ import {
   deleteSect,
   getSectById,
   getSectFounderIds,
-  getSectRegionIds,
   listSects,
   updateSect
 } from "@/server/repositories/sects";
@@ -33,10 +30,6 @@ import { getSectHierarchyView } from "@/server/services/relations";
 
 export function getReligionOptions() {
   return listReligions().map((religion) => ({ id: religion.id, name: religion.name }));
-}
-
-export function getRegionOptions() {
-  return listRegions().map((region) => ({ id: region.id, name: region.name, parentRegionId: region.parentRegionId }));
 }
 
 export function getFounderOptions() {
@@ -49,36 +42,26 @@ export function getParentSectOptions(excludeId?: number) {
 
 type ReligionListFilters = {
   query?: string;
-  regionId?: number;
   hasFounders?: boolean;
 };
 
 type SectListFilters = {
   query?: string;
   religionId?: number;
-  regionId?: number;
   hasFounders?: boolean;
 };
 
 export function getReligionListView(filters: ReligionListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const religions = listReligions();
-  const regions = listRegions();
   const person = listPerson();
-  const regionLinks = getReligionRegionIds(religions.map((religion) => religion.id));
   const founderLinks = getReligionFounderIds(religions.map((religion) => religion.id));
-  const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const personNameById = new Map(person.map((person) => [person.id, person.name]));
 
   return religions
     .map((religion) => ({
       ...religion,
       timeLabel: formatStoredTime("time", religion),
-      regionNames: regionLinks
-        .filter((link) => link.religionId === religion.id)
-        .map((link) => regionNameById.get(link.regionId))
-        .filter((name): name is string => Boolean(name)),
-      regionIds: regionLinks.filter((link) => link.religionId === religion.id).map((link) => link.regionId),
       founderNames: founderLinks
         .filter((link) => link.religionId === religion.id)
         .map((link) => personNameById.get(link.personId))
@@ -86,10 +69,6 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
       founderIds: founderLinks.filter((link) => link.religionId === religion.id).map((link) => link.personId)
     }))
     .filter((religion) => {
-      if (filters.regionId && !religion.regionIds.includes(filters.regionId)) {
-        return false;
-      }
-
       if (filters.hasFounders && religion.founderIds.length === 0) {
         return false;
       }
@@ -98,7 +77,7 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
     })
     .filter((religion) =>
       matchesQuery(
-        [religion.name, religion.description, religion.note, religion.regionNames.join(", "), religion.founderNames.join(", ")],
+        [religion.name, religion.description, religion.note, religion.founderNames.join(", ")],
         normalizedQuery
       )
     );
@@ -108,12 +87,9 @@ export function getSectListView(filters: SectListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const sects = listSects();
   const religions = listReligions();
-  const regions = listRegions();
   const person = listPerson();
-  const regionLinks = getSectRegionIds(sects.map((sect) => sect.id));
   const founderLinks = getSectFounderIds(sects.map((sect) => sect.id));
   const religionNameById = new Map(religions.map((religion) => [religion.id, religion.name]));
-  const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const personNameById = new Map(person.map((person) => [person.id, person.name]));
   const parentSectNameById = new Map(sects.map((sect) => [sect.id, sect.name]));
 
@@ -125,11 +101,6 @@ export function getSectListView(filters: SectListFilters = {}) {
       religionId: sect.religionId,
       parentSectId: sect.parentSectId,
       parentSectName: sect.parentSectId ? parentSectNameById.get(sect.parentSectId) ?? null : null,
-      regionNames: regionLinks
-        .filter((link) => link.sectId === sect.id)
-        .map((link) => regionNameById.get(link.regionId))
-        .filter((name): name is string => Boolean(name)),
-      regionIds: regionLinks.filter((link) => link.sectId === sect.id).map((link) => link.regionId),
       founderNames: founderLinks
         .filter((link) => link.sectId === sect.id)
         .map((link) => personNameById.get(link.personId))
@@ -141,10 +112,6 @@ export function getSectListView(filters: SectListFilters = {}) {
         return false;
       }
 
-      if (filters.regionId && !sect.regionIds.includes(filters.regionId)) {
-        return false;
-      }
-
       if (filters.hasFounders && sect.founderIds.length === 0) {
         return false;
       }
@@ -153,7 +120,7 @@ export function getSectListView(filters: SectListFilters = {}) {
     })
     .filter((sect) =>
       matchesQuery(
-        [sect.name, sect.description, sect.note, sect.religionName, sect.parentSectName, sect.regionNames.join(", "), sect.founderNames.join(", ")],
+        [sect.name, sect.description, sect.note, sect.religionName, sect.parentSectName, sect.founderNames.join(", ")],
         normalizedQuery
       )
     );
@@ -166,10 +133,8 @@ export function getReligionDetailView(id: number) {
   }
 
   const sects = listSects().filter((sect) => sect.religionId === id);
-  const regions = listRegions();
   const person = listPerson();
   const detailedPerson = listPersonDetailed();
-  const regionIds = getReligionRegionIds([id]).map((link) => link.regionId);
   const founderIds = getReligionFounderIds([id]).map((link) => link.personId);
   const religionPerson = getPersonReligionLinks(detailedPerson.map((person) => person.id))
     .filter((link) => link.religionId === id)
@@ -179,7 +144,6 @@ export function getReligionDetailView(id: number) {
   return {
     religion,
     sects,
-    regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: person.filter((person) => founderIds.includes(person.id)),
     relatedPerson: dedupePerson(religionPerson),
     relatedEvents: getRelatedEvents({ religionId: id }),
@@ -197,10 +161,8 @@ export function getSectDetailView(id: number) {
   }
 
   const religion = getReligionById(sect.religionId);
-  const regions = listRegions();
   const person = listPerson();
   const detailedPerson = listPersonDetailed();
-  const regionIds = getSectRegionIds([id]).map((link) => link.regionId);
   const founderIds = getSectFounderIds([id]).map((link) => link.personId);
   const sectPerson = getPersonSectLinks(detailedPerson.map((person) => person.id))
     .filter((link) => link.sectId === id)
@@ -214,7 +176,6 @@ export function getSectDetailView(id: number) {
     religion,
     parentSect: hierarchy.parent,
     childSects: hierarchy.children,
-    regions: regions.filter((region) => regionIds.includes(region.id)),
     founders: person.filter((person) => founderIds.includes(person.id)),
     relatedPerson: dedupePerson(sectPerson),
     relatedEvents: getRelatedEvents({ sectId: id }),
@@ -233,7 +194,6 @@ export function createReligionFromInput(input: ReligionInput) {
       ...toStoredBoundaryTime("from", input.fromTimeExpression),
       ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
-    input.regionIds,
     input.founderIds
   );
 }
@@ -248,7 +208,6 @@ export function updateReligionFromInput(id: number, input: ReligionInput) {
       ...toStoredBoundaryTime("from", input.fromTimeExpression),
       ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
-    input.regionIds,
     input.founderIds
   );
 }
@@ -268,7 +227,6 @@ export function createSectFromInput(input: SectInput) {
     },
     input.religionId,
     input.parentSectId ?? null,
-    input.regionIds,
     input.founderIds
   );
 }
@@ -285,7 +243,6 @@ export function updateSectFromInput(id: number, input: SectInput) {
     },
     input.religionId,
     input.parentSectId ?? null,
-    input.regionIds,
     input.founderIds
   );
 }

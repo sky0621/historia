@@ -1108,19 +1108,17 @@ describe("csv import service", () => {
   });
 
   it("previews and imports religions", () => {
-    repositoryMocks.listRegions.mockReturnValue([{ id: 1, name: "インド" }]);
     repositoryMocks.listPersonDetailed.mockReturnValue([{ id: 10, name: "釈迦", aliases: null }]);
-    const preview = previewReligionCsvImport("name,time_start_year,regions,founders\n仏教,-566,インド,釈迦");
+    const preview = previewReligionCsvImport("name,time_start_year,founders\n仏教,-566,釈迦");
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
       input: {
         name: "仏教",
-        regionIds: [1],
         founderIds: [10]
       }
     });
 
-    const result = applyReligionCsvImport("name,time_start_year,regions,founders\n仏教,-566,インド,釈迦");
+    const result = applyReligionCsvImport("name,time_start_year,founders\n仏教,-566,釈迦");
     expect(result).toEqual({ kind: "religion", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createReligionFromInput).toHaveBeenCalled();
   });
@@ -1171,20 +1169,18 @@ describe("csv import service", () => {
 
   it("previews and imports sects", () => {
     repositoryMocks.listReligions.mockReturnValue([{ id: 1, name: "仏教" }]);
-    repositoryMocks.listRegions.mockReturnValue([{ id: 2, name: "日本" }]);
     repositoryMocks.listPersonDetailed.mockReturnValue([{ id: 10, name: "最澄", aliases: null }]);
-    const preview = previewSectCsvImport("name,religion,time_start_year,regions,founders\n天台宗,仏教,805,日本,最澄");
+    const preview = previewSectCsvImport("name,religion,time_start_year,founders\n天台宗,仏教,805,最澄");
     expect(preview.rows[0]).toMatchObject({
       status: "ok",
       input: {
         name: "天台宗",
         religionId: 1,
-        regionIds: [2],
         founderIds: [10]
       }
     });
 
-    const result = applySectCsvImport("name,religion,time_start_year,regions,founders\n天台宗,仏教,805,日本,最澄");
+    const result = applySectCsvImport("name,religion,time_start_year,founders\n天台宗,仏教,805,最澄");
     expect(result).toEqual({ kind: "sect", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createSectFromInput).toHaveBeenCalled();
   });
