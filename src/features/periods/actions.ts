@@ -48,8 +48,8 @@ export async function deletePeriodCategoryAction(formData: FormData) {
 
 export async function createHistoricalPeriodAction(_previousState: CreateFormState, formData: FormData): Promise<CreateFormState> {
   const input = parseHistoricalPeriodFormData(formData);
-  if (listHistoricalPeriods().some((period) => period.name === input.name)) {
-    return { error: "同じ名称の時代区分が登録済みです。" };
+  if (listHistoricalPeriods().some((period) => period.name === input.name && period.categoryId === input.categoryId)) {
+    return { error: "同じカテゴリ内に同じ名称の時代区分が登録済みです。" };
   }
 
   const id = createHistoricalPeriodFromInput(input);

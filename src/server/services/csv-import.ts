@@ -1230,7 +1230,13 @@ export function previewHistoricalPeriodCsvImport(rawCsv: string): CsvPreviewResu
     }
     const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
     const duplicateCandidates = previewInput
-      ? findNameDuplicateCandidates(periods, previewInput.name, "同名の時代区分が登録済みです")
+      ? periods
+          .filter((period) => period.name === previewInput.name && period.categoryId === previewInput.categoryId)
+          .map((period) => ({
+            id: period.id,
+            label: period.name,
+            reason: "同じカテゴリ内に同じ名称の時代区分が登録済みです"
+          }))
       : [];
     const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
     return { rowNumber: row.rowNumber, label: inputCandidate.name || `row-${row.rowNumber}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<HistoricalPeriodCsvInput>;
@@ -1583,8 +1589,8 @@ export function applyHistoricalPeriodCsvImport(rawCsv: string): CsvImportResult 
     syncNamedRows({
       rows: preview.rows,
       existingItems: listHistoricalPeriods(),
-      getExistingKey: (item) => item.name,
-      getInputKey: (input) => input.name,
+      getExistingKey: (item) => `${item.categoryId}:${item.name}`,
+      getInputKey: (input) => `${input.categoryId}:${input.name}`,
       createItem: createHistoricalPeriodFromInput,
       updateItem: updateHistoricalPeriodFromInput,
       deleteItem: removeHistoricalPeriod
