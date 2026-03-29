@@ -6,10 +6,15 @@ import {
   historicalPeriodRegionLinks,
   historicalPeriods,
   periodCategories,
+  persons,
   polities,
   polityRegionLinks,
+  religionSectLinks,
   religions,
-  regions
+  regions,
+  sectFounderLinks,
+  sectParentLinks,
+  sects
 } from "@/db/schema";
 
 export const csvSyncImportTargets = [
@@ -17,7 +22,8 @@ export const csvSyncImportTargets = [
   "period-categories",
   "historical-periods",
   "historical-period-category-links",
-  "religions"
+  "religions",
+  "sects"
 ] as const;
 
 export type CsvSyncImportTarget = (typeof csvSyncImportTargets)[number];
@@ -50,6 +56,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importHistoricalPeriodCategoryLinksCsv(rawCsv);
     case "religions":
       return importReligionsCsv(rawCsv);
+    case "sects":
+      return importSectsCsv(rawCsv);
     case "polities":
       return importPolitiesCsv(rawCsv);
   }
@@ -426,6 +434,127 @@ function importReligionsCsv(rawCsv: string): CsvSyncImportResult {
   });
 }
 
+function importSectsCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, [
+    "id",
+    "name",
+    "religion",
+    "parent_sect",
+    "description",
+    "note",
+    "time_calendar_era",
+    "time_start_year",
+    "time_end_year",
+    "time_is_approximate",
+    "founders"
+  ]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(sects).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const religionOptions = tx.select().from(religions).all();
+    const personOptions = tx.select().from(persons).all();
+    const religionIdByName = new Map(religionOptions.map((item) => [item.name, item.id]));
+    const personIdByName = new Map(personOptions.map((item) => [item.name, item.id]));
+    const csvIds = new Set<number>();
+    const csvSectIdByName = new Map(existingItems.map((item) => [item.name, item.id]));
+    const pendingParentBySectId = new Map<number, { parentSectName: string; rowNumber: number }>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+      const religionName = parseRequiredString(cells.religion, "religion", row.rowNumber);
+      const religionId = religionIdByName.get(religionName);
+      if (!religionId) {
+        throw new Error(`row ${row.rowNumber}: religion "${religionName}" が存在しません`);
+      }
+      const founderIds = parseReferenceNames(cells.founders).map((name) => {
+        const personId = personIdByName.get(name);
+        if (!personId) {
+          throw new Error(`row ${row.rowNumber}: founder "${name}" が存在しません`);
+        }
+        return personId;
+      });
+      const timeCalendarEra = parseOptionalEra(cells.time_calendar_era, row.rowNumber, "time_calendar_era");
+      const timeStartYear = parseOptionalInteger(cells.time_start_year, row.rowNumber, "time_start_year");
+      const timeEndYear = parseOptionalInteger(cells.time_end_year, row.rowNumber, "time_end_year");
+      const timeIsApproximate = parseBooleanFlag(cells.time_is_approximate);
+
+      const values = {
+        name: parseRequiredString(cells.name, "name", row.rowNumber),
+        description: nullable(cells.description),
+        note: nullable(cells.note),
+        fromCalendarEra: timeCalendarEra,
+        fromYear: timeStartYear,
+        fromIsApproximate: timeIsApproximate,
+        toCalendarEra: timeEndYear == null ? null : timeCalendarEra,
+        toYear: timeEndYear,
+        toIsApproximate: timeEndYear == null ? false : timeIsApproximate
+      };
+
+      if (id == null) {
+        const result = tx.insert(sects).values(values).run();
+        const sectId = Number(result.lastInsertRowid);
+        replaceSectLinks(tx, sectId, religionId, null, founderIds);
+        csvSectIdByName.set(values.name, sectId);
+        const parentSectName = nullable(cells.parent_sect);
+        if (parentSectName) {
+          pendingParentBySectId.set(sectId, { parentSectName, rowNumber: row.rowNumber });
+        }
+        createdCount += 1;
+        continue;
+      }
+
+      assertUniqueCsvId(csvIds, id, row.rowNumber);
+      if (!existingIds.has(id)) {
+        throw new Error(`row ${row.rowNumber}: id=${id} の宗派は存在しません`);
+      }
+
+      tx.update(sects).set(values).where(eq(sects.id, id)).run();
+      replaceSectLinks(tx, id, religionId, null, founderIds);
+      csvSectIdByName.set(values.name, id);
+      const parentSectName = nullable(cells.parent_sect);
+      if (parentSectName) {
+        pendingParentBySectId.set(id, { parentSectName, rowNumber: row.rowNumber });
+      }
+      updatedCount += 1;
+    }
+
+    for (const [sectId, pendingParent] of pendingParentBySectId.entries()) {
+      const parentSectId = csvSectIdByName.get(pendingParent.parentSectName);
+      if (!parentSectId) {
+        throw new Error(`row ${pendingParent.rowNumber}: parent_sect "${pendingParent.parentSectName}" が存在しません`);
+      }
+      if (parentSectId === sectId) {
+        throw new Error(`row ${pendingParent.rowNumber}: parent_sect に自分自身は指定できません`);
+      }
+
+      tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, sectId)).run();
+      tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
+      tx.delete(sectParentLinks).where(eq(sectParentLinks.parentSectId, id)).run();
+      tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
+      tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
+      tx.delete(sects).where(eq(sects.id, id)).run();
+    }
+
+    return {
+      targetType: "sects" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
+    };
+  });
+}
+
 function replacePolityRegionLinks(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   polityId: number,
@@ -453,6 +582,25 @@ function replaceHistoricalPeriodLinks(
   }
   if (regionIds.length > 0) {
     tx.insert(historicalPeriodRegionLinks).values(regionIds.map((regionId) => ({ periodId, regionId }))).run();
+  }
+}
+
+function replaceSectLinks(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  sectId: number,
+  religionId: number,
+  parentSectId: number | null,
+  founderIds: number[]
+) {
+  tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, sectId)).run();
+  tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, sectId)).run();
+  tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, sectId)).run();
+  tx.insert(religionSectLinks).values({ sectId, religionId }).run();
+  if (parentSectId != null) {
+    tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
+  }
+  if (founderIds.length > 0) {
+    tx.insert(sectFounderLinks).values(founderIds.map((personId) => ({ sectId, personId }))).run();
   }
 }
 

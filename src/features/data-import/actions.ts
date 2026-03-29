@@ -61,5 +61,6 @@ const revalidationPaths: Record<CsvSyncImportTarget, string[]> = {
   "period-categories": ["/period-categories", "/periods", "/manage/data"],
   "historical-periods": ["/periods", "/period-categories", "/manage/data"],
   "historical-period-category-links": ["/periods", "/period-categories", "/manage/data"],
-  religions: ["/religions", "/manage/data"]
+  religions: ["/religions", "/manage/data"],
+  sects: ["/religions", "/manage/data"]
 };

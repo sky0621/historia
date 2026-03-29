@@ -27,6 +27,10 @@ afterAll(() => {
 });
 
 beforeEach(() => {
+  sqlite.prepare("DELETE FROM sect_founder_links").run();
+  sqlite.prepare("DELETE FROM sect_parent_links").run();
+  sqlite.prepare("DELETE FROM religion_sect_links").run();
+  sqlite.prepare("DELETE FROM sects").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM religions").run();
   sqlite.prepare("DELETE FROM historical_period_category_links").run();
@@ -59,6 +63,13 @@ beforeEach(() => {
   sqlite
     .prepare("INSERT INTO religion_founder_links (religion_id, person_id) VALUES (1, 2), (2, 1)")
     .run();
+  sqlite
+    .prepare(
+      "INSERT INTO sects (id, name, description, from_calendar_era, from_year, from_is_approximate) VALUES (1, '上座部仏教', 'old', 'BCE', 300, 1), (2, 'スンナ派', 'old', 'CE', 700, 0)"
+    )
+    .run();
+  sqlite.prepare("INSERT INTO religion_sect_links (religion_id, sect_id) VALUES (1, 1), (2, 2)").run();
+  sqlite.prepare("INSERT INTO sect_founder_links (sect_id, person_id) VALUES (1, 2), (2, 1)").run();
 });
 
 describe("csv sync import service", () => {
@@ -172,6 +183,7 @@ describe("csv sync import service", () => {
 
   it("deletes religions missing from csv", () => {
     sqlite.prepare("DELETE FROM religion_founder_links WHERE religion_id = 2").run();
+    sqlite.prepare("DELETE FROM religion_sect_links WHERE religion_id = 2").run();
 
     const result = csvSyncImportModule.importCsvSync(
       "religions",
@@ -195,5 +207,97 @@ describe("csv sync import service", () => {
     });
     expect(religionRows).toEqual([{ id: 1 }]);
     expect(founderRows).toEqual([{ religion_id: 1, person_id: 2 }]);
+  });
+
+  it("syncs sects and related links", () => {
+    sqlite
+      .prepare("INSERT INTO religions (id, name, description, from_calendar_era, from_year, from_is_approximate) VALUES (3, 'キリスト教', 'old', 'CE', 1, 1)")
+      .run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "sects",
+      [
+        "id,name,religion,parent_sect,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
+        "1,上座部仏教,仏教,,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ",
+        "2,スンナ派,イスラム教,,updated,,700,CE,700,,0,ムハンマド",
+        ",カトリック,キリスト教,,new,,年未詳,CE,,,0,イエス",
+        ",浄土真宗,仏教,上座部仏教,new child,,1224,CE,1224,,0,"
+      ].join("\n")
+    );
+
+    const sectRows = sqlite
+      .prepare("SELECT id, name, description, from_calendar_era, from_year, from_is_approximate FROM sects ORDER BY id")
+      .all() as Array<{
+      id: number;
+      name: string;
+      description: string | null;
+      from_calendar_era: string | null;
+      from_year: number | null;
+      from_is_approximate: number;
+    }>;
+    const religionLinkRows = sqlite
+      .prepare("SELECT sect_id, religion_id FROM religion_sect_links ORDER BY sect_id")
+      .all() as Array<{ sect_id: number; religion_id: number }>;
+    const parentRows = sqlite
+      .prepare("SELECT sect_id, parent_sect_id FROM sect_parent_links ORDER BY sect_id")
+      .all() as Array<{ sect_id: number; parent_sect_id: number }>;
+    const founderRows = sqlite
+      .prepare("SELECT sect_id, person_id FROM sect_founder_links ORDER BY sect_id, person_id")
+      .all() as Array<{ sect_id: number; person_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "sects",
+      totalRows: 4,
+      createdCount: 2,
+      updatedCount: 2,
+      deletedCount: 0
+    });
+    expect(sectRows).toEqual([
+      { id: 1, name: "上座部仏教", description: "updated", from_calendar_era: "BCE", from_year: 300, from_is_approximate: 1 },
+      { id: 2, name: "スンナ派", description: "updated", from_calendar_era: "CE", from_year: 700, from_is_approximate: 0 },
+      { id: 3, name: "カトリック", description: "new", from_calendar_era: "CE", from_year: null, from_is_approximate: 0 },
+      { id: 4, name: "浄土真宗", description: "new child", from_calendar_era: "CE", from_year: 1224, from_is_approximate: 0 }
+    ]);
+    expect(religionLinkRows).toEqual([
+      { sect_id: 1, religion_id: 1 },
+      { sect_id: 2, religion_id: 2 },
+      { sect_id: 3, religion_id: 3 },
+      { sect_id: 4, religion_id: 1 }
+    ]);
+    expect(parentRows).toEqual([{ sect_id: 4, parent_sect_id: 1 }]);
+    expect(founderRows).toEqual([
+      { sect_id: 1, person_id: 2 },
+      { sect_id: 2, person_id: 1 },
+      { sect_id: 3, person_id: 3 }
+    ]);
+  });
+
+  it("deletes sects missing from csv", () => {
+    sqlite
+      .prepare("INSERT INTO religions (id, name, description, from_calendar_era, from_year, from_is_approximate) VALUES (3, 'キリスト教', 'old', 'CE', 1, 1)")
+      .run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "sects",
+      [
+        "id,name,religion,parent_sect,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
+        "1,上座部仏教,仏教,,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ"
+      ].join("\n")
+    );
+
+    const sectRows = sqlite.prepare("SELECT id FROM sects ORDER BY id").all() as Array<{ id: number }>;
+    const religionLinkRows = sqlite
+      .prepare("SELECT sect_id, religion_id FROM religion_sect_links ORDER BY sect_id")
+      .all() as Array<{ sect_id: number; religion_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "sects",
+      totalRows: 1,
+      createdCount: 0,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(sectRows).toEqual([{ id: 1 }]);
+    expect(religionLinkRows).toEqual([{ sect_id: 1, religion_id: 1 }]);
   });
 });
