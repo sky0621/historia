@@ -184,6 +184,67 @@ export function buildReligionsCsv() {
   ]);
 }
 
+export function buildSectsCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         s.id,
+         s.name,
+         (
+           SELECT r.name
+           FROM religion_sect_links rsl
+           JOIN religions r ON r.id = rsl.religion_id
+           WHERE rsl.sect_id = s.id
+           LIMIT 1
+         ) AS religion,
+         (
+           SELECT parent.name
+           FROM sect_parent_links spl
+           JOIN sects parent ON parent.id = spl.parent_sect_id
+           WHERE spl.sect_id = s.id
+           LIMIT 1
+         ) AS parent_sect,
+         s.description,
+         s.note,
+         s.from_calendar_era AS time_calendar_era,
+         s.from_year AS time_start_year,
+         s.to_year AS time_end_year,
+         CASE
+           WHEN coalesce(s.from_is_approximate, 0) = 1 OR coalesce(s.to_is_approximate, 0) = 1 THEN 1
+           ELSE 0
+         END AS time_is_approximate,
+         (
+           SELECT group_concat(p.name, ', ')
+           FROM sect_founder_links sfl
+           JOIN persons p ON p.id = sfl.person_id
+           WHERE sfl.sect_id = s.id
+         ) AS founders
+       FROM sects s
+       ORDER BY s.name`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  const normalizedRows = rows.map((row) => ({
+    ...row,
+    time_label: formatHistoricalPeriodTime(row)
+  }));
+
+  return toCsv(normalizedRows, [
+    "id",
+    "name",
+    "religion",
+    "parent_sect",
+    "description",
+    "note",
+    "time_label",
+    "time_calendar_era",
+    "time_start_year",
+    "time_end_year",
+    "time_is_approximate",
+    "founders"
+  ]);
+}
+
 function formatHistoricalPeriodTime(row: Record<string, unknown>) {
   const expression = fromTimeExpressionRecord({
     calendarEra: (row.time_calendar_era as "BCE" | "CE" | null) ?? "CE",

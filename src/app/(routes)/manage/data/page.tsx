@@ -27,6 +27,9 @@ export default function ManageDataPage() {
               <Link href="/api/export/religions.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Religion CSV をダウンロード
               </Link>
+              <Link href="/api/export/sects.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                Sect CSV をダウンロード
+              </Link>
               <Link href="/api/export/polities.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Polity CSV をダウンロード
               </Link>
