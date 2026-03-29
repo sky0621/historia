@@ -34,7 +34,6 @@ function clearTables() {
     "role_dynasty_links",
     "role_polity_links",
     "role_person_links",
-    "sect_parent_links",
     "religion_sect_links",
     "historical_period_polity_links",
     "historical_period_category_links",

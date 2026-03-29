@@ -75,18 +75,6 @@ export default async function SectDetailPage({ params }: { params: Promise<{ id:
             </dd>
           </div>
           <div>
-            <dt className="font-medium text-[var(--muted)]">親宗派</dt>
-            <dd className="mt-1">
-              {view.parentSect ? (
-                <Link href={`/sects/${view.parentSect.id}`} className="underline-offset-4 hover:underline">
-                  {view.parentSect.name}
-                </Link>
-              ) : (
-                "-"
-              )}
-            </dd>
-          </div>
-          <div>
             <dt className="font-medium text-[var(--muted)]">説明</dt>
             <dd className="mt-1 whitespace-pre-wrap">{view.sect.description ?? "-"}</dd>
           </div>
@@ -131,25 +119,6 @@ export default async function SectDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">子宗派</h2>
-          <Link href={`/sects/new?religionId=${view.sect.religionId}&parentSectId=${view.sect.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
-            宗派を追加
-          </Link>
-        </div>
-        <div className="mt-4 space-y-3">
-          {view.childSects.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">子宗派はまだありません。</p>
-          ) : (
-            view.childSects.map((sect) => (
-              <Link key={sect.id} href={`/sects/${sect.id}`} className="block rounded-2xl border border-[var(--border)] px-4 py-3 text-sm hover:bg-stone-50">
-                {sect.name}
-              </Link>
-            ))
-          )}
-        </div>
-      </div>
     </section>
   );
 }

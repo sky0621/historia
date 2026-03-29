@@ -232,7 +232,6 @@ const REQUIRED_HISTORICAL_PERIOD_HEADERS = ["name", "category"] as const;
 const SECT_HEADERS = [
   "name",
   "religion",
-  "parent_sect",
   "description",
   "note",
   "time_label",
@@ -451,6 +450,7 @@ export function previewEventCsvImport(rawCsv: string): CsvPreviewResult<EventInp
       religionIds: resolveReferences("religions", cells.religions, references.religions, issues),
       sectIds: resolveReferences("sects", cells.sects, references.sects, issues),
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
+      periodIds: resolveReferences("periods", cells.periods, references.periods, issues),
       relations: [],
       conflictParticipants: [],
       conflictOutcome: undefined
@@ -535,6 +535,7 @@ export function previewPersonCsvImport(rawCsv: string): CsvPreviewResult<PersonI
       regionIds: resolveReferences("regions", cells.regions, references.regions, issues),
       religionIds: resolveReferences("religions", cells.religions, references.religions, issues),
       sectIds: resolveReferences("sects", cells.sects, references.sects, issues),
+      periodIds: resolveReferences("periods", cells.periods, references.periods, issues),
       roles: []
     };
 
@@ -622,7 +623,26 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
       dynastyId,
       note: normalizeOptionalString(cells.note),
       isIncumbent: parseOptionalBoolean(cells.is_incumbent, "is_incumbent", issues) ?? false,
-      timeExpression
+      fromTimeExpression:
+        timeExpression
+          ? {
+              calendarEra: timeExpression.calendarEra,
+              startYear: timeExpression.startYear,
+              isApproximate: timeExpression.isApproximate,
+              precision: "year",
+              displayLabel: ""
+            }
+          : undefined,
+      toTimeExpression:
+        timeExpression && timeExpression.endYear !== undefined
+          ? {
+              calendarEra: timeExpression.calendarEra,
+              startYear: timeExpression.endYear,
+              isApproximate: timeExpression.isApproximate,
+              precision: "year",
+              displayLabel: ""
+            }
+          : undefined
     };
 
     const parsedInput = roleAssignmentSchema.safeParse(inputCandidate);
@@ -1236,7 +1256,6 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
   validateRequiredHeaders(parsed.headers, REQUIRED_SECT_HEADERS);
   const unknownHeaders = parsed.headers.filter((header) => !SECT_HEADERS.includes(header as (typeof SECT_HEADERS)[number]));
   const references = buildReferenceMaps();
-  const sectNameMap = new Map(listSects().map((item) => [item.name, item.id]));
   const sects = listSects();
 
   const rows = parsed.rows.map((row) => {
@@ -1246,7 +1265,6 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
     const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
     const inputCandidate = {
       religionId: resolveSingleReference("religions", cells.religion, references.religions, issues),
-      parentSectId: resolveNamedEntityOptional("parent_sect", cells.parent_sect, sectNameMap, issues),
       name: cells.name.trim(),
       description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
@@ -1258,9 +1276,6 @@ export function previewSectCsvImport(rawCsv: string): CsvPreviewResult<SectCsvIn
       for (const issue of parsedInput.error.issues) {
         issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
       }
-    }
-    if (parsedInput.success && parsedInput.data.parentSectId && sectNameMap.get(parsedInput.data.name) === parsedInput.data.parentSectId) {
-      issues.push({ field: "parent_sect", message: "自己参照は登録できません" });
     }
     if (unknownHeaders.length > 0) {
       warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
@@ -1364,6 +1379,8 @@ export function applyRoleAssignmentCsvImport(rawCsv: string): CsvImportResult {
           role.dynastyId ?? "",
           (record.fromCalendarEra as string | null) ?? (record.timeCalendarEra as string | null) ?? "",
           (record.fromYear as number | null) ?? (record.timeStartYear as number | null) ?? "",
+          (record.toCalendarEra as string | null) ??
+            (record.timeEndYear != null ? ((record.fromCalendarEra as string | null) ?? (record.timeCalendarEra as string | null) ?? "") : ""),
           (record.toYear as number | null) ?? (record.timeEndYear as number | null) ?? ""
         ].join(":");
       })

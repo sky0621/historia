@@ -35,6 +35,7 @@ export const eventSchema = z.object({
   religionIds: idsSchema,
   sectIds: idsSchema,
   regionIds: idsSchema,
+  periodIds: idsSchema,
   relations: z.array(eventRelationSchema).default([]),
   conflictParticipants: z.array(conflictParticipantSchema).default([]),
   conflictOutcome: z
@@ -65,6 +66,7 @@ export function parseEventFormData(formData: FormData): EventInput {
     religionIds: normalizeIds(formData.getAll("religionIds")),
     sectIds: normalizeIds(formData.getAll("sectIds")),
     regionIds: normalizeIds(formData.getAll("regionIds")),
+    periodIds: normalizeIds(formData.getAll("periodIds")),
     relations: parseRelations(formData),
     conflictParticipants: parseConflictParticipants(formData),
     conflictOutcome: parseConflictOutcome(formData)

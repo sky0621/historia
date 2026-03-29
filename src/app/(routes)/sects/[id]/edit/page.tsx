@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SectForm } from "@/features/religions/components/sect-form";
-import { getFounderOptions, getParentSectOptions, getReligionOptions, getSectDetailView } from "@/server/services/religions";
+import { getFounderOptions, getReligionOptions, getSectDetailView } from "@/server/services/religions";
 
 export const metadata: Metadata = { title: "sect" };
 
@@ -19,12 +19,10 @@ export default async function EditSectPage({ params }: { params: Promise<{ id: s
       description="既存の宗派情報を更新します。"
       submitLabel="宗派を更新"
       religionOptions={getReligionOptions()}
-      parentSectOptions={getParentSectOptions(view.sect.id)}
       founderOptions={getFounderOptions()}
       defaultValues={{
         id: view.sect.id,
         religionId: view.sect.religionId,
-        parentSectId: view.sect.parentSectId,
         name: view.sect.name,
         description: view.sect.description ?? "",
         note: view.sect.note ?? "",

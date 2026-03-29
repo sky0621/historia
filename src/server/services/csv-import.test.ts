@@ -704,10 +704,16 @@ describe("csv import service", () => {
           polityId: 2,
           dynastyId: 3,
           isIncumbent: false,
-          timeExpression: {
+          fromTimeExpression: {
             calendarEra: "CE",
             startYear: 804,
-            endYear: 822,
+            isApproximate: false,
+            precision: "year",
+            displayLabel: ""
+          },
+          toTimeExpression: {
+            calendarEra: "CE",
+            startYear: 822,
             isApproximate: false,
             precision: "year",
             displayLabel: ""

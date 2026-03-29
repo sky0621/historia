@@ -34,7 +34,6 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM person_region_links").run();
   sqlite.prepare("DELETE FROM regions").run();
   sqlite.prepare("DELETE FROM sect_founder_links").run();
-  sqlite.prepare("DELETE FROM sect_parent_links").run();
   sqlite.prepare("DELETE FROM religion_sect_links").run();
   sqlite.prepare("DELETE FROM sects").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
@@ -272,11 +271,11 @@ describe("csv sync import service", () => {
     const result = csvSyncImportModule.importCsvSync(
       "sects",
       [
-        "id,name,religion,parent_sect,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
-        "1,上座部仏教,仏教,,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ",
-        "2,スンナ派,イスラム教,,updated,,700,CE,700,,0,ムハンマド",
-        ",カトリック,キリスト教,,new,,年未詳,CE,,,0,イエス",
-        ",浄土真宗,仏教,上座部仏教,new child,,1224,CE,1224,,0,"
+        "id,name,religion,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
+        "1,上座部仏教,仏教,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ",
+        "2,スンナ派,イスラム教,updated,,700,CE,700,,0,ムハンマド",
+        ",カトリック,キリスト教,new,,年未詳,CE,,,0,イエス",
+        ",浄土真宗,仏教,new child,,1224,CE,1224,,0,"
       ].join("\n")
     );
 
@@ -293,9 +292,6 @@ describe("csv sync import service", () => {
     const religionLinkRows = sqlite
       .prepare("SELECT sect_id, religion_id FROM religion_sect_links ORDER BY sect_id")
       .all() as Array<{ sect_id: number; religion_id: number }>;
-    const parentRows = sqlite
-      .prepare("SELECT sect_id, parent_sect_id FROM sect_parent_links ORDER BY sect_id")
-      .all() as Array<{ sect_id: number; parent_sect_id: number }>;
     const founderRows = sqlite
       .prepare("SELECT sect_id, person_id FROM sect_founder_links ORDER BY sect_id, person_id")
       .all() as Array<{ sect_id: number; person_id: number }>;
@@ -319,7 +315,6 @@ describe("csv sync import service", () => {
       { sect_id: 3, religion_id: 3 },
       { sect_id: 4, religion_id: 1 }
     ]);
-    expect(parentRows).toEqual([{ sect_id: 4, parent_sect_id: 1 }]);
     expect(founderRows).toEqual([
       { sect_id: 1, person_id: 2 },
       { sect_id: 2, person_id: 1 },
@@ -335,8 +330,8 @@ describe("csv sync import service", () => {
     const result = csvSyncImportModule.importCsvSync(
       "sects",
       [
-        "id,name,religion,parent_sect,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
-        "1,上座部仏教,仏教,,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ"
+        "id,name,religion,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
+        "1,上座部仏教,仏教,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ"
       ].join("\n")
     );
 

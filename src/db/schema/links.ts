@@ -35,11 +35,6 @@ export const religionSectLinks = sqliteTable("religion_sect_links", {
   sectId: integer("sect_id").notNull()
 });
 
-export const sectParentLinks = sqliteTable("sect_parent_links", {
-  sectId: integer("sect_id").notNull(),
-  parentSectId: integer("parent_sect_id").notNull()
-});
-
 export const eventPersonLinks = sqliteTable("event_person_links", {
   eventId: integer("event_id").notNull(),
   personId: integer("person_id").notNull()

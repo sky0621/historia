@@ -17,7 +17,6 @@ const partFiles = [
   "050-polity-link.sql",
   "060-religion.sql",
   "060-religion-link.sql",
-  "060-religion-parent-link.sql",
   "070-source.sql",
   "080-other.sql",
   "090-import.sql",

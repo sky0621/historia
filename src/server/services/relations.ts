@@ -28,7 +28,6 @@ import {
   getPolityTransitionsByPolityIds,
   updatePolityTransition
 } from "@/server/repositories/polity-transitions";
-import { listSects } from "@/server/repositories/sects";
 
 export function getRelationFormOptions() {
   return {
@@ -206,19 +205,6 @@ export function getHistoricalPeriodRelationView(periodId: number) {
     fromName: periods.get(item.fromPeriodId) ?? `#${item.fromPeriodId}`,
     toName: periods.get(item.toPeriodId) ?? `#${item.toPeriodId}`
   }));
-}
-
-export function getSectHierarchyView(sectId: number) {
-  const sects = listSects();
-  const current = sects.find((item) => item.id === sectId) ?? null;
-  if (!current) {
-    return { parent: null, children: [] };
-  }
-
-  return {
-    parent: current.parentSectId ? sects.find((item) => item.id === current.parentSectId) ?? null : null,
-    children: sects.filter((item) => item.parentSectId === sectId)
-  };
 }
 
 function nullable(value: string | undefined) {

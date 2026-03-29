@@ -1,19 +1,16 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { religionSectLinks, sectFounderLinks, sectParentLinks, sects } from "@/db/schema";
+import { religionSectLinks, sectFounderLinks, sects } from "@/db/schema";
 
 export type SectInsert = typeof sects.$inferInsert;
 export type SectRecord = typeof sects.$inferSelect & {
   religionId: number;
-  parentSectId: number | null;
 };
 
 export function listSects() {
   const items = db.select().from(sects).orderBy(asc(sects.name)).all();
   const religionLinks = getSectReligionLinks(items.map((item) => item.id));
-  const parentLinks = getSectParentLinks(items.map((item) => item.id));
   const religionBySectId = new Map(religionLinks.map((link) => [link.sectId, link.religionId]));
-  const parentBySectId = new Map(parentLinks.map((link) => [link.sectId, link.parentSectId]));
 
   return items
     .map((item) => {
@@ -24,8 +21,7 @@ export function listSects() {
 
       return {
         ...item,
-        religionId,
-        parentSectId: parentBySectId.get(item.id) ?? null
+        religionId
       };
     })
     .filter((item): item is SectRecord => Boolean(item));
@@ -44,15 +40,13 @@ export function getSectById(id: number) {
 
   return {
     ...sect,
-    religionId,
-    parentSectId: getSectParentLinks([id])[0]?.parentSectId ?? null
+    religionId
   };
 }
 
 export function createSect(
   input: SectInsert,
   religionId: number,
-  parentSectId: number | null,
   founderIds: number[]
 ) {
   return db.transaction((tx) => {
@@ -60,9 +54,6 @@ export function createSect(
     const sectId = Number(result.lastInsertRowid);
 
     tx.insert(religionSectLinks).values({ religionId, sectId }).run();
-    if (parentSectId != null) {
-      tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
-    }
 
     if (founderIds.length > 0) {
       tx.insert(sectFounderLinks).values(founderIds.map((personId) => ({ sectId, personId }))).run();
@@ -76,18 +67,13 @@ export function updateSect(
   id: number,
   input: Omit<SectInsert, "id">,
   religionId: number,
-  parentSectId: number | null,
   founderIds: number[]
 ) {
   db.transaction((tx) => {
     tx.update(sects).set(input).where(eq(sects.id, id)).run();
     tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
-    tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
     tx.insert(religionSectLinks).values({ religionId, sectId: id }).run();
-    if (parentSectId != null) {
-      tx.insert(sectParentLinks).values({ sectId: id, parentSectId }).run();
-    }
 
     if (founderIds.length > 0) {
       tx.insert(sectFounderLinks).values(founderIds.map((personId) => ({ sectId: id, personId }))).run();
@@ -97,8 +83,6 @@ export function updateSect(
 
 export function deleteSect(id: number) {
   db.transaction((tx) => {
-    tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
-    tx.delete(sectParentLinks).where(eq(sectParentLinks.parentSectId, id)).run();
     tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
     tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
     tx.delete(sects).where(eq(sects.id, id)).run();
@@ -126,17 +110,5 @@ export function getSectReligionLinks(sectIds: number[]) {
     .select()
     .from(religionSectLinks)
     .where(inArray(religionSectLinks.sectId, sectIds))
-    .all();
-}
-
-export function getSectParentLinks(sectIds: number[]) {
-  if (sectIds.length === 0) {
-    return [];
-  }
-
-  return db
-    .select()
-    .from(sectParentLinks)
-    .where(inArray(sectParentLinks.sectId, sectIds))
     .all();
 }

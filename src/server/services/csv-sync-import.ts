@@ -16,7 +16,6 @@ import {
   religions,
   regions,
   sectFounderLinks,
-  sectParentLinks,
   sects
 } from "@/db/schema";
 
@@ -531,7 +530,6 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
     "id",
     "name",
     "religion",
-    "parent_sect",
     "description",
     "note",
     "time_calendar_era",
@@ -549,8 +547,6 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
     const religionIdByName = new Map(religionOptions.map((item) => [item.name, item.id]));
     const personIdByName = new Map(personOptions.map((item) => [item.name, item.id]));
     const csvIds = new Set<number>();
-    const csvSectIdByName = new Map(existingItems.map((item) => [item.name, item.id]));
-    const pendingParentBySectId = new Map<number, { parentSectName: string; rowNumber: number }>();
     let createdCount = 0;
     let updatedCount = 0;
 
@@ -589,12 +585,7 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       if (id == null) {
         const result = tx.insert(sects).values(values).run();
         const sectId = Number(result.lastInsertRowid);
-        replaceSectLinks(tx, sectId, religionId, null, founderIds);
-        csvSectIdByName.set(values.name, sectId);
-        const parentSectName = nullable(cells.parent_sect);
-        if (parentSectName) {
-          pendingParentBySectId.set(sectId, { parentSectName, rowNumber: row.rowNumber });
-        }
+        replaceSectLinks(tx, sectId, religionId, founderIds);
         createdCount += 1;
         continue;
       }
@@ -605,32 +596,12 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       }
 
       tx.update(sects).set(values).where(eq(sects.id, id)).run();
-      replaceSectLinks(tx, id, religionId, null, founderIds);
-      csvSectIdByName.set(values.name, id);
-      const parentSectName = nullable(cells.parent_sect);
-      if (parentSectName) {
-        pendingParentBySectId.set(id, { parentSectName, rowNumber: row.rowNumber });
-      }
+      replaceSectLinks(tx, id, religionId, founderIds);
       updatedCount += 1;
-    }
-
-    for (const [sectId, pendingParent] of pendingParentBySectId.entries()) {
-      const parentSectId = csvSectIdByName.get(pendingParent.parentSectName);
-      if (!parentSectId) {
-        throw new Error(`row ${pendingParent.rowNumber}: parent_sect "${pendingParent.parentSectName}" が存在しません`);
-      }
-      if (parentSectId === sectId) {
-        throw new Error(`row ${pendingParent.rowNumber}: parent_sect に自分自身は指定できません`);
-      }
-
-      tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, sectId)).run();
-      tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
     }
 
     const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
     for (const id of deletedIds) {
-      tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, id)).run();
-      tx.delete(sectParentLinks).where(eq(sectParentLinks.parentSectId, id)).run();
       tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
       tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
       tx.delete(sects).where(eq(sects.id, id)).run();
@@ -680,16 +651,11 @@ function replaceSectLinks(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   sectId: number,
   religionId: number,
-  parentSectId: number | null,
   founderIds: number[]
 ) {
   tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, sectId)).run();
-  tx.delete(sectParentLinks).where(eq(sectParentLinks.sectId, sectId)).run();
   tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, sectId)).run();
   tx.insert(religionSectLinks).values({ sectId, religionId }).run();
-  if (parentSectId != null) {
-    tx.insert(sectParentLinks).values({ sectId, parentSectId }).run();
-  }
   if (founderIds.length > 0) {
     tx.insert(sectFounderLinks).values(founderIds.map((personId) => ({ sectId, personId }))).run();
   }

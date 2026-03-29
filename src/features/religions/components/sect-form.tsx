@@ -26,12 +26,10 @@ type Props = {
   description: string;
   submitLabel: string;
   religionOptions: Option[];
-  parentSectOptions: Option[];
   founderOptions: Option[];
   defaultValues?: {
     id?: number;
     religionId: number;
-    parentSectId?: number | null;
     name: string;
     description: string;
     note: string;
@@ -46,7 +44,6 @@ export function SectForm({
   description,
   submitLabel,
   religionOptions,
-  parentSectOptions,
   founderOptions,
   defaultValues
 }: Props) {
@@ -81,17 +78,6 @@ export function SectForm({
             <label className={fieldLabelClassName}>
               <span className={fieldMetaClassName}>名称</span>
               <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
-            </label>
-            <label className={fieldLabelClassName}>
-              <span className={fieldMetaClassName}>親宗派</span>
-              <select name="parentSectId" defaultValue={defaultValues?.parentSectId ?? ""} className={inputClassName}>
-                <option value="">親宗派なし</option>
-                {parentSectOptions.map((sect) => (
-                  <option key={sect.id} value={sect.id}>
-                    {sect.name}
-                  </option>
-                ))}
-              </select>
             </label>
             <label className={fieldLabelClassName}>
               <span className={fieldMetaClassName}>説明</span>

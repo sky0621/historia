@@ -215,13 +215,6 @@ export function buildSectsCsv() {
            WHERE rsl.sect_id = s.id
            LIMIT 1
          ) AS religion,
-         (
-           SELECT parent.name
-           FROM sect_parent_links spl
-           JOIN sects parent ON parent.id = spl.parent_sect_id
-           WHERE spl.sect_id = s.id
-           LIMIT 1
-         ) AS parent_sect,
          s.description,
          s.note,
          s.from_calendar_era AS time_calendar_era,
@@ -251,7 +244,6 @@ export function buildSectsCsv() {
     "id",
     "name",
     "religion",
-    "parent_sect",
     "description",
     "note",
     "time_label",

@@ -14,8 +14,7 @@ export const religionSchema = z.object({
 });
 
 export const sectSchema = religionSchema.extend({
-  religionId: z.number().int().positive(),
-  parentSectId: z.number().int().positive().nullable().optional()
+  religionId: z.number().int().positive()
 });
 
 export type ReligionInput = z.infer<typeof religionSchema>;
@@ -35,7 +34,6 @@ export function parseReligionFormData(formData: FormData): ReligionInput {
 export function parseSectFormData(formData: FormData): SectInput {
   return sectSchema.parse({
     religionId: Number(formData.get("religionId")),
-    parentSectId: normalizeId(formData.get("parentSectId")),
     name: formData.get("name"),
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
@@ -47,13 +45,4 @@ export function parseSectFormData(formData: FormData): SectInput {
 
 function normalizeIds(values: FormDataEntryValue[]) {
   return values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
-}
-
-function normalizeId(value: FormDataEntryValue | null) {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    return null;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
 }
