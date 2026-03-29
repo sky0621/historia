@@ -204,21 +204,20 @@ function importPolitiesCsv(rawCsv: string): CsvSyncImportResult {
   assertHeaders(parsed.headers, [
     "id",
     "name",
+    "reading",
+    "description",
     "note",
     "from_calendar_era",
     "from_year",
     "from_is_approximate",
     "to_calendar_era",
     "to_year",
-    "to_is_approximate",
-    "regions"
+    "to_is_approximate"
   ]);
 
   return db.transaction((tx) => {
     const existingItems = tx.select().from(polities).all();
     const existingIds = new Set(existingItems.map((item) => item.id));
-    const regionOptions = tx.select().from(regions).all();
-    const regionIdByName = new Map(regionOptions.map((item) => [item.name, item.id]));
     const csvIds = new Set<number>();
     let createdCount = 0;
     let updatedCount = 0;
@@ -226,17 +225,11 @@ function importPolitiesCsv(rawCsv: string): CsvSyncImportResult {
     for (const row of parsed.rows) {
       const cells = toCells(parsed.headers, row.values);
       const id = parseOptionalId(cells.id, row.rowNumber);
-      const regionIds = parseReferenceNames(cells.regions)
-        .map((name) => {
-          const regionId = regionIdByName.get(name);
-          if (!regionId) {
-            throw new Error(`row ${row.rowNumber}: region "${name}" が存在しません`);
-          }
-          return regionId;
-        });
 
       const values = {
         name: parseRequiredString(cells.name, "name", row.rowNumber),
+        reading: nullable(cells.reading),
+        description: nullable(cells.description),
         note: nullable(cells.note),
         fromCalendarEra: parseOptionalEra(cells.from_calendar_era, row.rowNumber, "from_calendar_era"),
         fromYear: parseOptionalInteger(cells.from_year, row.rowNumber, "from_year"),
@@ -247,9 +240,7 @@ function importPolitiesCsv(rawCsv: string): CsvSyncImportResult {
       };
 
       if (id == null) {
-        const result = tx.insert(polities).values(values).run();
-        const polityId = Number(result.lastInsertRowid);
-        replacePolityRegionLinks(tx, polityId, regionIds);
+        tx.insert(polities).values(values).run();
         createdCount += 1;
         continue;
       }
@@ -260,7 +251,6 @@ function importPolitiesCsv(rawCsv: string): CsvSyncImportResult {
       }
 
       tx.update(polities).set(values).where(eq(polities.id, id)).run();
-      replacePolityRegionLinks(tx, id, regionIds);
       updatedCount += 1;
     }
 
@@ -608,17 +598,6 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       deletedCount: deletedIds.length
     };
   });
-}
-
-function replacePolityRegionLinks(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  polityId: number,
-  regionIds: number[]
-) {
-  tx.delete(polityRegionLinks).where(eq(polityRegionLinks.polityId, polityId)).run();
-  if (regionIds.length > 0) {
-    tx.insert(polityRegionLinks).values(regionIds.map((regionId) => ({ polityId, regionId }))).run();
-  }
 }
 
 function replaceHistoricalPeriodLinks(

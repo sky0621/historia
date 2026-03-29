@@ -30,6 +30,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM event_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
+  sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM historical_period_region_links").run();
   sqlite.prepare("DELETE FROM person_region_links").run();
   sqlite.prepare("DELETE FROM regions").run();
@@ -78,6 +79,12 @@ beforeEach(() => {
       "INSERT INTO regions (id, name, parent_region_id, description, note) VALUES (1, '日本', NULL, 'old root', NULL), (2, '近畿', 1, 'old child', 'old note'), (3, '削除対象', 1, 'obsolete', NULL)"
     )
     .run();
+  sqlite
+    .prepare(
+      "INSERT INTO polities (id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate) VALUES (1, '日本', 'にほん', 'old polity', 'old note', 'CE', 1, 0), (2, 'ローマ帝国', NULL, 'old rome', NULL, 'BCE', 27, 0)"
+    )
+    .run();
+  sqlite.prepare("INSERT INTO polity_region_links (polity_id, region_id) VALUES (1, 1), (2, 2)").run();
 });
 
 describe("csv sync import service", () => {
@@ -161,6 +168,92 @@ describe("csv sync import service", () => {
         ["category_id,category_name,period_id,period_name", "1,東洋史,1,旧石器時代"].join("\n")
       )
     ).toThrow("row 2: category_id=1 の名称が一致しません");
+  });
+
+  it("syncs polities using 国家.csv format without changing region links", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "polities",
+      [
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,日本,にっぽん,updated polity,,CE,,0,CE,,0",
+        "2,ローマ帝国,,updated rome,,BCE,27,0,CE,476,0",
+        ",アケメネス朝ペルシア帝国,,new polity,,BCE,550,0,BCE,330,0"
+      ].join("\n")
+    );
+
+    const polityRows = sqlite
+      .prepare(
+        "SELECT id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate FROM polities ORDER BY id"
+      )
+      .all() as Array<{
+      id: number;
+      name: string;
+      reading: string | null;
+      description: string | null;
+      note: string | null;
+      from_calendar_era: string | null;
+      from_year: number | null;
+      from_is_approximate: number;
+      to_calendar_era: string | null;
+      to_year: number | null;
+      to_is_approximate: number;
+    }>;
+    const regionLinkRows = sqlite
+      .prepare("SELECT polity_id, region_id FROM polity_region_links ORDER BY polity_id, region_id")
+      .all() as Array<{ polity_id: number; region_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "polities",
+      totalRows: 3,
+      createdCount: 1,
+      updatedCount: 2,
+      deletedCount: 0
+    });
+    expect(polityRows).toEqual([
+      {
+        id: 1,
+        name: "日本",
+        reading: "にっぽん",
+        description: "updated polity",
+        note: null,
+        from_calendar_era: "CE",
+        from_year: null,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: null,
+        to_is_approximate: 0
+      },
+      {
+        id: 2,
+        name: "ローマ帝国",
+        reading: null,
+        description: "updated rome",
+        note: null,
+        from_calendar_era: "BCE",
+        from_year: 27,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 476,
+        to_is_approximate: 0
+      },
+      {
+        id: 3,
+        name: "アケメネス朝ペルシア帝国",
+        reading: null,
+        description: "new polity",
+        note: null,
+        from_calendar_era: "BCE",
+        from_year: 550,
+        from_is_approximate: 0,
+        to_calendar_era: "BCE",
+        to_year: 330,
+        to_is_approximate: 0
+      }
+    ]);
+    expect(regionLinkRows).toEqual([
+      { polity_id: 1, region_id: 1 },
+      { polity_id: 2, region_id: 2 }
+    ]);
   });
 
   it("syncs religions and founder links", () => {
