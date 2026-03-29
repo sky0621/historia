@@ -171,27 +171,6 @@ ON CONFLICT(`code`) DO UPDATE SET
 SQL
 }
 
-ensure_region_relation_types_seed_data() {
-  sqlite3 "$DATABASE_URL" <<'SQL'
-CREATE TABLE IF NOT EXISTS `region_relation_types` (
-  `code` text PRIMARY KEY NOT NULL,
-  `label` text NOT NULL,
-  `description` text
-);
-INSERT INTO `region_relation_types` (`code`, `label`, `description`)
-VALUES
-  ('adjacent', '隣接', '地理的に隣接している関係'),
-  ('cultural_area', '文化圏', '同じ文化圏として結び付く関係'),
-  ('trade_zone', '交易圏', '同じ交易圏として結び付く関係'),
-  ('influences', '影響', '一方の地域が他方へ影響を与える関係'),
-  ('related', '関連', '上記に限定しない一般的な関連'),
-  ('equivalent', '対応', '別名や別区分だが概ね対応する関係')
-ON CONFLICT(`code`) DO UPDATE SET
-  `label` = excluded.`label`,
-  `description` = excluded.`description`;
-SQL
-}
-
 ensure_polity_transition_types_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `polity_transition_types` (
@@ -259,7 +238,6 @@ ensure_event_conflict_participant_types_seed_data
 ensure_event_conflict_participant_roles_seed_data
 ensure_event_conflict_sides_seed_data
 ensure_historical_period_relation_types_seed_data
-ensure_region_relation_types_seed_data
 ensure_polity_transition_types_seed_data
 ensure_change_history_actions_seed_data
 

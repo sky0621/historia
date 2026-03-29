@@ -1,14 +1,4 @@
 import { integer, sqliteTable } from "drizzle-orm/sqlite-core";
-import { regions } from "./masters";
-
-export const regionParentLinks = sqliteTable("region_parent_links", {
-  regionId: integer("region_id")
-    .notNull()
-    .references(() => regions.id),
-  parentRegionId: integer("parent_region_id")
-    .notNull()
-    .references(() => regions.id)
-});
 
 export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
   dynastyId: integer("dynasty_id").notNull(),

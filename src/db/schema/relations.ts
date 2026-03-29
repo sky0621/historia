@@ -1,5 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { dynasties, historicalPeriods, polities, regions } from "./masters";
+import { dynasties, historicalPeriods, polities } from "./masters";
 
 export const polityTransitions = sqliteTable("polity_transitions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -31,25 +31,6 @@ export const dynastySuccessions = sqliteTable("dynasty_successions", {
   successorDynastyId: integer("successor_dynasty_id")
     .notNull()
     .references(() => dynasties.id)
-});
-
-export const regionRelations = sqliteTable("region_relations", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  fromRegionId: integer("from_region_id")
-    .notNull()
-    .references(() => regions.id),
-  toRegionId: integer("to_region_id")
-    .notNull()
-    .references(() => regions.id),
-  relationType: text("relation_type")
-    .notNull()
-    .references(() => regionRelationTypes.code)
-});
-
-export const regionRelationTypes = sqliteTable("region_relation_types", {
-  code: text("code").primaryKey(),
-  label: text("label").notNull(),
-  description: text("description")
 });
 
 export const historicalPeriodRelationTypes = sqliteTable("historical_period_relation_types", {

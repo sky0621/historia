@@ -181,6 +181,7 @@ export function createPolityFromInput(input: PolityInput) {
   const id = createPolity(
     {
       name: input.name,
+      description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredPolityTime("from", input.fromTimeExpression),
       ...toStoredPolityTime("to", input.toTimeExpression)
@@ -202,6 +203,7 @@ export function updatePolityFromInput(id: number, input: PolityInput) {
     id,
     {
       name: input.name,
+      description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredPolityTime("from", input.fromTimeExpression),
       ...toStoredPolityTime("to", input.toTimeExpression)
@@ -231,6 +233,7 @@ export function createDynastyFromInput(input: DynastyInput) {
   return createDynasty(
     {
       name: input.name,
+      description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredBoundaryTime("from", input.fromTimeExpression),
       ...toStoredBoundaryTime("to", input.toTimeExpression)
@@ -245,6 +248,7 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
     id,
     {
       name: input.name,
+      description: nullable(input.description),
       note: nullable(input.note),
       ...toStoredBoundaryTime("from", input.fromTimeExpression),
       ...toStoredBoundaryTime("to", input.toTimeExpression)

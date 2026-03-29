@@ -2,16 +2,13 @@ import {
   createDynastySuccessionAction,
   createHistoricalPeriodRelationAction,
   createPolityTransitionAction,
-  createRegionRelationAction,
   updateDynastySuccessionAction,
   updateHistoricalPeriodRelationAction,
-  updatePolityTransitionAction,
-  updateRegionRelationAction
+  updatePolityTransitionAction
 } from "@/features/relations/actions";
 import {
   historicalPeriodRelationTypeOptions,
-  polityTransitionTypeOptions,
-  regionRelationTypeOptions
+  polityTransitionTypeOptions
 } from "@/lib/master-labels";
 type Option = { id: number; name: string };
 
@@ -90,50 +87,6 @@ export function DynastySuccessionForm({
           <div />
           <SelectField name="predecessorDynastyId" label="前王朝" options={dynastyOptions} defaultValue={defaultValues?.predecessorDynastyId} />
           <SelectField name="successorDynastyId" label="後王朝" options={dynastyOptions} defaultValue={defaultValues?.successorDynastyId} />
-        </div>
-        <SubmitButton label={submitLabel} />
-      </form>
-    </RelationFormShell>
-  );
-}
-
-export function RegionRelationForm({
-  title,
-  description,
-  submitLabel,
-  regionOptions,
-  defaultValues
-}: {
-  title: string;
-  description: string;
-  submitLabel: string;
-  regionOptions: Option[];
-  defaultValues?: {
-    id?: number;
-    fromRegionId: number;
-    toRegionId: number;
-    relationType: "adjacent" | "cultural_area" | "trade_zone" | "influences" | "related" | "equivalent";
-  };
-}) {
-  const action = defaultValues?.id ? updateRegionRelationAction : createRegionRelationAction;
-
-  return (
-    <RelationFormShell title={title} description={description}>
-      <form action={action} className="space-y-6 rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
-        {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
-        <div className="grid gap-5 md:grid-cols-2">
-          <SelectField name="fromRegionId" label="起点地域" options={regionOptions} defaultValue={defaultValues?.fromRegionId} />
-          <SelectField name="toRegionId" label="終点地域" options={regionOptions} defaultValue={defaultValues?.toRegionId} />
-          <label className="grid gap-2 text-sm md:col-span-2">
-            <span>関係種別</span>
-            <select name="relationType" defaultValue={defaultValues?.relationType ?? "related"} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" required>
-              {regionRelationTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
         <SubmitButton label={submitLabel} />
       </form>

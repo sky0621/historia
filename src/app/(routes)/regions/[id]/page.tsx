@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteRegionAction } from "@/features/regions/actions";
-import { getRegionRelationTypeLabel } from "@/lib/master-labels";
 import { getRegionView } from "@/server/services/regions";
 
 export const metadata: Metadata = { title: "region" };
@@ -190,40 +189,6 @@ export default async function RegionDetailPage({
               ))
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">地域関係</h2>
-          <Link href={`/region-relations/new?fromRegionId=${view.region.id}`} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
-            関係を追加
-          </Link>
-        </div>
-        <div className="mt-4 space-y-3">
-          {view.regionRelations.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">地域関係はまだありません。</p>
-          ) : (
-            view.regionRelations.map((relation) => (
-              <div key={relation.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="font-medium">
-                    <Link href={`/regions/${relation.fromRegionId}`} className="underline-offset-4 hover:underline">
-                      {relation.fromName}
-                    </Link>{" "}
-                    →{" "}
-                    <Link href={`/regions/${relation.toRegionId}`} className="underline-offset-4 hover:underline">
-                      {relation.toName}
-                    </Link>
-                  </div>
-                  <Link href={`/region-relations/${relation.id}/edit`} className="text-xs underline-offset-4 hover:underline">
-                    編集
-                  </Link>
-                </div>
-                <div className="mt-1 text-[var(--muted)]">{getRegionRelationTypeLabel(relation.relationType)}</div>
-              </div>
-            ))
-          )}
         </div>
       </div>
     </section>

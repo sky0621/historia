@@ -15,7 +15,6 @@ const repositoryMocks = vi.hoisted(() => ({
   listCitations: vi.fn(),
   listPolityTransitions: vi.fn(),
   listDynastySuccessions: vi.fn(),
-  listRegionRelations: vi.fn(),
   listHistoricalPeriodRelations: vi.fn(),
   getRoleAssignmentsByPersonIds: vi.fn(),
   getEventRelationsByEventIds: vi.fn(),
@@ -68,9 +67,6 @@ const repositoryMocks = vi.hoisted(() => ({
   createDynastySuccessionFromInput: vi.fn(),
   updateDynastySuccessionFromInput: vi.fn(),
   deleteDynastySuccessionById: vi.fn(),
-  createRegionRelationFromInput: vi.fn(),
-  updateRegionRelationFromInput: vi.fn(),
-  deleteRegionRelationById: vi.fn(),
   createHistoricalPeriodRelationFromInput: vi.fn(),
   updateHistoricalPeriodRelationFromInput: vi.fn(),
   deleteHistoricalPeriodRelationById: vi.fn()
@@ -133,10 +129,6 @@ vi.mock("@/server/repositories/polity-transitions", () => ({
 
 vi.mock("@/server/repositories/dynasty-successions", () => ({
   listDynastySuccessions: repositoryMocks.listDynastySuccessions
-}));
-
-vi.mock("@/server/repositories/region-relations", () => ({
-  listRegionRelations: repositoryMocks.listRegionRelations
 }));
 
 vi.mock("@/server/repositories/historical-period-relations", () => ({
@@ -222,9 +214,6 @@ vi.mock("@/server/services/relations", () => ({
   createDynastySuccessionFromInput: repositoryMocks.createDynastySuccessionFromInput,
   updateDynastySuccessionFromInput: repositoryMocks.updateDynastySuccessionFromInput,
   deleteDynastySuccessionById: repositoryMocks.deleteDynastySuccessionById,
-  createRegionRelationFromInput: repositoryMocks.createRegionRelationFromInput,
-  updateRegionRelationFromInput: repositoryMocks.updateRegionRelationFromInput,
-  deleteRegionRelationById: repositoryMocks.deleteRegionRelationById,
   createHistoricalPeriodRelationFromInput: repositoryMocks.createHistoricalPeriodRelationFromInput,
   updateHistoricalPeriodRelationFromInput: repositoryMocks.updateHistoricalPeriodRelationFromInput,
   deleteHistoricalPeriodRelationById: repositoryMocks.deleteHistoricalPeriodRelationById
@@ -244,7 +233,6 @@ import {
   applyPersonCsvImport,
   applyPolityCsvImport,
   applyPolityTransitionCsvImport,
-  applyRegionRelationCsvImport,
   applyRegionCsvImport,
   applyReligionCsvImport,
   applyRoleAssignmentCsvImport,
@@ -265,7 +253,6 @@ import {
   previewPersonCsvImport,
   previewPolityCsvImport,
   previewPolityTransitionCsvImport,
-  previewRegionRelationCsvImport,
   previewRegionCsvImport,
   previewReligionCsvImport,
   previewRoleAssignmentCsvImport,
@@ -290,7 +277,6 @@ describe("csv import service", () => {
     repositoryMocks.listCitations.mockReset();
     repositoryMocks.listPolityTransitions.mockReset();
     repositoryMocks.listDynastySuccessions.mockReset();
-    repositoryMocks.listRegionRelations.mockReset();
     repositoryMocks.listHistoricalPeriodRelations.mockReset();
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReset();
     repositoryMocks.getEventRelationsByEventIds.mockReset();
@@ -311,7 +297,6 @@ describe("csv import service", () => {
     repositoryMocks.listCitations.mockReturnValue([]);
     repositoryMocks.listPolityTransitions.mockReturnValue([]);
     repositoryMocks.listDynastySuccessions.mockReturnValue([]);
-    repositoryMocks.listRegionRelations.mockReturnValue([]);
     repositoryMocks.listHistoricalPeriodRelations.mockReturnValue([]);
     repositoryMocks.getRoleAssignmentsByPersonIds.mockReturnValue([]);
     repositoryMocks.getEventRelationsByEventIds.mockReturnValue([]);
@@ -366,9 +351,6 @@ describe("csv import service", () => {
     repositoryMocks.createDynastySuccessionFromInput.mockReset();
     repositoryMocks.updateDynastySuccessionFromInput.mockReset();
     repositoryMocks.deleteDynastySuccessionById.mockReset();
-    repositoryMocks.createRegionRelationFromInput.mockReset();
-    repositoryMocks.updateRegionRelationFromInput.mockReset();
-    repositoryMocks.deleteRegionRelationById.mockReset();
     repositoryMocks.createHistoricalPeriodRelationFromInput.mockReset();
     repositoryMocks.updateHistoricalPeriodRelationFromInput.mockReset();
     repositoryMocks.deleteHistoricalPeriodRelationById.mockReset();
@@ -1270,22 +1252,6 @@ describe("csv import service", () => {
     );
     expect(result).toEqual({ kind: "dynasty-succession", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
     expect(repositoryMocks.createDynastySuccessionFromInput).toHaveBeenCalled();
-  });
-
-  it("previews and imports region relations", () => {
-    repositoryMocks.listRegions.mockReturnValue([
-      { id: 1, name: "日本" },
-      { id: 2, name: "東アジア" }
-    ]);
-    const preview = previewRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_area");
-    expect(preview.rows[0]).toMatchObject({
-      status: "ok",
-      input: { fromRegionId: 1, toRegionId: 2, relationType: "cultural_area" }
-    });
-
-    const result = applyRegionRelationCsvImport("from_region,to_region,relation_type\n日本,東アジア,cultural_area");
-    expect(result).toEqual({ kind: "region-relation", insertedCount: 1, updatedCount: 0, deletedCount: 0 });
-    expect(repositoryMocks.createRegionRelationFromInput).toHaveBeenCalled();
   });
 
   it("previews and imports historical period relations", () => {

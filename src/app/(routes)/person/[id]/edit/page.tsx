@@ -22,6 +22,7 @@ export default async function EditPersonPage({ params }: { params: Promise<{ id:
       defaultValues={{
         id: view.person.id,
         name: view.person.name,
+        description: view.person.description ?? "",
         reading: view.person.reading ?? "",
         aliases: view.person.aliases ?? "",
         note: view.person.note ?? "",

@@ -6,6 +6,7 @@ const regionIdsSchema = z.array(z.number().int().positive()).default([]);
 
 export const politySchema = z.object({
   name: z.string().trim().min(1, "名称は必須です"),
+  description: z.string().trim().optional(),
   note: z.string().trim().optional(),
   fromTimeExpression: timeExpressionSchema.optional(),
   toTimeExpression: timeExpressionSchema.optional(),
@@ -15,6 +16,7 @@ export const politySchema = z.object({
 export const dynastySchema = z.object({
   polityIds: regionIdsSchema,
   name: z.string().trim().min(1, "名称は必須です"),
+  description: z.string().trim().optional(),
   note: z.string().trim().optional(),
   fromTimeExpression: timeExpressionSchema.optional(),
   toTimeExpression: timeExpressionSchema.optional(),
@@ -27,6 +29,7 @@ export type DynastyInput = z.infer<typeof dynastySchema>;
 export function parsePolityFormData(formData: FormData): PolityInput {
   return politySchema.parse({
     name: formData.get("name"),
+    description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
@@ -38,6 +41,7 @@ export function parseDynastyFormData(formData: FormData): DynastyInput {
   return dynastySchema.parse({
     polityIds: normalizeIds(formData.getAll("polityIds")),
     name: formData.get("name"),
+    description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),

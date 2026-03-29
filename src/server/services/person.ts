@@ -142,6 +142,7 @@ export function createPersonFromInput(input: PersonInput) {
   return db.transaction(() => {
     const personId = createPerson({
       name: input.name,
+      description: nullable(input.description),
       reading: nullable(input.reading),
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),
@@ -179,6 +180,7 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
     const before = buildPersonHistorySnapshot(id);
     updatePerson(id, {
       name: input.name,
+      description: nullable(input.description),
       reading: nullable(input.reading),
       aliases: joinAliases(input.aliases),
       note: nullable(input.note),

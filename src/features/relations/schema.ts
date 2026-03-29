@@ -12,12 +12,6 @@ export const dynastySuccessionSchema = z.object({
   successorDynastyId: z.number().int().positive()
 });
 
-export const regionRelationSchema = z.object({
-  fromRegionId: z.number().int().positive(),
-  toRegionId: z.number().int().positive(),
-  relationType: z.enum(["adjacent", "cultural_area", "trade_zone", "influences", "related", "equivalent"])
-});
-
 export const historicalPeriodRelationSchema = z.object({
   fromPeriodId: z.number().int().positive(),
   toPeriodId: z.number().int().positive(),
@@ -27,7 +21,6 @@ export const historicalPeriodRelationSchema = z.object({
 
 export type PolityTransitionInput = z.infer<typeof polityTransitionSchema>;
 export type DynastySuccessionInput = z.infer<typeof dynastySuccessionSchema>;
-export type RegionRelationInput = z.infer<typeof regionRelationSchema>;
 export type HistoricalPeriodRelationInput = z.infer<typeof historicalPeriodRelationSchema>;
 
 export function parsePolityTransitionFormData(formData: FormData): PolityTransitionInput {
@@ -43,14 +36,6 @@ export function parseDynastySuccessionFormData(formData: FormData): DynastySucce
     polityId: Number(formData.get("polityId")),
     predecessorDynastyId: Number(formData.get("predecessorDynastyId")),
     successorDynastyId: Number(formData.get("successorDynastyId"))
-  });
-}
-
-export function parseRegionRelationFormData(formData: FormData): RegionRelationInput {
-  return regionRelationSchema.parse({
-    fromRegionId: Number(formData.get("fromRegionId")),
-    toRegionId: Number(formData.get("toRegionId")),
-    relationType: formData.get("relationType")
   });
 }
 

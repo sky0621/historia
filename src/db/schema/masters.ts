@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export const era = sqliteTable("era", {
   code: text("code").primaryKey(),
@@ -20,6 +20,7 @@ function rangeTimeColumns() {
 export const regions = sqliteTable("regions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  parentRegionId: integer("parent_region_id").references((): AnySQLiteColumn => regions.id),
   reading: text("reading"),
   description: text("description"),
   note: text("note")

@@ -11,11 +11,9 @@ import {
   dynastySuccessionSchema,
   historicalPeriodRelationSchema,
   polityTransitionSchema,
-  regionRelationSchema,
   type DynastySuccessionInput,
   type HistoricalPeriodRelationInput,
-  type PolityTransitionInput,
-  type RegionRelationInput
+  type PolityTransitionInput
 } from "@/features/relations/schema";
 import { regionSchema, type RegionInput } from "@/features/regions/schema";
 import { religionSchema, sectSchema, type ReligionInput, type SectInput } from "@/features/religions/schema";
@@ -39,7 +37,6 @@ import { listPeriodCategories } from "@/server/repositories/period-categories";
 import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
 import { listPolityTransitions } from "@/server/repositories/polity-transitions";
-import { listRegionRelations } from "@/server/repositories/region-relations";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
@@ -77,15 +74,12 @@ import {
   createDynastySuccessionFromInput,
   createHistoricalPeriodRelationFromInput,
   createPolityTransitionFromInput,
-  createRegionRelationFromInput,
   deleteDynastySuccessionById,
   deleteHistoricalPeriodRelationById,
   deletePolityTransitionById,
-  deleteRegionRelationById,
   updateDynastySuccessionFromInput,
   updateHistoricalPeriodRelationFromInput,
-  updatePolityTransitionFromInput,
-  updateRegionRelationFromInput
+  updatePolityTransitionFromInput
 } from "@/server/services/relations";
 import { createRegionFromInput, deleteRegionById, updateRegionFromInput } from "@/server/services/regions";
 import {
@@ -267,8 +261,6 @@ const DYNASTY_SUCCESSION_HEADERS = [
   "successor_dynasty"
 ] as const;
 const REQUIRED_DYNASTY_SUCCESSION_HEADERS = ["polity", "predecessor_dynasty", "successor_dynasty"] as const;
-const REGION_RELATION_HEADERS = ["from_region", "to_region", "relation_type", "note"] as const;
-const REQUIRED_REGION_RELATION_HEADERS = ["from_region", "to_region", "relation_type"] as const;
 const HISTORICAL_PERIOD_RELATION_HEADERS = ["from_period", "to_period", "relation_type", "note"] as const;
 const REQUIRED_HISTORICAL_PERIOD_RELATION_HEADERS = ["from_period", "to_period", "relation_type"] as const;
 const MULTI_VALUE_SEPARATOR = "|";
@@ -391,7 +383,6 @@ export type SourceCsvInput = SourceInput;
 export type CitationCsvInput = CitationInput;
 export type PolityTransitionCsvInput = PolityTransitionInput;
 export type DynastySuccessionCsvInput = DynastySuccessionInput;
-export type RegionRelationCsvInput = RegionRelationInput;
 export type HistoricalPeriodRelationCsvInput = HistoricalPeriodRelationInput;
 
 type ParsedCsvRow = {
@@ -1842,56 +1833,6 @@ export function previewDynastySuccessionCsvImport(rawCsv: string): CsvPreviewRes
   return { kind: "dynasty-succession", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
 }
 
-export function previewRegionRelationCsvImport(rawCsv: string): CsvPreviewResult<RegionRelationCsvInput> {
-  const parsed = parseCsv(rawCsv);
-  validateRequiredHeaders(parsed.headers, REQUIRED_REGION_RELATION_HEADERS);
-  const unknownHeaders = parsed.headers.filter((header) => !REGION_RELATION_HEADERS.includes(header as (typeof REGION_RELATION_HEADERS)[number]));
-  const references = buildReferenceMaps();
-  const relations = listRegionRelations();
-
-  const rows = parsed.rows.map((row) => {
-    const issues: CsvPreviewIssue[] = [];
-    const warnings: CsvPreviewIssue[] = [];
-    const cells = mapRowToCells(parsed.headers, row.values);
-    const inputCandidate = {
-      fromRegionId: resolveSingleReference("regions", cells.from_region, references.regions, issues),
-      toRegionId: resolveSingleReference("regions", cells.to_region, references.regions, issues),
-      relationType: cells.relation_type.trim(),
-      note: normalizeOptionalString(cells.note) ?? undefined
-    };
-    const parsedInput = regionRelationSchema.safeParse(inputCandidate);
-    if (!parsedInput.success) {
-      for (const issue of parsedInput.error.issues) {
-        issues.push({ field: issue.path.join(".") || "_row", message: issue.message });
-      }
-    }
-    if (parsedInput.success && parsedInput.data.fromRegionId === parsedInput.data.toRegionId) {
-      issues.push({ field: "to_region", message: "同一地域同士の関係は登録できません" });
-    }
-    if (unknownHeaders.length > 0) {
-      warnings.push({ field: "_header", message: `未対応列は無視されます: ${unknownHeaders.join(", ")}` });
-    }
-    const previewInput = issues.length === 0 && parsedInput.success ? parsedInput.data : undefined;
-    const duplicateCandidates = previewInput
-      ? relations
-          .filter((item) =>
-            item.fromRegionId === previewInput.fromRegionId &&
-            item.toRegionId === previewInput.toRegionId &&
-            item.relationType === previewInput.relationType
-          )
-          .map((item) => ({
-            id: item.id,
-            label: `${cells.from_region} -> ${cells.to_region}`,
-            reason: "同一の地域関係が登録済みです"
-          }))
-      : [];
-    const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
-    return { rowNumber: row.rowNumber, label: `${cells.from_region || "?"} -> ${cells.to_region || "?"}`, status, issues, warnings, duplicateCandidates, input: previewInput } satisfies CsvPreviewRow<RegionRelationCsvInput>;
-  });
-
-  return { kind: "region-relation", headers: parsed.headers, unknownHeaders, summary: summarizeRows(rows), rows };
-}
-
 export function previewHistoricalPeriodRelationCsvImport(rawCsv: string): CsvPreviewResult<HistoricalPeriodRelationCsvInput> {
   const parsed = parseCsv(rawCsv);
   validateRequiredHeaders(parsed.headers, REQUIRED_HISTORICAL_PERIOD_RELATION_HEADERS);
@@ -2024,25 +1965,6 @@ export function applyDynastySuccessionCsvImport(rawCsv: string): CsvImportResult
   )();
 
   return { kind: "dynasty-succession", ...result };
-}
-
-export function applyRegionRelationCsvImport(rawCsv: string): CsvImportResult {
-  const preview = previewRegionRelationCsvImport(rawCsv);
-  assertSyncableRows(preview.rows);
-
-  const result = sqlite.transaction(() =>
-    syncCompositeRows({
-      rows: preview.rows,
-      existingItems: listRegionRelations(),
-      getExistingKey: buildRegionRelationSyncKey,
-      getInputKey: buildRegionRelationSyncKey,
-      createItem: createRegionRelationFromInput,
-      updateItem: updateRegionRelationFromInput,
-      deleteItem: deleteRegionRelationById
-    })
-  )();
-
-  return { kind: "region-relation", ...result };
 }
 
 export function applyHistoricalPeriodRelationCsvImport(rawCsv: string): CsvImportResult {
@@ -2262,12 +2184,6 @@ function buildDynastySuccessionSyncKey(
   input: DynastySuccessionCsvInput | { polityId: number; predecessorDynastyId: number; successorDynastyId: number }
 ) {
   return `${input.polityId}:${input.predecessorDynastyId}:${input.successorDynastyId}`;
-}
-
-function buildRegionRelationSyncKey(
-  input: RegionRelationCsvInput | { fromRegionId: number; toRegionId: number; relationType: string }
-) {
-  return `${input.fromRegionId}:${input.toRegionId}:${input.relationType}`;
 }
 
 function buildHistoricalPeriodRelationSyncKey(

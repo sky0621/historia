@@ -18,7 +18,6 @@ function clearTables() {
     "citations",
     "sources",
     "historical_period_relations",
-    "region_relations",
     "dynasty_successions",
     "polity_transitions",
     "event_conflict_outcome_participants",
@@ -30,7 +29,6 @@ function clearTables() {
     "event_conflict_participant_types",
     "event_relation_types",
     "historical_period_relation_types",
-    "region_relation_types",
     "polity_transition_types",
     "change_history_actions",
     "role_dynasty_links",
@@ -41,7 +39,6 @@ function clearTables() {
     "historical_period_polity_links",
     "historical_period_category_links",
     "dynasty_polity_links",
-    "region_parent_links",
     "event_region_links",
     "event_tag_links",
     "event_sect_links",
@@ -175,18 +172,6 @@ sqlite
       ('overlaps', '重複', '他の時代区分と期間が重なる関係'),
       ('includes', '包含', '他の時代区分を含む関係'),
       ('included_in', '被包含', '他の時代区分に含まれる関係')`
-  )
-  .run();
-
-sqlite
-  .prepare(
-    `INSERT INTO region_relation_types (code, label, description) VALUES
-      ('adjacent', '隣接', '地理的に隣接している関係'),
-      ('cultural_area', '文化圏', '同じ文化圏として結び付く関係'),
-      ('trade_zone', '交易圏', '同じ交易圏として結び付く関係'),
-      ('influences', '影響', '一方の地域が他方へ影響を与える関係'),
-      ('related', '関連', '上記に限定しない一般的な関連'),
-      ('equivalent', '対応', '別名や別区分だが概ね対応する関係')`
   )
   .run();
 

@@ -49,13 +49,6 @@ CREATE TABLE `historical_period_relation_types` (
   `description` text -- 関係種別の説明
 );
 
--- 地域関係種別マスタ: region_relations.relation_type が参照する関係種別
-CREATE TABLE `region_relation_types` (
-  `code` text PRIMARY KEY NOT NULL, -- 関係種別コード: adjacent / cultural_area / trade_zone / influences / related / equivalent
-  `label` text NOT NULL, -- 表示名
-  `description` text -- 関係種別の説明
-);
-
 -- 国家変遷種別マスタ: polity_transitions.transition_type が参照する変遷種別
 CREATE TABLE `polity_transition_types` (
   `code` text PRIMARY KEY NOT NULL, -- 変遷種別コード: renamed / succeeded / merged / split / annexed / absorbed / restored / reorganized / other
@@ -270,28 +263,11 @@ CREATE INDEX `idx_historical_period_polity_links_polity_id` ON `historical_perio
 CREATE TABLE `regions` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 地域ID
   `name` text NOT NULL, -- 地域名
+  `parent_region_id` integer REFERENCES `regions`(`id`), -- 親地域ID
   `reading` text, -- 読み方
   `description` text, -- 地域の説明
   `note` text -- 編集メモ・注釈
 );
-
--- 地域間の関連: 親子関係以外の地域どうしの関係
-CREATE TABLE `region_relations` (
-  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 地域関係ID
-  `from_region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 起点となる地域ID
-  `to_region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 終点となる地域ID
-  `relation_type` text NOT NULL REFERENCES `region_relation_types`(`code`) -- 関係種別コード
-);
-CREATE INDEX `idx_region_relations_from_region_id` ON `region_relations` (`from_region_id`);
-CREATE INDEX `idx_region_relations_to_region_id` ON `region_relations` (`to_region_id`);
-
--- 地域の親子関係
-CREATE TABLE `region_parent_links` (
-  `region_id` integer NOT NULL REFERENCES `regions`(`id`), -- 子地域ID
-  `parent_region_id` integer NOT NULL REFERENCES `regions`(`id`) -- 親地域ID
-);
-CREATE INDEX `idx_region_parent_links_region_id` ON `region_parent_links` (`region_id`);
-CREATE INDEX `idx_region_parent_links_parent_region_id` ON `region_parent_links` (`parent_region_id`);
 
 -- 国家: 国家・政体の基本情報
 CREATE TABLE `polities` (

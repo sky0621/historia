@@ -41,6 +41,7 @@ type Props = {
     id?: number;
     polityIds: number[];
     name: string;
+    description: string;
     note: string;
     regionIds: number[];
     fromTimeExpression?: TimeExpressionInput;
@@ -95,6 +96,14 @@ export function DynastyForm({
               defaultValue={defaultValues?.name ?? ""}
               className={inputClassName}
               required
+            />
+          </label>
+          <label className={fieldLabelClassName}>
+            <span className={fieldMetaClassName}>説明</span>
+            <textarea
+              name="description"
+              defaultValue={defaultValues?.description ?? ""}
+              className={`min-h-28 ${inputClassName}`}
             />
           </label>
           </div>

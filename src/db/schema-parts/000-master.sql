@@ -47,13 +47,6 @@ CREATE TABLE `historical_period_relation_types` (
   `description` text -- 関係種別の説明
 );
 
--- 地域関係種別マスタ: region_relations.relation_type が参照する関係種別
-CREATE TABLE `region_relation_types` (
-  `code` text PRIMARY KEY NOT NULL, -- 関係種別コード: adjacent / cultural_area / trade_zone / influences / related / equivalent
-  `label` text NOT NULL, -- 表示名
-  `description` text -- 関係種別の説明
-);
-
 -- 国家変遷種別マスタ: polity_transitions.transition_type が参照する変遷種別
 CREATE TABLE `polity_transition_types` (
   `code` text PRIMARY KEY NOT NULL, -- 変遷種別コード: renamed / succeeded / merged / split / annexed / absorbed / restored / reorganized / other

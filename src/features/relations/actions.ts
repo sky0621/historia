@@ -5,22 +5,18 @@ import { redirect } from "next/navigation";
 import {
   parseDynastySuccessionFormData,
   parseHistoricalPeriodRelationFormData,
-  parsePolityTransitionFormData,
-  parseRegionRelationFormData
+  parsePolityTransitionFormData
 } from "@/features/relations/schema";
 import {
   createDynastySuccessionFromInput,
   createHistoricalPeriodRelationFromInput,
   createPolityTransitionFromInput,
-  createRegionRelationFromInput,
   deleteDynastySuccessionById,
   deleteHistoricalPeriodRelationById,
   deletePolityTransitionById,
-  deleteRegionRelationById,
   updateDynastySuccessionFromInput,
   updateHistoricalPeriodRelationFromInput,
-  updatePolityTransitionFromInput,
-  updateRegionRelationFromInput
+  updatePolityTransitionFromInput
 } from "@/server/services/relations";
 
 export async function createPolityTransitionAction(formData: FormData) {
@@ -76,32 +72,6 @@ export async function deleteDynastySuccessionAction(formData: FormData) {
   deleteDynastySuccessionById(Number(formData.get("id")));
   revalidatePath(`/polities/${polityId}`);
   redirect(`/polities/${polityId}`);
-}
-
-export async function createRegionRelationAction(formData: FormData) {
-  const input = parseRegionRelationFormData(formData);
-  const id = createRegionRelationFromInput(input);
-  revalidatePath(`/regions/${input.fromRegionId}`);
-  revalidatePath(`/regions/${input.toRegionId}`);
-  redirect(`/region-relations/${id}/edit`);
-}
-
-export async function updateRegionRelationAction(formData: FormData) {
-  const id = Number(formData.get("id"));
-  const input = parseRegionRelationFormData(formData);
-  updateRegionRelationFromInput(id, input);
-  revalidatePath(`/regions/${input.fromRegionId}`);
-  revalidatePath(`/regions/${input.toRegionId}`);
-  redirect(`/regions/${input.fromRegionId}`);
-}
-
-export async function deleteRegionRelationAction(formData: FormData) {
-  const fromRegionId = Number(formData.get("fromRegionId"));
-  const toRegionId = Number(formData.get("toRegionId"));
-  deleteRegionRelationById(Number(formData.get("id")));
-  revalidatePath(`/regions/${fromRegionId}`);
-  revalidatePath(`/regions/${toRegionId}`);
-  redirect(`/regions/${fromRegionId}`);
 }
 
 export async function createHistoricalPeriodRelationAction(formData: FormData) {

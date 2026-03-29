@@ -1,8 +1,7 @@
 import type {
   DynastySuccessionInput,
   HistoricalPeriodRelationInput,
-  PolityTransitionInput,
-  RegionRelationInput
+  PolityTransitionInput
 } from "@/features/relations/schema";
 import {
   createDynastySuccession,
@@ -29,22 +28,13 @@ import {
   getPolityTransitionsByPolityIds,
   updatePolityTransition
 } from "@/server/repositories/polity-transitions";
-import { listRegions } from "@/server/repositories/regions";
-import {
-  createRegionRelation,
-  deleteRegionRelation,
-  getRegionRelationById,
-  getRegionRelationsByRegionIds,
-  updateRegionRelation
-} from "@/server/repositories/region-relations";
 import { listSects } from "@/server/repositories/sects";
 
 export function getRelationFormOptions() {
   return {
     polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name })),
-    periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name })),
-    regions: listRegions().map((item) => ({ id: item.id, name: item.name }))
+    periods: listHistoricalPeriods().map((item) => ({ id: item.id, name: item.name }))
   };
 }
 
@@ -88,28 +78,6 @@ export function getDynastySuccessionFormView(id?: number, defaults?: Partial<Dyn
           polityId: defaults?.polityId ?? 0,
           predecessorDynastyId: defaults?.predecessorDynastyId ?? 0,
           successorDynastyId: defaults?.successorDynastyId ?? 0
-        }
-  };
-}
-
-export function getRegionRelationFormView(id?: number, defaults?: Partial<RegionRelationInput>) {
-  const relation = id ? getRegionRelationById(id) : null;
-  const options = getRelationFormOptions();
-
-  return {
-    options,
-    relation,
-    defaultValues: relation
-      ? {
-          id: relation.id,
-          fromRegionId: relation.fromRegionId,
-          toRegionId: relation.toRegionId,
-          relationType: relation.relationType as RegionRelationInput["relationType"]
-        }
-      : {
-          fromRegionId: defaults?.fromRegionId ?? 0,
-          toRegionId: defaults?.toRegionId ?? 0,
-          relationType: defaults?.relationType ?? "related"
         }
   };
 }
@@ -178,26 +146,6 @@ export function deleteDynastySuccessionById(id: number) {
   deleteDynastySuccession(id);
 }
 
-export function createRegionRelationFromInput(input: RegionRelationInput) {
-  return createRegionRelation({
-    fromRegionId: input.fromRegionId,
-    toRegionId: input.toRegionId,
-    relationType: input.relationType
-  });
-}
-
-export function updateRegionRelationFromInput(id: number, input: RegionRelationInput) {
-  updateRegionRelation(id, {
-    fromRegionId: input.fromRegionId,
-    toRegionId: input.toRegionId,
-    relationType: input.relationType
-  });
-}
-
-export function deleteRegionRelationById(id: number) {
-  deleteRegionRelation(id);
-}
-
 export function createHistoricalPeriodRelationFromInput(input: HistoricalPeriodRelationInput) {
   return createHistoricalPeriodRelation({
     fromPeriodId: input.fromPeriodId,
@@ -247,16 +195,6 @@ export function getDynastySuccessionViewForDynasty(dynastyId: number) {
     ...item,
     predecessorName: dynasties.get(item.predecessorDynastyId) ?? `#${item.predecessorDynastyId}`,
     successorName: dynasties.get(item.successorDynastyId) ?? `#${item.successorDynastyId}`
-  }));
-}
-
-export function getRegionRelationView(regionId: number) {
-  const regions = new Map(listRegions().map((item) => [item.id, item.name]));
-
-  return getRegionRelationsByRegionIds([regionId]).map((item) => ({
-    ...item,
-    fromName: regions.get(item.fromRegionId) ?? `#${item.fromRegionId}`,
-    toName: regions.get(item.toRegionId) ?? `#${item.toRegionId}`
   }));
 }
 

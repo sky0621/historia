@@ -36,6 +36,7 @@ type Props = {
   defaultValues?: {
     id?: number;
     name: string;
+    description: string;
     reading: string;
     aliases: string;
     note: string;
@@ -84,6 +85,11 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
             <Field label="氏名" required>
               <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
             </Field>
+            <Field label="説明" className="lg:col-span-2">
+              <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
+            </Field>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
             <Field label="別名">
               <input name="aliases" defaultValue={defaultValues?.aliases ?? ""} className={inputClassName} />
             </Field>

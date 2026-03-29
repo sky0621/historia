@@ -61,15 +61,6 @@ const HISTORICAL_PERIOD_RELATION_TYPE_LABELS = {
   included_in: "被包含"
 } as const;
 
-const REGION_RELATION_TYPE_LABELS = {
-  adjacent: "隣接",
-  cultural_area: "文化圏",
-  trade_zone: "交易圏",
-  influences: "影響",
-  related: "関連",
-  equivalent: "対応"
-} as const;
-
 const POLITY_TRANSITION_TYPE_LABELS = {
   renamed: "改称",
   succeeded: "後継",
@@ -110,7 +101,6 @@ export const eventConflictParticipantTypeOptions = buildOptions(EVENT_CONFLICT_P
 export const eventConflictParticipantRoleOptions = buildOptions(EVENT_CONFLICT_PARTICIPANT_ROLE_LABELS);
 export const eventConflictSideOptions = buildOptions(EVENT_CONFLICT_SIDE_LABELS);
 export const historicalPeriodRelationTypeOptions = buildOptions(HISTORICAL_PERIOD_RELATION_TYPE_LABELS);
-export const regionRelationTypeOptions = buildOptions(REGION_RELATION_TYPE_LABELS);
 export const polityTransitionTypeOptions = buildOptions(POLITY_TRANSITION_TYPE_LABELS);
 
 export function getEraLabel(code: string | null | undefined) {
@@ -139,10 +129,6 @@ export function getEventConflictSideLabel(code: string | null | undefined) {
 
 export function getHistoricalPeriodRelationTypeLabel(code: string | null | undefined) {
   return lookupLabel(HISTORICAL_PERIOD_RELATION_TYPE_LABELS, code);
-}
-
-export function getRegionRelationTypeLabel(code: string | null | undefined) {
-  return lookupLabel(REGION_RELATION_TYPE_LABELS, code);
 }
 
 export function getPolityTransitionTypeLabel(code: string | null | undefined) {
