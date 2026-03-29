@@ -1,6 +1,6 @@
 import { db } from "@/db/client";
 import { formatTimeExpression } from "@/lib/time-expression/format";
-import { fromTimeExpressionRecord, toTimeExpressionRecord } from "@/lib/time-expression/normalize";
+import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { PersonInput, RoleAssignmentInput } from "@/features/person/schema";
 import { listDynasties } from "@/server/repositories/dynasties";
@@ -295,19 +295,6 @@ function joinAliases(aliases: string[]) {
 
 function nullable(value: string | undefined) {
   return value && value.length > 0 ? value : null;
-}
-
-function toStoredTime(value: TimeExpressionInput | undefined) {
-  const record = toTimeExpressionRecord(value);
-
-  return {
-    fromCalendarEra: record?.calendarEra ?? null,
-    fromYear: record?.startYear ?? null,
-    fromIsApproximate: record?.isApproximate ?? false,
-    toCalendarEra: record?.endYear != null ? (record?.calendarEra ?? null) : null,
-    toYear: record?.endYear ?? null,
-    toIsApproximate: record?.endYear != null ? (record?.isApproximate ?? false) : false
-  };
 }
 
 function toStoredRoleTime(prefix: "from" | "to", value: TimeExpressionInput | undefined) {

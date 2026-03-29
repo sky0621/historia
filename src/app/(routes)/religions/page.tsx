@@ -94,16 +94,6 @@ function getSingleParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function getNumericParam(value: string | string[] | undefined) {
-  const single = getSingleParam(value);
-  if (!single) {
-    return undefined;
-  }
-
-  const parsed = Number(single);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 function renderLinkedNames(
   items: Array<{
     id: number;

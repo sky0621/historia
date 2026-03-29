@@ -72,7 +72,7 @@ function renderNodes(
         key={node.id}
         node={node}
         depth={depth}
-        children={children}
+        childNodes={children}
         childrenByParentId={childrenByParentId}
         name={name}
         selectedIds={selectedIds}
@@ -86,7 +86,7 @@ function renderNodes(
 function RegionTreeBranch({
   node,
   depth,
-  children,
+  childNodes,
   childrenByParentId,
   name,
   selectedIds,
@@ -95,7 +95,7 @@ function RegionTreeBranch({
 }: {
   node: RegionOption;
   depth: number;
-  children: RegionOption[];
+  childNodes: RegionOption[];
   childrenByParentId: Map<number | null, RegionOption[]>;
   name: string;
   selectedIds: Set<number>;
@@ -128,7 +128,7 @@ function RegionTreeBranch({
         </label>
       </summary>
       <div className="space-y-3">
-        {renderNodes(children, depth + 1, childrenByParentId, name, selectedIds, itemClassName)}
+        {renderNodes(childNodes, depth + 1, childrenByParentId, name, selectedIds, itemClassName)}
       </div>
     </details>
   );

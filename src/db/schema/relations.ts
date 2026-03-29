@@ -1,16 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { dynasties, era, historicalPeriods, polities, regions } from "./masters";
-
-function rangeTimeColumns() {
-  return {
-    fromCalendarEra: text("from_calendar_era").references(() => era.code),
-    fromYear: integer("from_year"),
-    fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
-    toCalendarEra: text("to_calendar_era").references(() => era.code),
-    toYear: integer("to_year"),
-    toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
-  };
-}
+import { dynasties, historicalPeriods, polities, regions } from "./masters";
 
 export const polityTransitions = sqliteTable("polity_transitions", {
   id: integer("id").primaryKey({ autoIncrement: true }),

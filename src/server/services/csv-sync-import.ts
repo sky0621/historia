@@ -11,7 +11,12 @@ import {
   regions
 } from "@/db/schema";
 
-export const csvSyncImportTargets = ["polities", "period-categories", "historical-periods"] as const;
+export const csvSyncImportTargets = [
+  "polities",
+  "period-categories",
+  "historical-periods",
+  "historical-period-category-links"
+] as const;
 
 export type CsvSyncImportTarget = (typeof csvSyncImportTargets)[number];
 
@@ -39,6 +44,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPeriodCategoriesCsv(rawCsv);
     case "historical-periods":
       return importHistoricalPeriodsCsv(rawCsv);
+    case "historical-period-category-links":
+      return importHistoricalPeriodCategoryLinksCsv(rawCsv);
     case "polities":
       return importPolitiesCsv(rawCsv);
   }
@@ -274,6 +281,76 @@ function importHistoricalPeriodsCsv(rawCsv: string): CsvSyncImportResult {
   });
 }
 
+function importHistoricalPeriodCategoryLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["category_id", "category_name", "period_id", "period_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(historicalPeriodCategoryLinks).all();
+    const categoryOptions = tx.select().from(periodCategories).all();
+    const periodOptions = tx.select().from(historicalPeriods).all();
+    const categoryNameById = new Map(categoryOptions.map((item) => [item.id, item.name]));
+    const periodNameById = new Map(periodOptions.map((item) => [item.id, item.name]));
+    const existingCategoryIdByPeriodId = new Map(existingLinks.map((item) => [item.periodId, item.categoryId]));
+    const csvPeriodIds = new Set<number>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const categoryId = parseRequiredId(cells.category_id, row.rowNumber, "category_id");
+      const categoryName = parseRequiredString(cells.category_name, "category_name", row.rowNumber);
+      const periodId = parseRequiredId(cells.period_id, row.rowNumber, "period_id");
+      const periodName = parseRequiredString(cells.period_name, "period_name", row.rowNumber);
+
+      assertUniqueCsvId(csvPeriodIds, periodId, row.rowNumber);
+
+      const actualCategoryName = categoryNameById.get(categoryId);
+      if (!actualCategoryName) {
+        throw new Error(`row ${row.rowNumber}: category_id=${categoryId} のカテゴリは存在しません`);
+      }
+      if (actualCategoryName !== categoryName) {
+        throw new Error(`row ${row.rowNumber}: category_id=${categoryId} の名称が一致しません`);
+      }
+
+      const actualPeriodName = periodNameById.get(periodId);
+      if (!actualPeriodName) {
+        throw new Error(`row ${row.rowNumber}: period_id=${periodId} の時代区分は存在しません`);
+      }
+      if (actualPeriodName !== periodName) {
+        throw new Error(`row ${row.rowNumber}: period_id=${periodId} の名称が一致しません`);
+      }
+
+      const existingCategoryId = existingCategoryIdByPeriodId.get(periodId);
+      if (existingCategoryId == null) {
+        tx.insert(historicalPeriodCategoryLinks).values({ periodId, categoryId }).run();
+        createdCount += 1;
+        continue;
+      }
+
+      tx
+        .update(historicalPeriodCategoryLinks)
+        .set({ categoryId })
+        .where(eq(historicalPeriodCategoryLinks.periodId, periodId))
+        .run();
+      updatedCount += 1;
+    }
+
+    const deletedPeriodIds = Array.from(existingCategoryIdByPeriodId.keys()).filter((periodId) => !csvPeriodIds.has(periodId));
+    for (const periodId of deletedPeriodIds) {
+      tx.delete(historicalPeriodCategoryLinks).where(eq(historicalPeriodCategoryLinks.periodId, periodId)).run();
+    }
+
+    return {
+      targetType: "historical-period-category-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedPeriodIds.length
+    };
+  });
+}
+
 function replacePolityRegionLinks(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   polityId: number,
@@ -346,6 +423,14 @@ function parseOptionalId(value: string | undefined, rowNumber: number) {
     throw new Error(`row ${rowNumber}: id は正の整数で指定してください`);
   }
 
+  return id;
+}
+
+function parseRequiredId(value: string | undefined, rowNumber: number, field: string) {
+  const id = parseOptionalId(value, rowNumber);
+  if (id == null) {
+    throw new Error(`row ${rowNumber}: ${field} は必須です`);
+  }
   return id;
 }
 

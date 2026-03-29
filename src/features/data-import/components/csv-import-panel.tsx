@@ -16,7 +16,8 @@ const initialState: CsvImportState = {};
 const targetOptions = [
   { value: "polities", label: "国家" },
   { value: "period-categories", label: "時代区分カテゴリ" },
-  { value: "historical-periods", label: "時代区分" }
+  { value: "historical-periods", label: "時代区分" },
+  { value: "historical-period-category-links", label: "時代区分カテゴリ紐付け" }
 ] as const;
 
 export function CsvImportPanel() {
@@ -71,5 +72,6 @@ export function CsvImportPanel() {
 const labelByTarget = {
   polities: "国家",
   "period-categories": "時代区分カテゴリ",
-  "historical-periods": "時代区分"
+  "historical-periods": "時代区分",
+  "historical-period-category-links": "時代区分カテゴリ紐付け"
 } as const;

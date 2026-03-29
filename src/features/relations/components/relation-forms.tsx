@@ -1,4 +1,3 @@
-import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import {
   createDynastySuccessionAction,
   createHistoricalPeriodRelationAction,
@@ -14,7 +13,6 @@ import {
   polityTransitionTypeOptions,
   regionRelationTypeOptions
 } from "@/lib/master-labels";
-import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 type Option = { id: number; name: string };
 
 export function PolityTransitionForm({
