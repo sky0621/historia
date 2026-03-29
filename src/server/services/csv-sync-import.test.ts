@@ -27,6 +27,12 @@ afterAll(() => {
 });
 
 beforeEach(() => {
+  sqlite.prepare("DELETE FROM event_region_links").run();
+  sqlite.prepare("DELETE FROM dynasty_region_links").run();
+  sqlite.prepare("DELETE FROM polity_region_links").run();
+  sqlite.prepare("DELETE FROM historical_period_region_links").run();
+  sqlite.prepare("DELETE FROM person_region_links").run();
+  sqlite.prepare("DELETE FROM regions").run();
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM sect_parent_links").run();
   sqlite.prepare("DELETE FROM religion_sect_links").run();
@@ -70,9 +76,58 @@ beforeEach(() => {
     .run();
   sqlite.prepare("INSERT INTO religion_sect_links (religion_id, sect_id) VALUES (1, 1), (2, 2)").run();
   sqlite.prepare("INSERT INTO sect_founder_links (sect_id, person_id) VALUES (1, 2), (2, 1)").run();
+  sqlite
+    .prepare(
+      "INSERT INTO regions (id, name, parent_region_id, description, note) VALUES (1, '日本', NULL, 'old root', NULL), (2, '近畿', 1, 'old child', 'old note'), (3, '削除対象', 1, 'obsolete', NULL)"
+    )
+    .run();
 });
 
 describe("csv sync import service", () => {
+  it("syncs regions and resolves parent_region by name", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "regions",
+      [
+        "id,name,parent_region,description,note",
+        "1,日本,,updated root,",
+        "2,近畿,日本,updated child,updated note",
+        ",京都,近畿,new child,"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT id, name, parent_region_id, description, note FROM regions ORDER BY id")
+      .all() as Array<{
+      id: number;
+      name: string;
+      parent_region_id: number | null;
+      description: string | null;
+      note: string | null;
+    }>;
+
+    expect(result).toEqual({
+      targetType: "regions",
+      totalRows: 3,
+      createdCount: 1,
+      updatedCount: 2,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { id: 1, name: "日本", parent_region_id: null, description: "updated root", note: null },
+      { id: 2, name: "近畿", parent_region_id: 1, description: "updated child", note: "updated note" },
+      { id: 4, name: "京都", parent_region_id: 2, description: "new child", note: null }
+    ]);
+  });
+
+  it("rejects unknown parent_region names in regions csv", () => {
+    expect(() =>
+      csvSyncImportModule.importCsvSync(
+        "regions",
+        ["id,name,parent_region,description,note", "1,日本,存在しない親,updated,"].join("\n")
+      )
+    ).toThrow('row 2: parent_region "存在しない親" が存在しません');
+  });
+
   it("syncs historical period category links by period_id", () => {
     const result = csvSyncImportModule.importCsvSync(
       "historical-period-category-links",

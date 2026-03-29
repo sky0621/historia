@@ -1,12 +1,15 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  dynastyRegionLinks,
+  eventRegionLinks,
   historicalPeriodCategoryLinks,
   historicalPeriodPolityLinks,
   historicalPeriodRegionLinks,
   historicalPeriods,
   periodCategories,
   persons,
+  personRegionLinks,
   polities,
   polityRegionLinks,
   religionSectLinks,
@@ -18,6 +21,7 @@ import {
 } from "@/db/schema";
 
 export const csvSyncImportTargets = [
+  "regions",
   "polities",
   "period-categories",
   "historical-periods",
@@ -48,6 +52,8 @@ type CsvCells = Record<string, string>;
 
 export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): CsvSyncImportResult {
   switch (targetType) {
+    case "regions":
+      return importRegionsCsv(rawCsv);
     case "period-categories":
       return importPeriodCategoriesCsv(rawCsv);
     case "historical-periods":
@@ -61,6 +67,91 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
     case "polities":
       return importPolitiesCsv(rawCsv);
   }
+}
+
+function importRegionsCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["id", "name", "parent_region", "description", "note"]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(regions).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const csvIds = new Set<number>();
+    const regionIdByName = new Map<string, number>();
+    const pendingParentByRegionId = new Map<number, { parentRegionName: string; rowNumber: number }>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+      const name = parseRequiredString(cells.name, "name", row.rowNumber);
+      const values = {
+        name,
+        parentRegionId: null,
+        description: nullable(cells.description),
+        note: nullable(cells.note)
+      };
+
+      let regionId: number;
+      if (id == null) {
+        const result = tx.insert(regions).values(values).run();
+        regionId = Number(result.lastInsertRowid);
+        createdCount += 1;
+      } else if (existingIds.has(id)) {
+        assertUniqueCsvId(csvIds, id, row.rowNumber);
+        tx.update(regions).set(values).where(eq(regions.id, id)).run();
+        regionId = id;
+        updatedCount += 1;
+      } else {
+        assertUniqueCsvId(csvIds, id, row.rowNumber);
+        tx.insert(regions).values({ id, ...values }).run();
+        regionId = id;
+        createdCount += 1;
+      }
+
+      if (regionIdByName.has(name)) {
+        throw new Error(`row ${row.rowNumber}: name "${name}" が CSV 内で重複しています`);
+      }
+      regionIdByName.set(name, regionId);
+
+      const parentRegionName = nullable(cells.parent_region);
+      if (parentRegionName) {
+        pendingParentByRegionId.set(regionId, { parentRegionName, rowNumber: row.rowNumber });
+      }
+    }
+
+    for (const [regionId, pendingParent] of pendingParentByRegionId.entries()) {
+      const parentRegionId = regionIdByName.get(pendingParent.parentRegionName);
+      if (!parentRegionId) {
+        throw new Error(`row ${pendingParent.rowNumber}: parent_region "${pendingParent.parentRegionName}" が存在しません`);
+      }
+      if (parentRegionId === regionId) {
+        throw new Error(`row ${pendingParent.rowNumber}: parent_region に自分自身は指定できません`);
+      }
+
+      tx.update(regions).set({ parentRegionId }).where(eq(regions.id, regionId)).run();
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(personRegionLinks).where(eq(personRegionLinks.regionId, id)).run();
+      tx.delete(historicalPeriodRegionLinks).where(eq(historicalPeriodRegionLinks.regionId, id)).run();
+      tx.delete(polityRegionLinks).where(eq(polityRegionLinks.regionId, id)).run();
+      tx.delete(dynastyRegionLinks).where(eq(dynastyRegionLinks.regionId, id)).run();
+      tx.delete(eventRegionLinks).where(eq(eventRegionLinks.regionId, id)).run();
+      tx.update(regions).set({ parentRegionId: null }).where(eq(regions.parentRegionId, id)).run();
+      tx.delete(regions).where(eq(regions.id, id)).run();
+    }
+
+    return {
+      targetType: "regions" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
+    };
+  });
 }
 
 function importPeriodCategoriesCsv(rawCsv: string): CsvSyncImportResult {

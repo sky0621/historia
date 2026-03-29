@@ -14,6 +14,7 @@ import { importCsvAction, type CsvImportState } from "@/features/data-import/act
 const initialState: CsvImportState = {};
 
 const targetOptions = [
+  { value: "regions", label: "地域" },
   { value: "polities", label: "国家" },
   { value: "period-categories", label: "時代区分カテゴリ" },
   { value: "historical-periods", label: "時代区分" },
@@ -72,6 +73,7 @@ export function CsvImportPanel() {
 }
 
 const labelByTarget = {
+  regions: "地域",
   polities: "国家",
   "period-categories": "時代区分カテゴリ",
   "historical-periods": "時代区分",
