@@ -29,6 +29,7 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM sects").run();
+  sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM religions").run();
   sqlite.prepare("DELETE FROM persons").run();
   sqlite.prepare("DELETE FROM era").run();
@@ -46,6 +47,27 @@ beforeEach(() => {
 });
 
 describe("import export service", () => {
+  it("exports religions csv with table columns only", () => {
+    sqlite.prepare("DELETE FROM sect_founder_links").run();
+    sqlite.prepare("DELETE FROM sects").run();
+    sqlite.prepare("DELETE FROM religions").run();
+    sqlite
+      .prepare(
+        "INSERT INTO religions (id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate) VALUES (1, '仏教', 'ぶっきょう', '宗教の説明', '注記', 'BCE', 500, 1, NULL, NULL, 0), (2, 'イスラム教', NULL, NULL, NULL, 'CE', 610, 0, 'CE', 632, 0)"
+      )
+      .run();
+
+    const csv = importExportModule.buildReligionsCsv();
+
+    expect(csv).toBe(
+      [
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "2,イスラム教,,,,CE,610,0,CE,632,0",
+        "1,仏教,ぶっきょう,宗教の説明,注記,BCE,500,1,,,0"
+      ].join("\n")
+    );
+  });
+
   it("exports sects csv using sects.religion_id", () => {
     const csv = importExportModule.buildSectsCsv();
 

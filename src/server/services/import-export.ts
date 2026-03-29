@@ -163,42 +163,32 @@ export function buildReligionsCsv() {
       `SELECT
          r.id,
          r.name,
+         r.reading,
          r.description,
          r.note,
-         r.from_calendar_era AS time_calendar_era,
-         r.from_year AS time_start_year,
-         r.to_year AS time_end_year,
-         CASE
-           WHEN coalesce(r.from_is_approximate, 0) = 1 OR coalesce(r.to_is_approximate, 0) = 1 THEN 1
-           ELSE 0
-         END AS time_is_approximate,
-         (
-           SELECT group_concat(p.name, ', ')
-           FROM religion_founder_links rfl
-           JOIN persons p ON p.id = rfl.person_id
-           WHERE rfl.religion_id = r.id
-         ) AS founders
+         r.from_calendar_era,
+         r.from_year,
+         r.from_is_approximate,
+         r.to_calendar_era,
+         r.to_year,
+         r.to_is_approximate
        FROM religions r
        ORDER BY r.name`
     )
     .all() as Array<Record<string, unknown>>;
 
-  const normalizedRows = rows.map((row) => ({
-    ...row,
-    time_label: formatHistoricalPeriodTime(row)
-  }));
-
-  return toCsv(normalizedRows, [
+  return toCsv(rows, [
     "id",
     "name",
+    "reading",
     "description",
     "note",
-    "time_label",
-    "time_calendar_era",
-    "time_start_year",
-    "time_end_year",
-    "time_is_approximate",
-    "founders"
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
   ]);
 }
 
