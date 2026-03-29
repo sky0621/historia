@@ -99,43 +99,32 @@ export function buildPolitiesCsv() {
       `SELECT
          p.id,
          p.name,
+         p.reading,
+         p.description,
          p.note,
          p.from_calendar_era,
          p.from_year,
          p.from_is_approximate,
          p.to_calendar_era,
          p.to_year,
-         p.to_is_approximate,
-         (
-           SELECT group_concat(r.name, ', ')
-           FROM polity_region_links prl
-           JOIN regions r ON r.id = prl.region_id
-           WHERE prl.polity_id = p.id
-         ) AS regions
+         p.to_is_approximate
        FROM polities p
        ORDER BY p.name`
     )
     .all() as Array<Record<string, unknown>>;
 
-  const normalizedRows = rows.map((row) => ({
-    ...row,
-    from_label: formatBoundaryLabel("from", row),
-    to_label: formatBoundaryLabel("to", row)
-  }));
-
-  return toCsv(normalizedRows, [
+  return toCsv(rows, [
     "id",
     "name",
+    "reading",
+    "description",
     "note",
-    "from_label",
     "from_calendar_era",
     "from_year",
     "from_is_approximate",
-    "to_label",
     "to_calendar_era",
     "to_year",
-    "to_is_approximate",
-    "regions"
+    "to_is_approximate"
   ]);
 }
 
@@ -236,23 +225,6 @@ function formatHistoricalPeriodTime(row: Record<string, unknown>) {
     startYear: (row.time_start_year as number | null) ?? null,
     endYear: (row.time_end_year as number | null) ?? null,
     isApproximate: Boolean(row.time_is_approximate),
-    precision: "year",
-    displayLabel: null
-  });
-
-  return expression ? formatTimeExpression(expression) : "";
-}
-
-function formatBoundaryLabel(prefix: "from" | "to", row: Record<string, unknown>) {
-  const calendarEraKey = prefix === "from" ? "from_calendar_era" : "to_calendar_era";
-  const yearKey = prefix === "from" ? "from_year" : "to_year";
-  const approximateKey = prefix === "from" ? "from_is_approximate" : "to_is_approximate";
-
-  const expression = fromTimeExpressionRecord({
-    calendarEra: (row[calendarEraKey] as "BCE" | "CE" | null) ?? "CE",
-    startYear: (row[yearKey] as number | null) ?? null,
-    endYear: null,
-    isApproximate: Boolean(row[approximateKey]),
     precision: "year",
     displayLabel: null
   });

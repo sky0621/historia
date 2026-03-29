@@ -24,27 +24,27 @@ export default function ManageDataPage() {
           <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
             <h2 className="text-lg font-semibold">Export</h2>
             <div className="mt-5 grid gap-3">
-              <Link href="/api/export/regions.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Region CSV をダウンロード
-              </Link>
-              <Link href="/api/export/religions.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Religion CSV をダウンロード
-              </Link>
-              <Link href="/api/export/sects.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Sect CSV をダウンロード
-              </Link>
-              <Link href="/api/export/polities.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Polity CSV をダウンロード
-              </Link>
-              <Link href="/api/export/period-categories.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Period Category CSV をダウンロード
-              </Link>
-              <Link href="/api/export/historical-periods.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Historical Period CSV をダウンロード
-              </Link>
-              <Link href="/api/export/historical-period-category-links.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                Historical Period Category Link CSV をダウンロード
-              </Link>
+              <a href="/api/export/regions.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                地域CSVをダウンロード
+              </a>
+              <a href="/api/export/religions.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                宗教CSVをダウンロード
+              </a>
+              <a href="/api/export/sects.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                宗派CSVをダウンロード
+              </a>
+              <a href="/api/export/polities.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                国家CSVをダウンロード
+              </a>
+              <a href="/api/export/period-categories.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                時代区分カテゴリCSVをダウンロード
+              </a>
+              <a href="/api/export/historical-periods.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                時代区分CSVをダウンロード
+              </a>
+              <a href="/api/export/historical-period-category-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                時代区分カテゴリ紐付けCSVをダウンロード
+              </a>
             </div>
           </div>
 

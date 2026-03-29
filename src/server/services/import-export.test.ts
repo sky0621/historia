@@ -29,6 +29,8 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM sects").run();
+  sqlite.prepare("DELETE FROM polity_region_links").run();
+  sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM religions").run();
   sqlite.prepare("DELETE FROM persons").run();
@@ -47,6 +49,24 @@ beforeEach(() => {
 });
 
 describe("import export service", () => {
+  it("exports polities csv with table columns only", () => {
+    sqlite
+      .prepare(
+        "INSERT INTO polities (id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate) VALUES (1, '日本', 'にほん', '国家の説明', '注記', 'BCE', 660, 1, 'CE', 1947, 0), (2, 'ローマ帝国', NULL, NULL, NULL, 'BCE', 27, 0, 'CE', 476, 0)"
+      )
+      .run();
+
+    const csv = importExportModule.buildPolitiesCsv();
+
+    expect(csv).toBe(
+      [
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "2,ローマ帝国,,,,BCE,27,0,CE,476,0",
+        "1,日本,にほん,国家の説明,注記,BCE,660,1,CE,1947,0"
+      ].join("\n")
+    );
+  });
+
   it("exports religions csv with table columns only", () => {
     sqlite.prepare("DELETE FROM sect_founder_links").run();
     sqlite.prepare("DELETE FROM sects").run();
