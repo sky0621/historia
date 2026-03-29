@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 export default function NewPolityPage() {
   return (
     <PolityForm
-      title="国家作成"
+      title="国家・政体作成"
       description="名称、開始年・終了年、関連地域を登録します。"
-      submitLabel="国家を作成"
+      submitLabel="国家・政体を作成"
       regionOptions={getRegionOptions()}
     />
   );

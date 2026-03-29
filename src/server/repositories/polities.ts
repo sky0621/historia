@@ -1,6 +1,15 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { polities, polityRegionLinks } from "@/db/schema";
+import {
+  dynastyPolityLinks,
+  dynastySuccessions,
+  eventPolityLinks,
+  historicalPeriodPolityLinks,
+  polities,
+  polityRegionLinks,
+  polityTransitions,
+  rolePolityLinks
+} from "@/db/schema";
 
 export type PolityRecord = typeof polities.$inferSelect;
 export type PolityInsert = typeof polities.$inferInsert;
@@ -39,6 +48,13 @@ export function updatePolity(id: number, input: Omit<PolityInsert, "id">, region
 
 export function deletePolity(id: number) {
   db.transaction((tx) => {
+    tx.delete(rolePolityLinks).where(eq(rolePolityLinks.polityId, id)).run();
+    tx.delete(historicalPeriodPolityLinks).where(eq(historicalPeriodPolityLinks.polityId, id)).run();
+    tx.delete(eventPolityLinks).where(eq(eventPolityLinks.polityId, id)).run();
+    tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.polityId, id)).run();
+    tx.delete(dynastySuccessions).where(eq(dynastySuccessions.polityId, id)).run();
+    tx.delete(polityTransitions).where(eq(polityTransitions.predecessorPolityId, id)).run();
+    tx.delete(polityTransitions).where(eq(polityTransitions.successorPolityId, id)).run();
     tx.delete(polityRegionLinks).where(eq(polityRegionLinks.polityId, id)).run();
     tx.delete(polities).where(eq(polities.id, id)).run();
   });
