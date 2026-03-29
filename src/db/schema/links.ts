@@ -30,11 +30,6 @@ export const historicalPeriodPolityLinks = sqliteTable("historical_period_polity
   polityId: integer("polity_id").notNull()
 });
 
-export const religionSectLinks = sqliteTable("religion_sect_links", {
-  religionId: integer("religion_id").notNull(),
-  sectId: integer("sect_id").notNull()
-});
-
 export const eventPersonLinks = sqliteTable("event_person_links", {
   eventId: integer("event_id").notNull(),
   personId: integer("person_id").notNull()

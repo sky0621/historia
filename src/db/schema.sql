@@ -363,6 +363,7 @@ CREATE TABLE `religions` (
 CREATE TABLE `sects` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 宗派ID
   `name` text NOT NULL, -- 宗派名
+  `religion_id` integer REFERENCES `religions`(`id`), -- 所属宗教ID
   `reading` text, -- 読み方
   `description` text, -- 宗派の説明
   `note` text, -- 編集メモ・注釈
@@ -381,14 +382,6 @@ CREATE TABLE `religion_founder_links` (
 );
 CREATE INDEX `idx_religion_founder_links_religion_id` ON `religion_founder_links` (`religion_id`);
 CREATE INDEX `idx_religion_founder_links_person_id` ON `religion_founder_links` (`person_id`);
-
--- 宗派と宗教の所属関係
-CREATE TABLE `religion_sect_links` (
-  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
-  `sect_id` integer NOT NULL REFERENCES `sects`(`id`) -- 宗派ID
-);
-CREATE INDEX `idx_religion_sect_links_religion_id` ON `religion_sect_links` (`religion_id`);
-CREATE INDEX `idx_religion_sect_links_sect_id` ON `religion_sect_links` (`sect_id`);
 
 -- 宗派と開祖人物の関連
 CREATE TABLE `sect_founder_links` (

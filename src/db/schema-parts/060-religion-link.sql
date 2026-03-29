@@ -6,14 +6,6 @@ CREATE TABLE `religion_founder_links` (
 CREATE INDEX `idx_religion_founder_links_religion_id` ON `religion_founder_links` (`religion_id`);
 CREATE INDEX `idx_religion_founder_links_person_id` ON `religion_founder_links` (`person_id`);
 
--- 宗派と宗教の所属関係
-CREATE TABLE `religion_sect_links` (
-  `religion_id` integer NOT NULL REFERENCES `religions`(`id`), -- 宗教ID
-  `sect_id` integer NOT NULL REFERENCES `sects`(`id`) -- 宗派ID
-);
-CREATE INDEX `idx_religion_sect_links_religion_id` ON `religion_sect_links` (`religion_id`);
-CREATE INDEX `idx_religion_sect_links_sect_id` ON `religion_sect_links` (`sect_id`);
-
 -- 宗派と開祖人物の関連
 CREATE TABLE `sect_founder_links` (
   `sect_id` integer NOT NULL REFERENCES `sects`(`id`), -- 宗派ID

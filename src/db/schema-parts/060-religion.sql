@@ -17,6 +17,7 @@ CREATE TABLE `religions` (
 CREATE TABLE `sects` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 宗派ID
   `name` text NOT NULL, -- 宗派名
+  `religion_id` integer REFERENCES `religions`(`id`), -- 所属宗教ID
   `reading` text, -- 読み方
   `description` text, -- 宗派の説明
   `note` text, -- 編集メモ・注釈

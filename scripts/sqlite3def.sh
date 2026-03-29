@@ -57,6 +57,39 @@ SQL
 
 normalize_legacy_import_runs
 
+normalize_legacy_religion_sect_links() {
+  if [ ! -f "$DATABASE_URL" ]; then
+    return
+  fi
+
+  HAS_SECTS_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'sects';")"
+  HAS_LINK_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'religion_sect_links';")"
+
+  if [ "$HAS_SECTS_TABLE" != "1" ] || [ "$HAS_LINK_TABLE" != "1" ]; then
+    return
+  fi
+
+  HAS_RELIGION_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('sects') WHERE name = 'religion_id';")"
+
+  if [ "$HAS_RELIGION_COLUMN" = "0" ]; then
+    sqlite3 "$DATABASE_URL" "ALTER TABLE sects ADD COLUMN religion_id integer REFERENCES religions(id);"
+  fi
+
+  sqlite3 "$DATABASE_URL" <<'SQL'
+UPDATE `sects`
+SET `religion_id` = (
+  SELECT `religion_id`
+  FROM `religion_sect_links`
+  WHERE `religion_sect_links`.`sect_id` = `sects`.`id`
+  LIMIT 1
+)
+WHERE `religion_id` IS NULL;
+DROP TABLE `religion_sect_links`;
+SQL
+}
+
+normalize_legacy_religion_sect_links
+
 ensure_event_types_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `event_types` (

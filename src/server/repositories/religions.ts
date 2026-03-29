@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { religionFounderLinks, religions } from "@/db/schema";
+import { religionFounderLinks, religions, sects } from "@/db/schema";
 
 export type ReligionInsert = typeof religions.$inferInsert;
 
@@ -42,6 +42,7 @@ export function updateReligion(
 
 export function deleteReligion(id: number) {
   db.transaction((tx) => {
+    tx.update(sects).set({ religionId: null }).where(eq(sects.religionId, id)).run();
     tx.delete(religionFounderLinks).where(eq(religionFounderLinks.religionId, id)).run();
     tx.delete(religions).where(eq(religions.id, id)).run();
   });

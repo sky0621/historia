@@ -12,7 +12,6 @@ import {
   personRegionLinks,
   polities,
   polityRegionLinks,
-  religionSectLinks,
   religions,
   regions,
   sectFounderLinks,
@@ -511,6 +510,7 @@ function importReligionsCsv(rawCsv: string): CsvSyncImportResult {
 
     const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
     for (const id of deletedIds) {
+      tx.update(sects).set({ religionId: null }).where(eq(sects.religionId, id)).run();
       tx.delete(religions).where(eq(religions.id, id)).run();
     }
 
@@ -572,6 +572,7 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
 
       const values = {
         name: parseRequiredString(cells.name, "name", row.rowNumber),
+        religionId,
         description: nullable(cells.description),
         note: nullable(cells.note),
         fromCalendarEra: timeCalendarEra,
@@ -585,7 +586,7 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       if (id == null) {
         const result = tx.insert(sects).values(values).run();
         const sectId = Number(result.lastInsertRowid);
-        replaceSectLinks(tx, sectId, religionId, founderIds);
+        replaceSectLinks(tx, sectId, founderIds);
         createdCount += 1;
         continue;
       }
@@ -596,13 +597,12 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       }
 
       tx.update(sects).set(values).where(eq(sects.id, id)).run();
-      replaceSectLinks(tx, id, religionId, founderIds);
+      replaceSectLinks(tx, id, founderIds);
       updatedCount += 1;
     }
 
     const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
     for (const id of deletedIds) {
-      tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, id)).run();
       tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, id)).run();
       tx.delete(sects).where(eq(sects.id, id)).run();
     }
@@ -650,12 +650,9 @@ function replaceHistoricalPeriodLinks(
 function replaceSectLinks(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   sectId: number,
-  religionId: number,
   founderIds: number[]
 ) {
-  tx.delete(religionSectLinks).where(eq(religionSectLinks.sectId, sectId)).run();
   tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, sectId)).run();
-  tx.insert(religionSectLinks).values({ sectId, religionId }).run();
   if (founderIds.length > 0) {
     tx.insert(sectFounderLinks).values(founderIds.map((personId) => ({ sectId, personId }))).run();
   }

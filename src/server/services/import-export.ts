@@ -208,50 +208,35 @@ export function buildSectsCsv() {
       `SELECT
          s.id,
          s.name,
-         (
-           SELECT r.name
-           FROM religion_sect_links rsl
-           JOIN religions r ON r.id = rsl.religion_id
-           WHERE rsl.sect_id = s.id
-           LIMIT 1
-         ) AS religion,
+         r.name AS religion,
+         s.reading,
          s.description,
          s.note,
-         s.from_calendar_era AS time_calendar_era,
-         s.from_year AS time_start_year,
-         s.to_year AS time_end_year,
-         CASE
-           WHEN coalesce(s.from_is_approximate, 0) = 1 OR coalesce(s.to_is_approximate, 0) = 1 THEN 1
-           ELSE 0
-         END AS time_is_approximate,
-         (
-           SELECT group_concat(p.name, ', ')
-           FROM sect_founder_links sfl
-           JOIN persons p ON p.id = sfl.person_id
-           WHERE sfl.sect_id = s.id
-         ) AS founders
+         s.from_calendar_era,
+         s.from_year,
+         s.from_is_approximate,
+         s.to_calendar_era,
+         s.to_year,
+         s.to_is_approximate
        FROM sects s
+       LEFT JOIN religions r ON r.id = s.religion_id
        ORDER BY s.name`
     )
     .all() as Array<Record<string, unknown>>;
 
-  const normalizedRows = rows.map((row) => ({
-    ...row,
-    time_label: formatHistoricalPeriodTime(row)
-  }));
-
-  return toCsv(normalizedRows, [
+  return toCsv(rows, [
     "id",
     "name",
     "religion",
+    "reading",
     "description",
     "note",
-    "time_label",
-    "time_calendar_era",
-    "time_start_year",
-    "time_end_year",
-    "time_is_approximate",
-    "founders"
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
   ]);
 }
 
