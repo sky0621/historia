@@ -39,14 +39,13 @@ export function RegionCheckboxTree({
 
   return (
     <div className={containerClassName}>
-      {renderNodes(renderedRootOptions, 0, childrenByParentId, name, selectedIdSet, itemClassName)}
+      {renderNodes(renderedRootOptions, childrenByParentId, name, selectedIdSet, itemClassName)}
     </div>
   );
 }
 
 function renderNodes(
   nodes: RegionOption[],
-  depth: number,
   childrenByParentId: Map<number | null, RegionOption[]>,
   name: string,
   selectedIds: Set<number>,
@@ -54,12 +53,12 @@ function renderNodes(
 ): ReactNode {
   return nodes.map((node) => {
     const children = childrenByParentId.get(node.id) ?? [];
-    const defaultOpen = hasSelectedDescendant(node.id, childrenByParentId, selectedIds);
+    const defaultOpen = hasSelectedDescendant(node.id, childrenByParentId, selectedIds, false);
 
     if (children.length === 0) {
       return (
-        <div key={node.id} className="space-y-3">
-          <label className={itemClassName} style={{ marginLeft: `${depth * 1.25}rem` }}>
+        <div key={node.id}>
+          <label className={itemClassName}>
             <input type="checkbox" name={name} value={node.id} defaultChecked={selectedIds.has(node.id)} />
             {node.name}
           </label>
@@ -71,7 +70,6 @@ function renderNodes(
       <RegionTreeBranch
         key={node.id}
         node={node}
-        depth={depth}
         childNodes={children}
         childrenByParentId={childrenByParentId}
         name={name}
@@ -85,7 +83,6 @@ function renderNodes(
 
 function RegionTreeBranch({
   node,
-  depth,
   childNodes,
   childrenByParentId,
   name,
@@ -94,7 +91,6 @@ function RegionTreeBranch({
   defaultOpen
 }: {
   node: RegionOption;
-  depth: number;
   childNodes: RegionOption[];
   childrenByParentId: Map<number | null, RegionOption[]>;
   name: string;
@@ -105,30 +101,27 @@ function RegionTreeBranch({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <details
-      open={defaultOpen}
-      onToggle={(event) => setIsOpen(event.currentTarget.open)}
-      className="space-y-3"
-      style={{ marginLeft: `${depth * 1.25}rem` }}
-    >
+    <details open={defaultOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)} className="group space-y-3">
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         <label className={`${itemClassName} pointer-events-none`}>
-          <input
-            type="checkbox"
-            name={name}
-            value={node.id}
-            defaultChecked={selectedIds.has(node.id)}
-            className="pointer-events-auto"
-            onClick={(event) => event.stopPropagation()}
-          />
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-3">
             <span className="text-[var(--muted)]">{isOpen ? "▼" : "▶"}</span>
+            <input
+              type="checkbox"
+              name={name}
+              value={node.id}
+              defaultChecked={selectedIds.has(node.id)}
+              className="pointer-events-auto"
+              onClick={(event) => event.stopPropagation()}
+            />
             {node.name}
           </span>
         </label>
       </summary>
-      <div className="space-y-3">
-        {renderNodes(childNodes, depth + 1, childrenByParentId, name, selectedIds, itemClassName)}
+      <div className="ml-6 border-l border-[var(--border)] pl-4">
+        <div className="space-y-3">
+          {renderNodes(childNodes, childrenByParentId, name, selectedIds, itemClassName)}
+        </div>
       </div>
     </details>
   );
@@ -137,12 +130,13 @@ function RegionTreeBranch({
 function hasSelectedDescendant(
   nodeId: number,
   childrenByParentId: Map<number | null, RegionOption[]>,
-  selectedIds: Set<number>
+  selectedIds: Set<number>,
+  includeSelf = true
 ): boolean {
-  if (selectedIds.has(nodeId)) {
+  if (includeSelf && selectedIds.has(nodeId)) {
     return true;
   }
 
   const children = childrenByParentId.get(nodeId) ?? [];
-  return children.some((child) => hasSelectedDescendant(child.id, childrenByParentId, selectedIds));
+  return children.some((child) => selectedIds.has(child.id) || hasSelectedDescendant(child.id, childrenByParentId, selectedIds));
 }
