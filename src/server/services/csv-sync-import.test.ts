@@ -27,10 +27,19 @@ afterAll(() => {
 });
 
 beforeEach(() => {
+  sqlite.prepare("DELETE FROM religion_founder_links").run();
+  sqlite.prepare("DELETE FROM religions").run();
   sqlite.prepare("DELETE FROM historical_period_category_links").run();
   sqlite.prepare("DELETE FROM historical_periods").run();
+  sqlite.prepare("DELETE FROM persons").run();
   sqlite.prepare("DELETE FROM period_categories").run();
+  sqlite.prepare("DELETE FROM era").run();
+  sqlite.prepare("DELETE FROM sqlite_sequence").run();
 
+  sqlite.prepare("INSERT INTO era (code, label) VALUES ('BCE', '紀元前'), ('CE', '西暦')").run();
+  sqlite
+    .prepare("INSERT INTO persons (id, name) VALUES (1, 'ムハンマド'), (2, 'ゴータマ・シッダールタ'), (3, 'イエス')")
+    .run();
   sqlite.prepare("INSERT INTO period_categories (id, name) VALUES (1, '日本史'), (2, '東洋史'), (3, '西洋史')").run();
   sqlite
     .prepare(
@@ -41,6 +50,14 @@ beforeEach(() => {
     .prepare(
       "INSERT INTO historical_period_category_links (period_id, category_id) VALUES (1, 1), (2, 2), (4, 3)"
     )
+    .run();
+  sqlite
+    .prepare(
+      "INSERT INTO religions (id, name, description, from_calendar_era, from_year, from_is_approximate) VALUES (1, '仏教', 'old', 'BCE', 500, 1), (2, 'イスラム教', 'old', 'CE', 610, 0)"
+    )
+    .run();
+  sqlite
+    .prepare("INSERT INTO religion_founder_links (religion_id, person_id) VALUES (1, 2), (2, 1)")
     .run();
 });
 
@@ -81,5 +98,102 @@ describe("csv sync import service", () => {
         ["category_id,category_name,period_id,period_name", "1,東洋史,1,旧石器時代"].join("\n")
       )
     ).toThrow("row 2: category_id=1 の名称が一致しません");
+  });
+
+  it("syncs religions and founder links", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "religions",
+      [
+        "id,name,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
+        "1,仏教,updated,,ca. 前500,BCE,500,,1,ゴータマ・シッダールタ",
+        "2,イスラム教,updated,,610,CE,610,,0,ムハンマド",
+        ",キリスト教,new,,ca. 1,CE,1,,1,イエス"
+      ].join("\n")
+    );
+
+    const religionRows = sqlite
+      .prepare(
+        "SELECT id, name, description, from_calendar_era, from_year, to_year, from_is_approximate FROM religions ORDER BY id"
+      )
+      .all() as Array<{
+      id: number;
+      name: string;
+      description: string | null;
+      from_calendar_era: string | null;
+      from_year: number | null;
+      to_year: number | null;
+      from_is_approximate: number;
+    }>;
+    const founderRows = sqlite
+      .prepare("SELECT religion_id, person_id FROM religion_founder_links ORDER BY religion_id, person_id")
+      .all() as Array<{ religion_id: number; person_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "religions",
+      totalRows: 3,
+      createdCount: 1,
+      updatedCount: 2,
+      deletedCount: 0
+    });
+    expect(religionRows).toEqual([
+      {
+        id: 1,
+        name: "仏教",
+        description: "updated",
+        from_calendar_era: "BCE",
+        from_year: 500,
+        to_year: null,
+        from_is_approximate: 1
+      },
+      {
+        id: 2,
+        name: "イスラム教",
+        description: "updated",
+        from_calendar_era: "CE",
+        from_year: 610,
+        to_year: null,
+        from_is_approximate: 0
+      },
+      {
+        id: 3,
+        name: "キリスト教",
+        description: "new",
+        from_calendar_era: "CE",
+        from_year: 1,
+        to_year: null,
+        from_is_approximate: 1
+      }
+    ]);
+    expect(founderRows).toEqual([
+      { religion_id: 1, person_id: 2 },
+      { religion_id: 2, person_id: 1 }
+    ]);
+  });
+
+  it("deletes religions missing from csv", () => {
+    sqlite.prepare("DELETE FROM religion_founder_links WHERE religion_id = 2").run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "religions",
+      [
+        "id,name,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
+        "1,仏教,updated,,ca. 前500,BCE,500,,1,ゴータマ・シッダールタ"
+      ].join("\n")
+    );
+
+    const religionRows = sqlite.prepare("SELECT id FROM religions ORDER BY id").all() as Array<{ id: number }>;
+    const founderRows = sqlite
+      .prepare("SELECT religion_id, person_id FROM religion_founder_links ORDER BY religion_id, person_id")
+      .all() as Array<{ religion_id: number; person_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "religions",
+      totalRows: 1,
+      createdCount: 0,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(religionRows).toEqual([{ id: 1 }]);
+    expect(founderRows).toEqual([{ religion_id: 1, person_id: 2 }]);
   });
 });

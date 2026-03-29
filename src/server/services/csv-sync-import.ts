@@ -8,6 +8,7 @@ import {
   periodCategories,
   polities,
   polityRegionLinks,
+  religions,
   regions
 } from "@/db/schema";
 
@@ -15,7 +16,8 @@ export const csvSyncImportTargets = [
   "polities",
   "period-categories",
   "historical-periods",
-  "historical-period-category-links"
+  "historical-period-category-links",
+  "religions"
 ] as const;
 
 export type CsvSyncImportTarget = (typeof csvSyncImportTargets)[number];
@@ -46,6 +48,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importHistoricalPeriodsCsv(rawCsv);
     case "historical-period-category-links":
       return importHistoricalPeriodCategoryLinksCsv(rawCsv);
+    case "religions":
+      return importReligionsCsv(rawCsv);
     case "polities":
       return importPolitiesCsv(rawCsv);
   }
@@ -347,6 +351,77 @@ function importHistoricalPeriodCategoryLinksCsv(rawCsv: string): CsvSyncImportRe
       createdCount,
       updatedCount,
       deletedCount: deletedPeriodIds.length
+    };
+  });
+}
+
+function importReligionsCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, [
+    "id",
+    "name",
+    "description",
+    "note",
+    "time_calendar_era",
+    "time_start_year",
+    "time_end_year",
+    "time_is_approximate",
+    "founders"
+  ]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(religions).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const csvIds = new Set<number>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+      const timeCalendarEra = parseOptionalEra(cells.time_calendar_era, row.rowNumber, "time_calendar_era");
+      const timeStartYear = parseOptionalInteger(cells.time_start_year, row.rowNumber, "time_start_year");
+      const timeEndYear = parseOptionalInteger(cells.time_end_year, row.rowNumber, "time_end_year");
+      const timeIsApproximate = parseBooleanFlag(cells.time_is_approximate);
+
+      const values = {
+        name: parseRequiredString(cells.name, "name", row.rowNumber),
+        description: nullable(cells.description),
+        note: nullable(cells.note),
+        fromCalendarEra: timeCalendarEra,
+        fromYear: timeStartYear,
+        fromIsApproximate: timeIsApproximate,
+        toCalendarEra: timeEndYear == null ? null : timeCalendarEra,
+        toYear: timeEndYear,
+        toIsApproximate: timeEndYear == null ? false : timeIsApproximate
+      };
+
+      if (id == null) {
+        tx.insert(religions).values(values).run();
+        createdCount += 1;
+        continue;
+      }
+
+      assertUniqueCsvId(csvIds, id, row.rowNumber);
+      if (!existingIds.has(id)) {
+        throw new Error(`row ${row.rowNumber}: id=${id} の宗教は存在しません`);
+      }
+
+      tx.update(religions).set(values).where(eq(religions.id, id)).run();
+      updatedCount += 1;
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(religions).where(eq(religions.id, id)).run();
+    }
+
+    return {
+      targetType: "religions" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
     };
   });
 }
