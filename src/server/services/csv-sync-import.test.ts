@@ -167,25 +167,28 @@ describe("csv sync import service", () => {
     const result = csvSyncImportModule.importCsvSync(
       "religions",
       [
-        "id,name,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
-        "1,仏教,updated,,ca. 前500,BCE,500,,1,ゴータマ・シッダールタ",
-        "2,イスラム教,updated,,610,CE,610,,0,ムハンマド",
-        ",キリスト教,new,,ca. 1,CE,1,,1,イエス"
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,仏教,ぶっきょう,updated,,BCE,500,1,,,0",
+        "2,イスラム教,,updated,,CE,610,0,CE,632,0",
+        ",キリスト教,,new,,CE,1,1,,,0"
       ].join("\n")
     );
 
     const religionRows = sqlite
       .prepare(
-        "SELECT id, name, description, from_calendar_era, from_year, to_year, from_is_approximate FROM religions ORDER BY id"
+        "SELECT id, name, reading, description, from_calendar_era, from_year, to_calendar_era, to_year, from_is_approximate, to_is_approximate FROM religions ORDER BY id"
       )
       .all() as Array<{
       id: number;
       name: string;
+      reading: string | null;
       description: string | null;
       from_calendar_era: string | null;
       from_year: number | null;
+      to_calendar_era: string | null;
       to_year: number | null;
       from_is_approximate: number;
+      to_is_approximate: number;
     }>;
     const founderRows = sqlite
       .prepare("SELECT religion_id, person_id FROM religion_founder_links ORDER BY religion_id, person_id")
@@ -202,29 +205,38 @@ describe("csv sync import service", () => {
       {
         id: 1,
         name: "仏教",
+        reading: "ぶっきょう",
         description: "updated",
         from_calendar_era: "BCE",
         from_year: 500,
+        to_calendar_era: null,
         to_year: null,
-        from_is_approximate: 1
+        from_is_approximate: 1,
+        to_is_approximate: 0
       },
       {
         id: 2,
         name: "イスラム教",
+        reading: null,
         description: "updated",
         from_calendar_era: "CE",
         from_year: 610,
-        to_year: null,
-        from_is_approximate: 0
+        to_calendar_era: "CE",
+        to_year: 632,
+        from_is_approximate: 0,
+        to_is_approximate: 0
       },
       {
         id: 3,
         name: "キリスト教",
+        reading: null,
         description: "new",
         from_calendar_era: "CE",
         from_year: 1,
+        to_calendar_era: null,
         to_year: null,
-        from_is_approximate: 1
+        from_is_approximate: 1,
+        to_is_approximate: 0
       }
     ]);
     expect(founderRows).toEqual([
@@ -239,8 +251,8 @@ describe("csv sync import service", () => {
     const result = csvSyncImportModule.importCsvSync(
       "religions",
       [
-        "id,name,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
-        "1,仏教,updated,,ca. 前500,BCE,500,,1,ゴータマ・シッダールタ"
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,仏教,ぶっきょう,updated,,BCE,500,1,,,0"
       ].join("\n")
     );
 
@@ -268,24 +280,28 @@ describe("csv sync import service", () => {
     const result = csvSyncImportModule.importCsvSync(
       "sects",
       [
-        "id,name,religion,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
-        "1,上座部仏教,仏教,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ",
-        "2,スンナ派,イスラム教,updated,,700,CE,700,,0,ムハンマド",
-        ",カトリック,キリスト教,new,,年未詳,CE,,,0,イエス",
-        ",浄土真宗,仏教,new child,,1224,CE,1224,,0,"
+        "id,name,religion,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,上座部仏教,仏教,じょうざぶぶっきょう,updated,,BCE,300,1,,,0",
+        "2,スンナ派,イスラム教,,updated,,CE,700,0,CE,900,0",
+        ",カトリック,キリスト教,,new,,,,0,,,0",
+        ",浄土真宗,仏教,,new child,,CE,1224,0,,,0"
       ].join("\n")
     );
 
     const sectRows = sqlite
-      .prepare("SELECT id, name, religion_id, description, from_calendar_era, from_year, from_is_approximate FROM sects ORDER BY id")
+      .prepare("SELECT id, name, religion_id, reading, description, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate FROM sects ORDER BY id")
       .all() as Array<{
       id: number;
       name: string;
       religion_id: number | null;
+      reading: string | null;
       description: string | null;
       from_calendar_era: string | null;
       from_year: number | null;
       from_is_approximate: number;
+      to_calendar_era: string | null;
+      to_year: number | null;
+      to_is_approximate: number;
     }>;
     const founderRows = sqlite
       .prepare("SELECT sect_id, person_id FROM sect_founder_links ORDER BY sect_id, person_id")
@@ -299,15 +315,14 @@ describe("csv sync import service", () => {
       deletedCount: 0
     });
     expect(sectRows).toEqual([
-      { id: 1, name: "上座部仏教", religion_id: 1, description: "updated", from_calendar_era: "BCE", from_year: 300, from_is_approximate: 1 },
-      { id: 2, name: "スンナ派", religion_id: 2, description: "updated", from_calendar_era: "CE", from_year: 700, from_is_approximate: 0 },
-      { id: 3, name: "カトリック", religion_id: 3, description: "new", from_calendar_era: "CE", from_year: null, from_is_approximate: 0 },
-      { id: 4, name: "浄土真宗", religion_id: 1, description: "new child", from_calendar_era: "CE", from_year: 1224, from_is_approximate: 0 }
+      { id: 1, name: "上座部仏教", religion_id: 1, reading: "じょうざぶぶっきょう", description: "updated", from_calendar_era: "BCE", from_year: 300, from_is_approximate: 1, to_calendar_era: null, to_year: null, to_is_approximate: 0 },
+      { id: 2, name: "スンナ派", religion_id: 2, reading: null, description: "updated", from_calendar_era: "CE", from_year: 700, from_is_approximate: 0, to_calendar_era: "CE", to_year: 900, to_is_approximate: 0 },
+      { id: 3, name: "カトリック", religion_id: 3, reading: null, description: "new", from_calendar_era: null, from_year: null, from_is_approximate: 0, to_calendar_era: null, to_year: null, to_is_approximate: 0 },
+      { id: 4, name: "浄土真宗", religion_id: 1, reading: null, description: "new child", from_calendar_era: "CE", from_year: 1224, from_is_approximate: 0, to_calendar_era: null, to_year: null, to_is_approximate: 0 }
     ]);
     expect(founderRows).toEqual([
       { sect_id: 1, person_id: 2 },
-      { sect_id: 2, person_id: 1 },
-      { sect_id: 3, person_id: 3 }
+      { sect_id: 2, person_id: 1 }
     ]);
   });
 
@@ -319,8 +334,8 @@ describe("csv sync import service", () => {
     const result = csvSyncImportModule.importCsvSync(
       "sects",
       [
-        "id,name,religion,description,note,time_label,time_calendar_era,time_start_year,time_end_year,time_is_approximate,founders",
-        "1,上座部仏教,仏教,updated,,ca. 前300,BCE,300,,1,ゴータマ・シッダールタ"
+        "id,name,religion,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,上座部仏教,仏教,,updated,,BCE,300,1,,,0"
       ].join("\n")
     );
 

@@ -8,7 +8,6 @@ import {
   historicalPeriodRegionLinks,
   historicalPeriods,
   periodCategories,
-  persons,
   personRegionLinks,
   polities,
   polityRegionLinks,
@@ -457,13 +456,15 @@ function importReligionsCsv(rawCsv: string): CsvSyncImportResult {
   assertHeaders(parsed.headers, [
     "id",
     "name",
+    "reading",
     "description",
     "note",
-    "time_calendar_era",
-    "time_start_year",
-    "time_end_year",
-    "time_is_approximate",
-    "founders"
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
   ]);
 
   return db.transaction((tx) => {
@@ -476,21 +477,22 @@ function importReligionsCsv(rawCsv: string): CsvSyncImportResult {
     for (const row of parsed.rows) {
       const cells = toCells(parsed.headers, row.values);
       const id = parseOptionalId(cells.id, row.rowNumber);
-      const timeCalendarEra = parseOptionalEra(cells.time_calendar_era, row.rowNumber, "time_calendar_era");
-      const timeStartYear = parseOptionalInteger(cells.time_start_year, row.rowNumber, "time_start_year");
-      const timeEndYear = parseOptionalInteger(cells.time_end_year, row.rowNumber, "time_end_year");
-      const timeIsApproximate = parseBooleanFlag(cells.time_is_approximate);
+      const fromCalendarEra = parseOptionalEra(cells.from_calendar_era, row.rowNumber, "from_calendar_era");
+      const fromYear = parseOptionalInteger(cells.from_year, row.rowNumber, "from_year");
+      const toCalendarEra = parseOptionalEra(cells.to_calendar_era, row.rowNumber, "to_calendar_era");
+      const toYear = parseOptionalInteger(cells.to_year, row.rowNumber, "to_year");
 
       const values = {
         name: parseRequiredString(cells.name, "name", row.rowNumber),
+        reading: nullable(cells.reading),
         description: nullable(cells.description),
         note: nullable(cells.note),
-        fromCalendarEra: timeCalendarEra,
-        fromYear: timeStartYear,
-        fromIsApproximate: timeIsApproximate,
-        toCalendarEra: timeEndYear == null ? null : timeCalendarEra,
-        toYear: timeEndYear,
-        toIsApproximate: timeEndYear == null ? false : timeIsApproximate
+        fromCalendarEra,
+        fromYear,
+        fromIsApproximate: parseBooleanFlag(cells.from_is_approximate),
+        toCalendarEra,
+        toYear,
+        toIsApproximate: parseBooleanFlag(cells.to_is_approximate)
       };
 
       if (id == null) {
@@ -530,22 +532,22 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
     "id",
     "name",
     "religion",
+    "reading",
     "description",
     "note",
-    "time_calendar_era",
-    "time_start_year",
-    "time_end_year",
-    "time_is_approximate",
-    "founders"
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
   ]);
 
   return db.transaction((tx) => {
     const existingItems = tx.select().from(sects).all();
     const existingIds = new Set(existingItems.map((item) => item.id));
     const religionOptions = tx.select().from(religions).all();
-    const personOptions = tx.select().from(persons).all();
     const religionIdByName = new Map(religionOptions.map((item) => [item.name, item.id]));
-    const personIdByName = new Map(personOptions.map((item) => [item.name, item.id]));
     const csvIds = new Set<number>();
     let createdCount = 0;
     let updatedCount = 0;
@@ -558,35 +560,27 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       if (!religionId) {
         throw new Error(`row ${row.rowNumber}: religion "${religionName}" が存在しません`);
       }
-      const founderIds = parseReferenceNames(cells.founders).map((name) => {
-        const personId = personIdByName.get(name);
-        if (!personId) {
-          throw new Error(`row ${row.rowNumber}: founder "${name}" が存在しません`);
-        }
-        return personId;
-      });
-      const timeCalendarEra = parseOptionalEra(cells.time_calendar_era, row.rowNumber, "time_calendar_era");
-      const timeStartYear = parseOptionalInteger(cells.time_start_year, row.rowNumber, "time_start_year");
-      const timeEndYear = parseOptionalInteger(cells.time_end_year, row.rowNumber, "time_end_year");
-      const timeIsApproximate = parseBooleanFlag(cells.time_is_approximate);
+      const fromCalendarEra = parseOptionalEra(cells.from_calendar_era, row.rowNumber, "from_calendar_era");
+      const fromYear = parseOptionalInteger(cells.from_year, row.rowNumber, "from_year");
+      const toCalendarEra = parseOptionalEra(cells.to_calendar_era, row.rowNumber, "to_calendar_era");
+      const toYear = parseOptionalInteger(cells.to_year, row.rowNumber, "to_year");
 
       const values = {
         name: parseRequiredString(cells.name, "name", row.rowNumber),
         religionId,
+        reading: nullable(cells.reading),
         description: nullable(cells.description),
         note: nullable(cells.note),
-        fromCalendarEra: timeCalendarEra,
-        fromYear: timeStartYear,
-        fromIsApproximate: timeIsApproximate,
-        toCalendarEra: timeEndYear == null ? null : timeCalendarEra,
-        toYear: timeEndYear,
-        toIsApproximate: timeEndYear == null ? false : timeIsApproximate
+        fromCalendarEra,
+        fromYear,
+        fromIsApproximate: parseBooleanFlag(cells.from_is_approximate),
+        toCalendarEra,
+        toYear,
+        toIsApproximate: parseBooleanFlag(cells.to_is_approximate)
       };
 
       if (id == null) {
-        const result = tx.insert(sects).values(values).run();
-        const sectId = Number(result.lastInsertRowid);
-        replaceSectLinks(tx, sectId, founderIds);
+        tx.insert(sects).values(values).run();
         createdCount += 1;
         continue;
       }
@@ -597,7 +591,6 @@ function importSectsCsv(rawCsv: string): CsvSyncImportResult {
       }
 
       tx.update(sects).set(values).where(eq(sects.id, id)).run();
-      replaceSectLinks(tx, id, founderIds);
       updatedCount += 1;
     }
 
@@ -644,17 +637,6 @@ function replaceHistoricalPeriodLinks(
   }
   if (regionIds.length > 0) {
     tx.insert(historicalPeriodRegionLinks).values(regionIds.map((regionId) => ({ periodId, regionId }))).run();
-  }
-}
-
-function replaceSectLinks(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  sectId: number,
-  founderIds: number[]
-) {
-  tx.delete(sectFounderLinks).where(eq(sectFounderLinks.sectId, sectId)).run();
-  if (founderIds.length > 0) {
-    tx.insert(sectFounderLinks).values(founderIds.map((personId) => ({ sectId, personId }))).run();
   }
 }
 
