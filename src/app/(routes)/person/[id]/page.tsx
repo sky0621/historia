@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/forms/confirm-submit-button";
 import { deletePersonAction } from "@/features/person/actions";
 import { getPersonDetailView } from "@/server/services/person";
 
@@ -39,9 +40,9 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
           </Link>
           <form action={deletePersonAction}>
             <input type="hidden" name="id" value={view.person.id} />
-            <button type="submit" className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
+            <ConfirmSubmitButton className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
               削除
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </div>
       </div>

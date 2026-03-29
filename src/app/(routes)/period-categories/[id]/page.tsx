@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/forms/confirm-submit-button";
 import { deletePeriodCategoryAction } from "@/features/periods/actions";
 import { getPeriodCategoryView } from "@/server/services/period-categories";
 
@@ -43,12 +44,9 @@ export default async function PeriodCategoryDetailPage({
           </Link>
           <form action={deletePeriodCategoryAction}>
             <input type="hidden" name="id" value={view.category.id} />
-            <button
-              type="submit"
-              className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700"
-            >
+            <ConfirmSubmitButton className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
               削除
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </div>
       </div>

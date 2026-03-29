@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/forms/confirm-submit-button";
 import { deleteTagAction } from "@/features/tags/actions";
 import { getTagView } from "@/server/services/tags";
 
@@ -36,9 +37,9 @@ export default async function TagDetailPage({ params }: { params: Promise<{ id: 
           </Link>
           <form action={deleteTagAction}>
             <input type="hidden" name="id" value={view.tag.id} />
-            <button type="submit" className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
+            <ConfirmSubmitButton className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
               削除
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/forms/confirm-submit-button";
 import { deleteCitationAction, deleteSourceAction } from "@/features/sources/actions";
 import { getSourceView } from "@/server/services/sources";
 
@@ -33,9 +34,9 @@ export default async function SourceDetailPage({ params }: { params: Promise<{ i
           </Link>
           <form action={deleteSourceAction}>
             <input type="hidden" name="id" value={view.source.id} />
-            <button type="submit" className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
+            <ConfirmSubmitButton className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
               削除
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </div>
       </div>
@@ -93,9 +94,9 @@ export default async function SourceDetailPage({ params }: { params: Promise<{ i
                         <input type="hidden" name="sourceId" value={view.source.id} />
                         <input type="hidden" name="targetType" value={citation.targetType} />
                         <input type="hidden" name="targetId" value={citation.targetId} />
-                        <button type="submit" className="rounded-full border border-red-300 px-3 py-1.5 text-xs text-red-700">
+                        <ConfirmSubmitButton className="rounded-full border border-red-300 px-3 py-1.5 text-xs text-red-700">
                           削除
-                        </button>
+                        </ConfirmSubmitButton>
                       </form>
                     </div>
                   </div>

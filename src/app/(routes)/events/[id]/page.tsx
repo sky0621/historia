@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/forms/confirm-submit-button";
 import { deleteEventAction } from "@/features/events/actions";
 import {
   getEventConflictParticipantRoleLabel,
@@ -74,12 +75,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               </Link>
               <form action={deleteEventAction}>
                 <input type="hidden" name="id" value={view.event.id} />
-                <button
-                  type="submit"
-                  className="rounded-[14px] border border-[color:rgba(207,107,93,0.55)] px-4 py-2 text-sm text-[var(--danger)] hover:bg-[color:rgba(207,107,93,0.08)]"
-                >
+                <ConfirmSubmitButton className="rounded-[14px] border border-[color:rgba(207,107,93,0.55)] px-4 py-2 text-sm text-[var(--danger)] hover:bg-[color:rgba(207,107,93,0.08)]">
                   削除
-                </button>
+                </ConfirmSubmitButton>
               </form>
             </div>
           </div>

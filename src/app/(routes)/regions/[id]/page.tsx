@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/forms/confirm-submit-button";
 import { deleteRegionAction } from "@/features/regions/actions";
 import { getRegionView } from "@/server/services/regions";
 
@@ -62,12 +63,9 @@ export default async function RegionDetailPage({
           </Link>
           <form action={deleteRegionAction}>
             <input type="hidden" name="id" value={view.region.id} />
-            <button
-              type="submit"
-              className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700"
-            >
+            <ConfirmSubmitButton className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700">
               削除
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </div>
       </div>
