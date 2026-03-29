@@ -24,6 +24,9 @@ export default function ManageDataPage() {
           <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
             <h2 className="text-lg font-semibold">Export</h2>
             <div className="mt-5 grid gap-3">
+              <Link href="/api/export/regions.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                Region CSV をダウンロード
+              </Link>
               <Link href="/api/export/religions.csv" className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 Religion CSV をダウンロード
               </Link>

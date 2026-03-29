@@ -139,6 +139,24 @@ export function buildPolitiesCsv() {
   ]);
 }
 
+export function buildRegionsCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         r.id,
+         r.name,
+         parent.name AS parent_region,
+         r.description,
+         r.note
+       FROM regions r
+       LEFT JOIN regions parent ON parent.id = r.parent_region_id
+       ORDER BY r.name`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["id", "name", "parent_region", "description", "note"]);
+}
+
 export function buildReligionsCsv() {
   const rows = sqlite
     .prepare(
