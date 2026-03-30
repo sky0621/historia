@@ -5,7 +5,7 @@ import {
   personRegionLinks,
   personReligionLinks,
   personSectLinks,
-  rolePersonLinks,
+  personRoleLinks,
   role
 } from "@/db/schema";
 
@@ -55,16 +55,28 @@ export function replacePersonSectLinks(personId: number, sectIds: number[]) {
 
 export function replaceRoleAssignments(
   personId: number,
-  roles: Array<(typeof role.$inferInsert) & { personId: number }>
+  roles: Array<{
+    personId: number;
+    title: string;
+    reading?: string | null;
+    description?: string | null;
+    note?: string | null;
+    fromCalendarEra?: string | null;
+    fromYear?: number | null;
+    fromIsApproximate?: boolean;
+    toCalendarEra?: string | null;
+    toYear?: number | null;
+    toIsApproximate?: boolean;
+  }>
 ) {
   const existingRoleIds = db
     .select()
-    .from(rolePersonLinks)
-    .where(eq(rolePersonLinks.personId, personId))
+    .from(personRoleLinks)
+    .where(eq(personRoleLinks.personId, personId))
     .all()
     .map((link) => link.roleId);
 
-  db.delete(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).run();
+  db.delete(personRoleLinks).where(eq(personRoleLinks.personId, personId)).run();
   if (existingRoleIds.length > 0) {
     db.delete(role).where(inArray(role.id, existingRoleIds)).run();
   }
@@ -74,10 +86,32 @@ export function replaceRoleAssignments(
   }
 
   for (const roleItem of roles) {
-    const { personId: rolePersonId, ...roleInput } = roleItem;
+    const {
+      personId: rolePersonId,
+      description,
+      note,
+      fromCalendarEra,
+      fromYear,
+      fromIsApproximate,
+      toCalendarEra,
+      toYear,
+      toIsApproximate,
+      ...roleInput
+    } = roleItem;
     const result = db.insert(role).values(roleInput).run();
     const roleId = Number(result.lastInsertRowid);
-    db.insert(rolePersonLinks).values({ roleId, personId: rolePersonId }).run();
+    db.insert(personRoleLinks).values({
+      personId: rolePersonId,
+      roleId,
+      description: description ?? null,
+      note: note ?? null,
+      fromCalendarEra: fromCalendarEra ?? null,
+      fromYear: fromYear ?? null,
+      fromIsApproximate: fromIsApproximate ?? false,
+      toCalendarEra: toCalendarEra ?? null,
+      toYear: toYear ?? null,
+      toIsApproximate: toIsApproximate ?? false
+    }).run();
   }
 }
 

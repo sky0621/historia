@@ -1,13 +1,21 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
-  rolePersonLinks,
+  personRoleLinks,
   role
 } from "@/db/schema";
 
 export type RoleAssignmentInsert = typeof role.$inferInsert;
-export type RoleAssignmentRecord = typeof role.$inferSelect & {
+export type RoleAssignmentRecord = Omit<typeof role.$inferSelect, "description" | "note" | "fromCalendarEra" | "fromYear" | "fromIsApproximate" | "toCalendarEra" | "toYear" | "toIsApproximate"> & {
   personId: number;
+  description: string | null;
+  note: string | null;
+  fromCalendarEra: string | null;
+  fromYear: number | null;
+  fromIsApproximate: boolean;
+  toCalendarEra: string | null;
+  toYear: number | null;
+  toIsApproximate: boolean;
 };
 
 export function getRoleAssignmentsByPersonIds(personIds: number[]) {
@@ -17,8 +25,8 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
 
   const personLinks = db
     .select()
-    .from(rolePersonLinks)
-    .where(inArray(rolePersonLinks.personId, personIds))
+    .from(personRoleLinks)
+    .where(inArray(personRoleLinks.personId, personIds))
     .all();
 
   const roleIds = personLinks.map((link) => link.roleId);
@@ -27,30 +35,38 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
   }
 
   const items = db.select().from(role).where(inArray(role.id, roleIds)).all();
-  const personByRoleId = new Map(personLinks.map((link) => [link.roleId, link.personId]));
+  const linkByRoleId = new Map(personLinks.map((link) => [link.roleId, link]));
 
   return items
     .map((item) => {
-      const personId = personByRoleId.get(item.id);
-      if (!personId) {
+      const link = linkByRoleId.get(item.id);
+      if (!link) {
         return null;
       }
 
       return {
         ...item,
-        personId
+        personId: link.personId,
+        description: link.description ?? null,
+        note: link.note ?? null,
+        fromCalendarEra: link.fromCalendarEra ?? null,
+        fromYear: link.fromYear ?? null,
+        fromIsApproximate: link.fromIsApproximate ?? false,
+        toCalendarEra: link.toCalendarEra ?? null,
+        toYear: link.toYear ?? null,
+        toIsApproximate: link.toIsApproximate ?? false
       };
     })
     .filter((item): item is RoleAssignmentRecord => Boolean(item));
 }
 
 export function deleteRoleAssignmentsByPersonId(personId: number) {
-  const links = db.select().from(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).all();
+  const links = db.select().from(personRoleLinks).where(eq(personRoleLinks.personId, personId)).all();
   const roleIds = links.map((link) => link.roleId);
   if (roleIds.length === 0) {
     return;
   }
 
-  db.delete(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).run();
+  db.delete(personRoleLinks).where(eq(personRoleLinks.personId, personId)).run();
   db.delete(role).where(inArray(role.id, roleIds)).run();
 }

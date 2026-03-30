@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { role, rolePersonLinks } from "@/db/schema";
+import { role, personRoleLinks } from "@/db/schema";
 
 export type RoleRecord = typeof role.$inferSelect;
 export type RoleInsert = typeof role.$inferInsert;
@@ -24,7 +24,7 @@ export function updateRole(id: number, input: Omit<RoleInsert, "id">) {
 
 export function deleteRole(id: number) {
   db.transaction((tx) => {
-    tx.delete(rolePersonLinks).where(eq(rolePersonLinks.roleId, id)).run();
+    tx.delete(personRoleLinks).where(eq(personRoleLinks.roleId, id)).run();
     tx.delete(role).where(eq(role.id, id)).run();
   });
 }
@@ -34,5 +34,5 @@ export function getRolePersonLinks(roleIds: number[]) {
     return [];
   }
 
-  return db.select().from(rolePersonLinks).where(inArray(rolePersonLinks.roleId, roleIds)).all();
+  return db.select().from(personRoleLinks).where(inArray(personRoleLinks.roleId, roleIds)).all();
 }

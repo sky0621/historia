@@ -1,13 +1,21 @@
-import { integer, sqliteTable } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
   dynastyId: integer("dynasty_id").notNull(),
   polityId: integer("polity_id").notNull()
 });
 
-export const rolePersonLinks = sqliteTable("role_person_links", {
+export const personRoleLinks = sqliteTable("person_role_links", {
+  personId: integer("person_id").notNull(),
   roleId: integer("role_id").notNull(),
-  personId: integer("person_id").notNull()
+  description: text("description"),
+  note: text("note"),
+  fromCalendarEra: text("from_calendar_era"),
+  fromYear: integer("from_year"),
+  fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
+  toCalendarEra: text("to_calendar_era"),
+  toYear: integer("to_year"),
+  toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
 export const historicalPeriodCategoryLinks = sqliteTable("historical_period_category_links", {

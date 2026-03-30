@@ -170,13 +170,21 @@ CREATE TABLE `person_sect_links` (
 CREATE INDEX `idx_person_sect_links_person_id` ON `person_sect_links` (`person_id`);
 CREATE INDEX `idx_person_sect_links_sect_id` ON `person_sect_links` (`sect_id`);
 
--- 役職と人物の関連
-CREATE TABLE `role_person_links` (
+-- 人物と役職の関連
+CREATE TABLE `person_role_links` (
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`), -- 人物ID
   `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `person_id` integer NOT NULL REFERENCES `persons`(`id`) -- 人物ID
+  `description` text, -- 人物ごとの役職説明
+  `note` text, -- 人物ごとの役職メモ
+  `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
+  `from_year` integer, -- 開始年
+  `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
+  `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
+  `to_year` integer, -- 終了年
+  `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
-CREATE INDEX `idx_role_person_links_role_id` ON `role_person_links` (`role_id`);
-CREATE INDEX `idx_role_person_links_person_id` ON `role_person_links` (`person_id`);
+CREATE INDEX `idx_person_role_links_person_id` ON `person_role_links` (`person_id`);
+CREATE INDEX `idx_person_role_links_role_id` ON `person_role_links` (`role_id`);
 
 -- 時代区分カテゴリ: 時代区分の分類軸
 CREATE TABLE `period_categories` (

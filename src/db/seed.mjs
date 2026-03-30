@@ -31,7 +31,7 @@ function clearTables() {
     "historical_period_relation_types",
     "polity_transition_types",
     "change_history_actions",
-    "role_person_links",
+    "person_role_links",
     "historical_period_polity_links",
     "historical_period_category_links",
     "dynasty_polity_links",
