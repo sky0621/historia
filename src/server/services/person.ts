@@ -41,12 +41,24 @@ export function getPersonOptions() {
 }
 
 export function getPersonFormOptions() {
+  const dynastyOptions = listDynasties()
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"))
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      timeLabel: formatStoredBoundaryRangeForOption(item.fromCalendarEra, item.fromYear, item.toCalendarEra, item.toYear)
+    }));
+
   return {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
-    polities: sortPolitiesByStartYear(listPolities()).map((item) => ({ id: item.id, name: item.name })),
-    dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name }))
+    polities: sortPolitiesByStartYear(listPolities()).map((item) => ({
+      id: item.id,
+      name: item.name,
+      timeLabel: formatStoredBoundaryRangeForOption(item.fromCalendarEra, item.fromYear, item.toCalendarEra, item.toYear)
+    })),
+    dynasties: dynastyOptions
   };
 }
 
@@ -201,16 +213,6 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
     replacePersonRegionLinks(id, input.regionIds);
     replacePersonReligionLinks(id, input.religionIds);
     replacePersonSectLinks(id, input.sectIds);
-    replaceRoleAssignments(id, input.roles.map((role) => ({
-      personId: id,
-      title: role.title,
-      polityId: role.polityId ?? null,
-      dynastyId: role.dynastyId ?? null,
-      note: nullable(role.note),
-      isIncumbent: role.isIncumbent,
-      ...toStoredRoleTime("from", role.fromTimeExpression),
-      ...toStoredRoleTime("to", role.toTimeExpression)
-    })));
 
     recordChangeHistory({
       targetType: "person",

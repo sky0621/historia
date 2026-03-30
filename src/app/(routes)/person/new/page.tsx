@@ -10,7 +10,7 @@ export default function NewPersonPage() {
   return (
     <PersonForm
       title="人物作成"
-      description="人物本体と役職履歴を登録します。"
+      description="人物本体の基本情報を登録します。"
       submitLabel="人物を作成"
       options={getPersonFormOptions()}
     />

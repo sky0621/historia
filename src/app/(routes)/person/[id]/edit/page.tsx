@@ -30,16 +30,7 @@ export default async function EditPersonPage({ params }: { params: Promise<{ id:
         religionIds: view.religions.map((item) => item.id),
         sectIds: view.sects.map((item) => item.id),
         birthTimeExpression: view.defaultBirthTimeExpression,
-        deathTimeExpression: view.defaultDeathTimeExpression,
-        roles: view.roles.map((role) => ({
-          title: role.title,
-          polityId: role.polityId,
-          dynastyId: role.dynastyId,
-          note: role.note ?? "",
-          isIncumbent: Boolean(role.isIncumbent),
-          fromTimeExpression: role.defaultFromTimeExpression,
-          toTimeExpression: role.defaultToTimeExpression
-        }))
+        deathTimeExpression: view.defaultDeathTimeExpression
       }}
     />
   );

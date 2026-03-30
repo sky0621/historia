@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import { formErrorClassName, secondaryButtonClassName } from "@/components/forms/styles";
@@ -12,15 +12,6 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 type Option = { id: number; name: string; parentRegionId?: number | null };
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
-type RoleDefault = {
-  title: string;
-  polityId?: number | null;
-  dynastyId?: number | null;
-  note: string;
-  isIncumbent: boolean;
-  fromTimeExpression?: TimeExpressionInput;
-  toTimeExpression?: TimeExpressionInput;
-};
 
 type Props = {
   title: string;
@@ -45,14 +36,12 @@ type Props = {
     sectIds: number[];
     birthTimeExpression?: TimeExpressionInput;
     deathTimeExpression?: TimeExpressionInput;
-    roles: RoleDefault[];
   };
 };
 
 export function PersonForm({ title, description, submitLabel, options, defaultValues }: Props) {
   const [createState, createAction] = useActionState(createPersonAction, initialCreateFormState);
   const action = defaultValues?.id ? updatePersonAction : createAction;
-  const [roleCount, setRoleCount] = useState(Math.max(defaultValues?.roles.length ?? 0, 1));
 
   return (
     <section className="space-y-8">
@@ -74,7 +63,6 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
 
       <form action={action} className="space-y-6">
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
-        <input type="hidden" name="roleCount" value={roleCount} />
 
         <SectionCard
           eyebrow="Identity"
@@ -127,118 +115,6 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
             selectedSectIds={defaultValues?.sectIds ?? []}
           />
         </div>
-
-        <SectionCard
-          eyebrow="Career"
-          title="役職履歴"
-          description="国家または王朝に紐づく役職を、在任期間ごとに整理します。"
-          action={(
-            <button
-              type="button"
-              onClick={() => setRoleCount((count) => count + 1)}
-              className="rounded-[14px] border border-[var(--border-strong)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-medium text-[var(--button-foreground)] hover:border-[var(--accent-strong)]"
-            >
-              役職を追加
-            </button>
-          )}
-        >
-          <div className="space-y-5">
-            {Array.from({ length: roleCount }).map((_, index) => {
-              const role = defaultValues?.roles[index];
-              return (
-                <div key={index} className="historia-inset rounded-[14px] p-5 sm:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="historia-label">Role {String(index + 1).padStart(2, "0")}</p>
-                      <h3 className="mt-2 text-xl font-semibold text-[var(--foreground-strong)]">
-                        {role?.title || "新しい役職"}
-                      </h3>
-                    </div>
-                    <label className="rounded-[14px] border border-[var(--border)] bg-black/10 px-4 py-2 text-sm text-[var(--muted-strong)]">
-                      <input
-                        type="checkbox"
-                        name={`roles.${index}.isIncumbent`}
-                        defaultChecked={role?.isIncumbent ?? false}
-                        className="mr-2"
-                      />
-                      現職
-                    </label>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <Field label="役職名">
-                      <input
-                        name={`roles.${index}.title`}
-                        defaultValue={role?.title ?? ""}
-                        className={inputClassName}
-                      />
-                    </Field>
-                    <Field label="国家">
-                      <select
-                        name={`roles.${index}.polityId`}
-                        defaultValue={role?.polityId ?? ""}
-                        className={inputClassName}
-                      >
-                        <option value="">未設定</option>
-                        {options.polities.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="王朝" className="lg:col-span-2">
-                      <select
-                        name={`roles.${index}.dynastyId`}
-                        defaultValue={role?.dynastyId ?? ""}
-                        className={inputClassName}
-                      >
-                        <option value="">未設定</option>
-                        {options.dynasties.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
-
-                  <div className="mt-5">
-                    <div className="grid gap-6 xl:grid-cols-2">
-                      <TimeExpressionInputs
-                        prefix={`roles.${index}.fromTime`}
-                        label="開始年"
-                        defaultValue={role?.fromTimeExpression}
-                        includePrecision={false}
-                        includeDisplayLabel={false}
-                        includeEndYear={false}
-                      />
-                      <TimeExpressionInputs
-                        prefix={`roles.${index}.toTime`}
-                        label="終了年"
-                        defaultValue={role?.toTimeExpression}
-                        includePrecision={false}
-                        includeDisplayLabel={false}
-                        includeEndYear={false}
-                        startYearLabel="終了年"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-5">
-                    <Field label="メモ">
-                      <textarea
-                        name={`roles.${index}.note`}
-                        defaultValue={role?.note ?? ""}
-                        className={`${inputClassName} min-h-24`}
-                      />
-                    </Field>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </SectionCard>
 
         <SectionCard
           eyebrow="Editorial"
