@@ -65,7 +65,7 @@ export function getPolityListView(filters: PolityListFilters = {}) {
   return polities
     .map((polity) => ({
       ...polity,
-      timeLabel: formatStoredPolityTime(polity),
+      timeLabel: formatPolityOptionTime(polity),
       regionNames: links
         .filter((link) => link.polityId === polity.id)
         .map((link) => regionNameById.get(link.regionId))
@@ -95,7 +95,7 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
     .map((dynasty) => ({
       ...dynasty,
       polityNames: dynasty.polityIds.map((polityId) => polityNameById.get(polityId) ?? `#${polityId}`),
-      timeLabel: formatStoredTime("time", dynasty),
+      timeLabel: formatPolityOptionTime(dynasty),
       regionNames: links
         .filter((link) => link.dynastyId === dynasty.id)
         .map((link) => regionNameById.get(link.regionId))
@@ -371,7 +371,6 @@ function formatPolityOptionTime(value: Record<string, unknown>) {
     value.toYear as number | null | undefined
   );
 }
-
 function normalizeQuery(value?: string) {
   return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
 }

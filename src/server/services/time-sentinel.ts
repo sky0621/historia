@@ -52,15 +52,19 @@ export function normalizeStoredPersonBoundaryYear(prefix: "birth" | "death", yea
 }
 
 export function formatStoredBoundaryRangeForOption(
-  startEra: "BCE" | "CE" | null | undefined,
+  startEra: string | null | undefined,
   startYear: number | null | undefined,
-  endEra: "BCE" | "CE" | null | undefined,
+  endEra: string | null | undefined,
   endYear: number | null | undefined
 ) {
   const startLabel =
-    startYear == null || startYear === EMPTY_START_YEAR ? "不明" : formatYearWithEra(startEra ?? null, startYear) ?? "不明";
+    startYear == null || startYear === EMPTY_START_YEAR ? "不明" : formatYearWithEra(toEra(startEra), startYear) ?? "不明";
   const endLabel =
-    endYear == null || endYear === EMPTY_END_YEAR ? "現在" : formatYearWithEra(endEra ?? startEra ?? null, endYear) ?? "現在";
+    endYear == null || endYear === EMPTY_END_YEAR ? "現在" : formatYearWithEra(toEra(endEra) ?? toEra(startEra), endYear) ?? "現在";
 
   return `${startLabel} - ${endLabel}`;
+}
+
+function toEra(value: string | null | undefined): "BCE" | "CE" | null {
+  return value === "BCE" || value === "CE" ? value : null;
 }

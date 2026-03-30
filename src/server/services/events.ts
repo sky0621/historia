@@ -121,7 +121,12 @@ export function getEventsListView(filters: EventListFilters = {}) {
 
       return {
         ...event,
-        timeLabel: formatEventTime(event),
+        timeLabel: formatStoredBoundaryRangeForOption(
+          event.fromCalendarEra,
+          event.fromYear,
+          event.toCalendarEra,
+          event.toYear
+        ),
         relationSummaryItems,
         relationSummary: relationSummaryItems.map((item) => item.name).join(", "),
         relationTypes: Array.from(

@@ -26,7 +26,13 @@ import { listSects } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getCitationListForTarget } from "@/server/services/sources";
-import { normalizeStoredBoundaryYear, normalizeStoredPersonBoundaryYear, toStoredBoundaryYear, toStoredPersonBoundaryYear } from "@/server/services/time-sentinel";
+import {
+  formatStoredBoundaryRangeForOption,
+  normalizeStoredBoundaryYear,
+  normalizeStoredPersonBoundaryYear,
+  toStoredBoundaryYear,
+  toStoredPersonBoundaryYear
+} from "@/server/services/time-sentinel";
 
 export function getPersonOptions() {
   return listPersonDetailed().map((person) => ({ id: person.id, name: person.name }));
@@ -73,9 +79,9 @@ export function getPersonListView(filters: PersonListFilters = {}) {
   return person
     .map((person) => ({
       ...person,
-      birthLabel: formatStoredPersonTime("birth", person),
-      deathLabel: formatStoredPersonTime("death", person),
-      lifeLabel: [formatStoredPersonTime("birth", person), formatStoredPersonTime("death", person)].join(" - "),
+      birthLabel: formatStoredBoundaryRangeForOption(person.fromCalendarEra, person.fromYear, null, null).split(" - ")[0] ?? "不明",
+      deathLabel: formatStoredBoundaryRangeForOption(null, null, person.toCalendarEra, person.toYear).split(" - ")[1] ?? "現在",
+      lifeLabel: formatStoredBoundaryRangeForOption(person.fromCalendarEra, person.fromYear, person.toCalendarEra, person.toYear),
       regionNames: regionLinks
         .filter((link) => link.personId === person.id)
         .map((link) => regionById.get(link.regionId))

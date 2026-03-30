@@ -26,7 +26,7 @@ import {
 } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getCitationListForTarget } from "@/server/services/sources";
-import { normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
+import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 
 export function getReligionOptions() {
   return listReligions().map((religion) => ({ id: religion.id, name: religion.name }));
@@ -57,7 +57,12 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
   return religions
     .map((religion) => ({
       ...religion,
-      timeLabel: formatStoredTime("time", religion),
+      timeLabel: formatStoredBoundaryRangeForOption(
+        religion.fromCalendarEra,
+        religion.fromYear,
+        religion.toCalendarEra,
+        religion.toYear
+      ),
       founderNames: founderLinks
         .filter((link) => link.religionId === religion.id)
         .map((link) => personNameById.get(link.personId))
@@ -92,7 +97,12 @@ export function getSectListView(filters: SectListFilters = {}) {
     .map((sect) => ({
       ...sect,
       religionName: religionNameById.get(sect.religionId) ?? "不明",
-      timeLabel: formatStoredTime("time", sect),
+      timeLabel: formatStoredBoundaryRangeForOption(
+        sect.fromCalendarEra,
+        sect.fromYear,
+        sect.toCalendarEra,
+        sect.toYear
+      ),
       religionId: sect.religionId,
       founderNames: founderLinks
         .filter((link) => link.sectId === sect.id)
