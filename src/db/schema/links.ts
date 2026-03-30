@@ -10,16 +10,6 @@ export const rolePersonLinks = sqliteTable("role_person_links", {
   personId: integer("person_id").notNull()
 });
 
-export const rolePolityLinks = sqliteTable("role_polity_links", {
-  roleId: integer("role_id").notNull(),
-  polityId: integer("polity_id").notNull()
-});
-
-export const roleDynastyLinks = sqliteTable("role_dynasty_links", {
-  roleId: integer("role_id").notNull(),
-  dynastyId: integer("dynasty_id").notNull()
-});
-
 export const historicalPeriodCategoryLinks = sqliteTable("historical_period_category_links", {
   periodId: integer("period_id").notNull(),
   categoryId: integer("category_id").notNull()

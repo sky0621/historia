@@ -29,19 +29,3 @@ CREATE TABLE `role_person_links` (
 );
 CREATE INDEX `idx_role_person_links_role_id` ON `role_person_links` (`role_id`);
 CREATE INDEX `idx_role_person_links_person_id` ON `role_person_links` (`person_id`);
-
--- 役職と国家の関連
-CREATE TABLE `role_polity_links` (
-  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
-);
-CREATE INDEX `idx_role_polity_links_role_id` ON `role_polity_links` (`role_id`);
-CREATE INDEX `idx_role_polity_links_polity_id` ON `role_polity_links` (`polity_id`);
-
--- 役職と王朝の関連
-CREATE TABLE `role_dynasty_links` (
-  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`) -- 王朝ID
-);
-CREATE INDEX `idx_role_dynasty_links_role_id` ON `role_dynasty_links` (`role_id`);
-CREATE INDEX `idx_role_dynasty_links_dynasty_id` ON `role_dynasty_links` (`dynasty_id`);

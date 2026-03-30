@@ -1,9 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
-  roleDynastyLinks,
   rolePersonLinks,
-  rolePolityLinks,
   role
 } from "@/db/schema";
 
@@ -31,19 +29,7 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
   }
 
   const items = db.select().from(role).where(inArray(role.id, roleIds)).all();
-  const polityLinks = db
-    .select()
-    .from(rolePolityLinks)
-    .where(inArray(rolePolityLinks.roleId, roleIds))
-    .all();
-  const dynastyLinks = db
-    .select()
-    .from(roleDynastyLinks)
-    .where(inArray(roleDynastyLinks.roleId, roleIds))
-    .all();
   const personByRoleId = new Map(personLinks.map((link) => [link.roleId, link.personId]));
-  const polityByRoleId = new Map(polityLinks.map((link) => [link.roleId, link.polityId]));
-  const dynastyByRoleId = new Map(dynastyLinks.map((link) => [link.roleId, link.dynastyId]));
 
   return items
     .map((item) => {
@@ -55,8 +41,8 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
       return {
         ...item,
         personId,
-        polityId: polityByRoleId.get(item.id) ?? null,
-        dynastyId: dynastyByRoleId.get(item.id) ?? null
+        polityId: item.polityId ?? null,
+        dynastyId: item.dynastyId ?? null
       };
     })
     .filter((item): item is RoleAssignmentRecord => Boolean(item));
@@ -70,7 +56,5 @@ export function deleteRoleAssignmentsByPersonId(personId: number) {
   }
 
   db.delete(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).run();
-  db.delete(rolePolityLinks).where(inArray(rolePolityLinks.roleId, roleIds)).run();
-  db.delete(roleDynastyLinks).where(inArray(roleDynastyLinks.roleId, roleIds)).run();
   db.delete(role).where(inArray(role.id, roleIds)).run();
 }

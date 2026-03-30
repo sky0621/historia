@@ -144,6 +144,8 @@ CREATE TABLE `role` (
   `description` text, -- 役職記録の説明
   `note` text, -- 編集メモ・注釈
   `is_incumbent` integer DEFAULT false, -- 現職かどうか
+  `polity_id` integer REFERENCES `polities`(`id`), -- 関連国家ID
+  `dynasty_id` integer REFERENCES `dynasties`(`id`), -- 関連王朝ID
   `from_calendar_era` text REFERENCES `era`(`code`), -- 就任年の紀元区分コード
   `from_year` integer, -- 就任年
   `from_is_approximate` integer DEFAULT false, -- 就任年がおおよそか
@@ -183,22 +185,6 @@ CREATE TABLE `role_person_links` (
 );
 CREATE INDEX `idx_role_person_links_role_id` ON `role_person_links` (`role_id`);
 CREATE INDEX `idx_role_person_links_person_id` ON `role_person_links` (`person_id`);
-
--- 役職と国家の関連
-CREATE TABLE `role_polity_links` (
-  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) -- 国家ID
-);
-CREATE INDEX `idx_role_polity_links_role_id` ON `role_polity_links` (`role_id`);
-CREATE INDEX `idx_role_polity_links_polity_id` ON `role_polity_links` (`polity_id`);
-
--- 役職と王朝の関連
-CREATE TABLE `role_dynasty_links` (
-  `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
-  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`) -- 王朝ID
-);
-CREATE INDEX `idx_role_dynasty_links_role_id` ON `role_dynasty_links` (`role_id`);
-CREATE INDEX `idx_role_dynasty_links_dynasty_id` ON `role_dynasty_links` (`dynasty_id`);
 
 -- 時代区分カテゴリ: 時代区分の分類軸
 CREATE TABLE `period_categories` (

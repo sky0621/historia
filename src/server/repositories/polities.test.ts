@@ -29,7 +29,6 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM event_polity_links").run();
   sqlite.prepare("DELETE FROM historical_period_polity_links").run();
-  sqlite.prepare("DELETE FROM role_polity_links").run();
   sqlite.prepare("DELETE FROM polity_transitions").run();
   sqlite.prepare("DELETE FROM dynasty_successions").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
@@ -59,7 +58,7 @@ beforeEach(() => {
     .run();
   sqlite
     .prepare(
-      "INSERT INTO role (id, title) VALUES (1, '皇帝')"
+      "INSERT INTO role (id, title, polity_id) VALUES (1, '皇帝', 1)"
     )
     .run();
   sqlite
@@ -79,7 +78,6 @@ beforeEach(() => {
       "INSERT INTO dynasty_successions (polity_id, predecessor_dynasty_id, successor_dynasty_id) VALUES (1, 1, 2)"
     )
     .run();
-  sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1)").run();
   sqlite.prepare("INSERT INTO historical_period_polity_links (period_id, polity_id) VALUES (1, 1)").run();
   sqlite.prepare("INSERT INTO event_polity_links (event_id, polity_id) SELECT 1, 1 WHERE 0").run();
   sqlite
@@ -96,14 +94,14 @@ describe("polities repository", () => {
     const polityRows = sqlite.prepare("SELECT id FROM polities ORDER BY id").all() as Array<{ id: number }>;
     const dynastyPolityRows = sqlite.prepare("SELECT dynasty_id, polity_id FROM dynasty_polity_links").all();
     const dynastySuccessionRows = sqlite.prepare("SELECT id FROM dynasty_successions").all();
-    const rolePolityRows = sqlite.prepare("SELECT role_id, polity_id FROM role_polity_links").all();
+    const roleRows = sqlite.prepare("SELECT id, polity_id FROM role ORDER BY id").all();
     const periodPolityRows = sqlite.prepare("SELECT period_id, polity_id FROM historical_period_polity_links").all();
     const polityTransitionRows = sqlite.prepare("SELECT id FROM polity_transitions").all();
 
     expect(polityRows).toEqual([{ id: 2 }]);
     expect(dynastyPolityRows).toEqual([]);
     expect(dynastySuccessionRows).toEqual([]);
-    expect(rolePolityRows).toEqual([]);
+    expect(roleRows).toEqual([{ id: 1, polity_id: null }]);
     expect(periodPolityRows).toEqual([]);
     expect(polityTransitionRows).toEqual([]);
   });

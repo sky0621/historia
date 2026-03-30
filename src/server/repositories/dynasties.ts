@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { dynasties, dynastyPolityLinks, dynastyRegionLinks } from "@/db/schema";
+import { dynasties, dynastyPolityLinks, dynastyRegionLinks, role } from "@/db/schema";
 
 export type DynastyRecord = typeof dynasties.$inferSelect & { polityIds: number[] };
 export type DynastyInsert = typeof dynasties.$inferInsert;
@@ -68,6 +68,7 @@ export function updateDynasty(id: number, input: Omit<DynastyInsert, "id">, poli
 
 export function deleteDynasty(id: number) {
   db.transaction((tx) => {
+    tx.update(role).set({ dynastyId: null }).where(eq(role.dynastyId, id)).run();
     tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.dynastyId, id)).run();
     tx.delete(dynastyRegionLinks).where(eq(dynastyRegionLinks.dynastyId, id)).run();
     tx.delete(dynasties).where(eq(dynasties.id, id)).run();

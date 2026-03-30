@@ -5,9 +5,7 @@ import {
   personRegionLinks,
   personReligionLinks,
   personSectLinks,
-  roleDynastyLinks,
   rolePersonLinks,
-  rolePolityLinks,
   role
 } from "@/db/schema";
 
@@ -68,8 +66,6 @@ export function replaceRoleAssignments(
 
   db.delete(rolePersonLinks).where(eq(rolePersonLinks.personId, personId)).run();
   if (existingRoleIds.length > 0) {
-    db.delete(rolePolityLinks).where(inArray(rolePolityLinks.roleId, existingRoleIds)).run();
-    db.delete(roleDynastyLinks).where(inArray(roleDynastyLinks.roleId, existingRoleIds)).run();
     db.delete(role).where(inArray(role.id, existingRoleIds)).run();
   }
 
@@ -79,17 +75,9 @@ export function replaceRoleAssignments(
 
   for (const roleItem of roles) {
     const { personId: rolePersonId, polityId, dynastyId, ...roleInput } = roleItem;
-    const result = db.insert(role).values(roleInput).run();
+    const result = db.insert(role).values({ ...roleInput, polityId, dynastyId }).run();
     const roleId = Number(result.lastInsertRowid);
     db.insert(rolePersonLinks).values({ roleId, personId: rolePersonId }).run();
-
-    if (polityId != null) {
-      db.insert(rolePolityLinks).values({ roleId, polityId }).run();
-    }
-
-    if (dynastyId != null) {
-      db.insert(roleDynastyLinks).values({ roleId, dynastyId }).run();
-    }
   }
 }
 

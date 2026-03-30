@@ -90,6 +90,62 @@ SQL
 
 normalize_legacy_religion_sect_links
 
+normalize_legacy_role_links() {
+  if [ ! -f "$DATABASE_URL" ]; then
+    return
+  fi
+
+  HAS_ROLE_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role';")"
+
+  if [ "$HAS_ROLE_TABLE" != "1" ]; then
+    return
+  fi
+
+  HAS_POLITY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'polity_id';")"
+  HAS_DYNASTY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'dynasty_id';")"
+
+  if [ "$HAS_POLITY_COLUMN" = "0" ]; then
+    sqlite3 "$DATABASE_URL" "ALTER TABLE role ADD COLUMN polity_id integer REFERENCES polities(id);"
+  fi
+
+  if [ "$HAS_DYNASTY_COLUMN" = "0" ]; then
+    sqlite3 "$DATABASE_URL" "ALTER TABLE role ADD COLUMN dynasty_id integer REFERENCES dynasties(id);"
+  fi
+
+  HAS_ROLE_POLITY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_polity_links';")"
+  HAS_ROLE_DYNASTY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_dynasty_links';")"
+
+  if [ "$HAS_ROLE_POLITY_LINKS" = "1" ]; then
+    sqlite3 "$DATABASE_URL" <<'SQL'
+UPDATE `role`
+SET `polity_id` = (
+  SELECT `polity_id`
+  FROM `role_polity_links`
+  WHERE `role_polity_links`.`role_id` = `role`.`id`
+  LIMIT 1
+)
+WHERE `polity_id` IS NULL;
+DROP TABLE `role_polity_links`;
+SQL
+  fi
+
+  if [ "$HAS_ROLE_DYNASTY_LINKS" = "1" ]; then
+    sqlite3 "$DATABASE_URL" <<'SQL'
+UPDATE `role`
+SET `dynasty_id` = (
+  SELECT `dynasty_id`
+  FROM `role_dynasty_links`
+  WHERE `role_dynasty_links`.`role_id` = `role`.`id`
+  LIMIT 1
+)
+WHERE `dynasty_id` IS NULL;
+DROP TABLE `role_dynasty_links`;
+SQL
+  fi
+}
+
+normalize_legacy_role_links
+
 ensure_event_types_seed_data() {
   sqlite3 "$DATABASE_URL" <<'SQL'
 CREATE TABLE IF NOT EXISTS `event_types` (
