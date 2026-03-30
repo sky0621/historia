@@ -15,6 +15,7 @@ import { listRegions } from "@/server/repositories/regions";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getPeriodCategoryOptions } from "@/server/services/period-categories";
+import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getHistoricalPeriodRelationView } from "@/server/services/relations";
 import { getCitationListForTarget } from "@/server/services/sources";
 import { normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
@@ -22,7 +23,7 @@ import { normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/serv
 export function getHistoricalPeriodFormOptions() {
   return {
     categories: getPeriodCategoryOptions(),
-    polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
+    polities: sortPolitiesByStartYear(listPolities()).map((item) => ({ id: item.id, name: item.name })),
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId }))
   };
 }

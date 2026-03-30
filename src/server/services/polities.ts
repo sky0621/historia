@@ -29,7 +29,7 @@ import { getDynastySuccessionViewForDynasty, getDynastySuccessionViewForPolity, 
 import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPolityOptions() {
-  return listPolities().map((polity) => ({
+  return sortPolitiesByStartYear(listPolities()).map((polity) => ({
     id: polity.id,
     name: polity.name,
     timeLabel: formatPolityOptionTime(polity),
@@ -38,6 +38,17 @@ export function getPolityOptions() {
     toCalendarEra: polity.toCalendarEra,
     toYear: polity.toYear
   }));
+}
+
+export function sortPolitiesByStartYear<T extends { name: string; fromCalendarEra?: string | null; fromYear?: number | null }>(items: T[]) {
+  return [...items].sort((left, right) => {
+    const yearDiff = toComparableStartYear(left) - toComparableStartYear(right);
+    if (yearDiff !== 0) {
+      return yearDiff;
+    }
+
+    return left.name.localeCompare(right.name, "ja-JP");
+  });
 }
 
 export function getRegionOptions() {
@@ -371,6 +382,16 @@ function formatPolityOptionTime(value: Record<string, unknown>) {
     value.toYear as number | null | undefined
   );
 }
+
+function toComparableStartYear(value: { fromCalendarEra?: string | null; fromYear?: number | null }) {
+  const normalizedYear = normalizeStoredBoundaryYear("from", value.fromYear);
+  if (normalizedYear == null) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  return value.fromCalendarEra === "BCE" ? -normalizedYear : normalizedYear;
+}
+
 function normalizeQuery(value?: string) {
   return value?.trim().toLocaleLowerCase("ja-JP") ?? "";
 }

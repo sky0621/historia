@@ -28,7 +28,6 @@ import {
   eventTypeOptions
 } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
-import { polityContainsRange } from "@/lib/time-expression/polity-range";
 
 type Option = {
   id: number;
@@ -121,9 +120,6 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
   const [fromYearInput, setFromYearInput] = useState(defaultValues?.fromTimeExpression?.startYear?.toString() ?? "");
   const [toCalendarEra, setToCalendarEra] = useState<"BCE" | "CE">(defaultValues?.toTimeExpression?.calendarEra ?? "CE");
   const [toYearInput, setToYearInput] = useState(defaultValues?.toTimeExpression?.startYear?.toString() ?? "");
-  const filteredPolityOptions = options.polities.filter((polity) =>
-    polityContainsRange(polity, fromCalendarEra, fromYearInput, toCalendarEra, toYearInput)
-  );
 
   const addParticipant = () => {
     setParticipantCount((count) => count + 1);
@@ -223,7 +219,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         <SelectionGroup
           name="polityIds"
           label="国家"
-          options={filteredPolityOptions}
+          options={options.polities}
           selectedIds={defaultValues?.polityIds ?? []}
           optionLabel={formatPolityOptionLabel}
         />

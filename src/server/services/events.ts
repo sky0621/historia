@@ -32,6 +32,7 @@ import { listReligions } from "@/server/repositories/religions";
 import { listSects } from "@/server/repositories/sects";
 import { createTag, getEventTagLinks, getTagsByIds, getTagsByNames, listTags } from "@/server/repositories/tags";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getCitationListForTarget } from "@/server/services/sources";
 import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 
@@ -54,7 +55,7 @@ type EventListFilters = {
 export function getEventFormOptions() {
   return {
     person: listPersonDetailed().map((item) => ({ id: item.id, name: item.name })),
-    polities: listPolities().map((item) => ({
+    polities: sortPolitiesByStartYear(listPolities()).map((item) => ({
       id: item.id,
       name: item.name,
       timeLabel: formatPolityOptionTime(item),

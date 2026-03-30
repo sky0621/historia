@@ -25,6 +25,7 @@ import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assign
 import { listSects } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getCitationListForTarget } from "@/server/services/sources";
 import {
   formatStoredBoundaryRangeForOption,
@@ -43,7 +44,7 @@ export function getPersonFormOptions() {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
-    polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
+    polities: sortPolitiesByStartYear(listPolities()).map((item) => ({ id: item.id, name: item.name })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name }))
   };
 }

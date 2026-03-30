@@ -18,7 +18,6 @@ import {
 } from "@/components/forms/styles";
 import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createDynastyAction, updateDynastyAction } from "@/features/polities/actions";
-import { polityContainsRange } from "@/lib/time-expression/polity-range";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type RegionOption = {
@@ -69,9 +68,6 @@ export function DynastyForm({
   const [fromYearInput, setFromYearInput] = useState(defaultValues?.fromTimeExpression?.startYear?.toString() ?? "");
   const [toCalendarEra, setToCalendarEra] = useState<"BCE" | "CE">(defaultValues?.toTimeExpression?.calendarEra ?? "CE");
   const [toYearInput, setToYearInput] = useState(defaultValues?.toTimeExpression?.startYear?.toString() ?? "");
-  const filteredPolityOptions = polityOptions.filter((polity) =>
-    polityContainsRange(polity, fromCalendarEra, fromYearInput, toCalendarEra, toYearInput)
-  );
 
   return (
     <section className="space-y-6">
@@ -137,8 +133,8 @@ export function DynastyForm({
           <fieldset className={formCardClassName}>
             <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">関連国家</legend>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {filteredPolityOptions.length === 0 ? <p className="text-sm text-[var(--muted)]">該当する国家・政体はありません。</p> : null}
-              {filteredPolityOptions.map((polity) => (
+              {polityOptions.length === 0 ? <p className="text-sm text-[var(--muted)]">該当する国家・政体はありません。</p> : null}
+              {polityOptions.map((polity) => (
                 <label key={polity.id} className={checkboxCardClassName}>
                   <input
                     type="checkbox"
