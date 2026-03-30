@@ -12,7 +12,10 @@ export default async function PolitiesPage({ searchParams }: PolitiesPageProps) 
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
   const regionId = getNumericParam(params.regionId);
-  const polities = getPolityListView({ query, regionId });
+  const fromYear = getNumericParam(params.fromYear);
+  const toYear = getNumericParam(params.toYear);
+  const onlyCurrent = getBooleanParam(params.onlyCurrent);
+  const polities = getPolityListView({ query, regionId, fromYear, toYear, onlyCurrent });
   const regions = getRegionOptions();
 
   return (
@@ -49,6 +52,18 @@ export default async function PolitiesPage({ searchParams }: PolitiesPageProps) 
               </option>
             ))}
           </select>
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">開始年</span>
+          <input name="fromYear" type="number" defaultValue={fromYear?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="-500" />
+        </label>
+        <label className="space-y-2 text-sm">
+          <span className="font-medium text-[var(--muted)]">終了年</span>
+          <input name="toYear" type="number" defaultValue={toYear?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2" placeholder="1600" />
+        </label>
+        <label className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm">
+          <input name="onlyCurrent" type="checkbox" value="1" defaultChecked={onlyCurrent} />
+          <span className="font-medium text-[var(--muted)]">現在まで続くものだけ</span>
         </label>
         <div className="flex items-center gap-3">
           <button type="submit" className="inline-flex whitespace-nowrap rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
@@ -111,6 +126,11 @@ function getNumericParam(value: string | string[] | undefined) {
 
   const parsed = Number(single);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function getBooleanParam(value: string | string[] | undefined) {
+  const single = getSingleParam(value);
+  return single === "1" || single === "true" || single === "on";
 }
 
 function renderLinkedRegions(regionIds: number[], regionNames: string[]) {

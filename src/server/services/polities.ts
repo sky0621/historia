@@ -58,6 +58,9 @@ export function getRegionOptions() {
 type PolityListFilters = {
   query?: string;
   regionId?: number;
+  fromYear?: number;
+  toYear?: number;
+  onlyCurrent?: boolean;
 };
 
 type DynastyListFilters = {
@@ -85,6 +88,14 @@ export function getPolityListView(filters: PolityListFilters = {}) {
     }))
     .filter((polity) => {
       if (filters.regionId && !polity.regionIds.includes(filters.regionId)) {
+        return false;
+      }
+
+      if (!matchesPolityYearRange(polity, filters.fromYear, filters.toYear)) {
+        return false;
+      }
+
+      if (filters.onlyCurrent && !isCurrentPolity(polity)) {
         return false;
       }
 
@@ -390,6 +401,55 @@ function toComparableStartYear(value: { fromCalendarEra?: string | null; fromYea
   }
 
   return value.fromCalendarEra === "BCE" ? -normalizedYear : normalizedYear;
+}
+
+function matchesPolityYearRange(
+  polity: {
+    fromCalendarEra: string | null;
+    fromYear: number | null;
+    toCalendarEra: string | null;
+    toYear: number | null;
+  },
+  fromYear?: number,
+  toYear?: number
+) {
+  if (fromYear === undefined && toYear === undefined) {
+    return true;
+  }
+
+  const range = getComparablePolityRange(polity);
+  const filterStart = fromYear ?? Number.NEGATIVE_INFINITY;
+  const filterEnd = toYear ?? Number.POSITIVE_INFINITY;
+
+  return range.start <= filterEnd && range.end >= filterStart;
+}
+
+function isCurrentPolity(polity: { toYear: number | null }) {
+  return normalizeStoredBoundaryYear("to", polity.toYear) == null;
+}
+
+function getComparablePolityRange(polity: {
+  fromCalendarEra: string | null;
+  fromYear: number | null;
+  toCalendarEra: string | null;
+  toYear: number | null;
+}) {
+  const startYear = normalizeStoredBoundaryYear("from", polity.fromYear);
+  const endYear = normalizeStoredBoundaryYear("to", polity.toYear);
+
+  const start =
+    startYear == null ? Number.NEGATIVE_INFINITY : toComparableYear(polity.fromCalendarEra, startYear);
+  const end =
+    endYear == null ? Number.POSITIVE_INFINITY : toComparableYear(polity.toCalendarEra ?? polity.fromCalendarEra, endYear);
+
+  return {
+    start: Math.min(start, end),
+    end: Math.max(start, end)
+  };
+}
+
+function toComparableYear(era: string | null | undefined, year: number) {
+  return era === "BCE" ? -year : year;
 }
 
 function normalizeQuery(value?: string) {
