@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   dynasties,
@@ -23,6 +23,7 @@ export const csvSyncImportTargets = [
   "regions",
   "polities",
   "dynasties",
+  "dynasty-polity-links",
   "period-categories",
   "historical-periods",
   "historical-period-category-links",
@@ -68,6 +69,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPolitiesCsv(rawCsv);
     case "dynasties":
       return importDynastiesCsv(rawCsv);
+    case "dynasty-polity-links":
+      return importDynastyPolityLinksCsv(rawCsv);
   }
 }
 
@@ -514,6 +517,80 @@ function importHistoricalPeriodCategoryLinksCsv(rawCsv: string): CsvSyncImportRe
       createdCount,
       updatedCount,
       deletedCount: deletedPeriodIds.length
+    };
+  });
+}
+
+function importDynastyPolityLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["dynasty_id", "dynasty_name", "polity_id", "polity_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(dynastyPolityLinks).all();
+    const dynastyOptions = tx.select().from(dynasties).all();
+    const polityOptions = tx.select().from(polities).all();
+    const dynastyNameById = new Map(dynastyOptions.map((item) => [item.id, item.name]));
+    const polityNameById = new Map(polityOptions.map((item) => [item.id, item.name]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.dynastyId}:${item.polityId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const dynastyId = parseRequiredId(cells.dynasty_id, row.rowNumber, "dynasty_id");
+      const dynastyName = parseRequiredString(cells.dynasty_name, "dynasty_name", row.rowNumber);
+      const polityId = parseRequiredId(cells.polity_id, row.rowNumber, "polity_id");
+      const polityName = parseRequiredString(cells.polity_name, "polity_name", row.rowNumber);
+      const key = `${dynastyId}:${polityId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: dynasty_id=${dynastyId}, polity_id=${polityId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualDynastyName = dynastyNameById.get(dynastyId);
+      if (!actualDynastyName) {
+        throw new Error(`row ${row.rowNumber}: dynasty_id=${dynastyId} の王朝は存在しません`);
+      }
+      if (actualDynastyName !== dynastyName) {
+        throw new Error(`row ${row.rowNumber}: dynasty_id=${dynastyId} の名称が一致しません`);
+      }
+
+      const actualPolityName = polityNameById.get(polityId);
+      if (!actualPolityName) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId} の国家は存在しません`);
+      }
+      if (actualPolityName !== polityName) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId} の名称が一致しません`);
+      }
+
+      if (!existingKeys.has(key)) {
+        tx.insert(dynastyPolityLinks).values({ dynastyId, polityId }).run();
+        createdCount += 1;
+      } else {
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.dynastyId}:${link.polityId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(dynastyPolityLinks)
+          .where(and(eq(dynastyPolityLinks.dynastyId, link.dynastyId), eq(dynastyPolityLinks.polityId, link.polityId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.dynastyId}:${link.polityId}`)).length;
+
+    return {
+      targetType: "dynasty-polity-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
     };
   });
 }

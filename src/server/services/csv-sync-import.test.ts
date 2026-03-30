@@ -29,6 +29,7 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM event_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
+  sqlite.prepare("DELETE FROM dynasty_polity_links").run();
   sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM polities").run();
@@ -92,6 +93,7 @@ beforeEach(() => {
     )
     .run();
   sqlite.prepare("INSERT INTO dynasty_region_links (dynasty_id, region_id) VALUES (1, 1), (2, 2)").run();
+  sqlite.prepare("INSERT INTO dynasty_polity_links (dynasty_id, polity_id) VALUES (1, 1), (2, 2)").run();
 });
 
 describe("csv sync import service", () => {
@@ -346,6 +348,33 @@ describe("csv sync import service", () => {
     expect(regionLinkRows).toEqual([
       { dynasty_id: 1, region_id: 1 },
       { dynasty_id: 2, region_id: 2 }
+    ]);
+  });
+
+  it("syncs dynasty polity links by dynasty_id and polity_id", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "dynasty-polity-links",
+      [
+        "dynasty_id,dynasty_name,polity_id,polity_name",
+        "1,漢,1,日本",
+        "2,唐,1,日本"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT dynasty_id, polity_id FROM dynasty_polity_links ORDER BY dynasty_id, polity_id")
+      .all() as Array<{ dynasty_id: number; polity_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "dynasty-polity-links",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { dynasty_id: 1, polity_id: 1 },
+      { dynasty_id: 2, polity_id: 1 }
     ]);
   });
 

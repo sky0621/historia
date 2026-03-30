@@ -39,6 +39,9 @@ export default function ManageDataPage() {
               <a href="/api/export/dynasties.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 王朝CSVをダウンロード
               </a>
+              <a href="/api/export/dynasty-polity-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                王朝国家紐付けCSVをダウンロード
+              </a>
               <a href="/api/export/period-categories.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 時代区分カテゴリCSVをダウンロード
               </a>

@@ -88,6 +88,22 @@ describe("import export service", () => {
     );
   });
 
+  it("exports dynasty polity links csv", () => {
+    sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '漢帝国'), (2, '唐帝国')").run();
+    sqlite.prepare("INSERT INTO dynasties (id, name) VALUES (1, '漢'), (2, '唐')").run();
+    sqlite.prepare("INSERT INTO dynasty_polity_links (dynasty_id, polity_id) VALUES (1, 1), (2, 2)").run();
+
+    const csv = importExportModule.buildDynastyPolityLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "dynasty_id,dynasty_name,polity_id,polity_name",
+        "1,漢,1,漢帝国",
+        "2,唐,2,唐帝国"
+      ].join("\n")
+    );
+  });
+
   it("exports religions csv with table columns only", () => {
     sqlite.prepare("DELETE FROM sect_founder_links").run();
     sqlite.prepare("DELETE FROM sects").run();

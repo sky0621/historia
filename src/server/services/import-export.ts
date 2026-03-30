@@ -93,6 +93,24 @@ export function buildHistoricalPeriodCategoryLinksCsv() {
   return toCsv(rows, ["category_id", "category_name", "period_id", "period_name"]);
 }
 
+export function buildDynastyPolityLinksCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         d.id AS dynasty_id,
+         d.name AS dynasty_name,
+         p.id AS polity_id,
+         p.name AS polity_name
+       FROM dynasty_polity_links dpl
+       INNER JOIN dynasties d ON dpl.dynasty_id = d.id
+       INNER JOIN polities p ON dpl.polity_id = p.id
+       ORDER BY d.id, p.id`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["dynasty_id", "dynasty_name", "polity_id", "polity_name"]);
+}
+
 export function buildPolitiesCsv() {
   const rows = sqlite
     .prepare(
