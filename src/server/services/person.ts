@@ -26,6 +26,7 @@ import { listSects } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getCitationListForTarget } from "@/server/services/sources";
+import { normalizeStoredBoundaryYear, normalizeStoredPersonBoundaryYear, toStoredBoundaryYear, toStoredPersonBoundaryYear } from "@/server/services/time-sentinel";
 
 export function getPersonOptions() {
   return listPersonDetailed().map((person) => ({ id: person.id, name: person.name }));
@@ -306,7 +307,7 @@ function toStoredRoleTime(prefix: "from" | "to", value: TimeExpressionInput | un
 
   return {
     [calendarEraKey]: value?.calendarEra ?? null,
-    [yearKey]: value?.startYear ?? null,
+    [yearKey]: toStoredBoundaryYear(prefix, value?.startYear),
     [approximateKey]: value?.isApproximate ?? false
   };
 }
@@ -318,7 +319,7 @@ function toStoredPersonTime(prefix: "birth" | "death", value: TimeExpressionInpu
 
   return {
     [calendarEraKey]: value?.calendarEra ?? null,
-    [yearKey]: value?.startYear ?? null,
+    [yearKey]: toStoredPersonBoundaryYear(prefix, value?.startYear),
     [approximateKey]: value?.isApproximate ?? false
   };
 }
@@ -326,8 +327,8 @@ function toStoredPersonTime(prefix: "birth" | "death", value: TimeExpressionInpu
 function extractTimeExpression(_prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
     calendarEra: (value.fromCalendarEra as "BCE" | "CE" | null) ?? "CE",
-    startYear: (value.fromYear as number | null) ?? null,
-    endYear: (value.toYear as number | null) ?? null,
+    startYear: normalizeStoredPersonBoundaryYear("birth", value.fromYear as number | null | undefined),
+    endYear: normalizeStoredPersonBoundaryYear("death", value.toYear as number | null | undefined),
     isApproximate: Boolean(value.fromIsApproximate || value.toIsApproximate),
     precision: "year",
     displayLabel: null
@@ -339,7 +340,7 @@ function extractRoleBoundaryTime(prefix: "from" | "to", value: Record<string, un
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
   const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
-  const startYear = (value[yearKey] as number | null) ?? null;
+  const startYear = normalizeStoredBoundaryYear(prefix, value[yearKey] as number | null | undefined);
   const isApproximate = Boolean(value[approximateKey]);
 
   if (startYear === null && !isApproximate && calendarEra == null) {
@@ -360,7 +361,7 @@ function extractPersonTimeExpression(prefix: "birth" | "death", value: Record<st
   const yearKey = prefix === "birth" ? "fromYear" : "toYear";
   const approximateKey = prefix === "birth" ? "fromIsApproximate" : "toIsApproximate";
   const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
-  const startYear = (value[yearKey] as number | null) ?? null;
+  const startYear = normalizeStoredPersonBoundaryYear(prefix, value[yearKey] as number | null | undefined);
   const isApproximate = Boolean(value[approximateKey]);
 
   if (startYear === null && !isApproximate && calendarEra == null) {

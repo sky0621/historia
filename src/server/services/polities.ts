@@ -24,11 +24,16 @@ import {
 } from "@/server/repositories/dynasties";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 import { getDynastySuccessionViewForDynasty, getDynastySuccessionViewForPolity, getPolityTransitionView } from "@/server/services/relations";
 import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPolityOptions() {
-  return listPolities().map((polity) => ({ id: polity.id, name: polity.name }));
+  return listPolities().map((polity) => ({
+    id: polity.id,
+    name: polity.name,
+    timeLabel: formatPolityOptionTime(polity)
+  }));
 }
 
 export function getRegionOptions() {
@@ -273,7 +278,7 @@ function toStoredBoundaryTime(prefix: "from" | "to", value: TimeExpressionInput 
 
   return {
     [calendarEraKey]: value?.calendarEra ?? null,
-    [yearKey]: value?.startYear ?? null,
+    [yearKey]: toStoredBoundaryYear(prefix, value?.startYear),
     [approximateKey]: value?.isApproximate ?? false
   };
 }
@@ -285,7 +290,7 @@ function toStoredPolityTime(prefix: "from" | "to", value: TimeExpressionInput | 
 
   return {
     [calendarEraKey]: value?.calendarEra ?? null,
-    [yearKey]: value?.startYear ?? null,
+    [yearKey]: toStoredBoundaryYear(prefix, value?.startYear),
     [approximateKey]: value?.isApproximate ?? false
   };
 }
@@ -293,8 +298,8 @@ function toStoredPolityTime(prefix: "from" | "to", value: TimeExpressionInput | 
 function extractTimeExpression(_prefix: string, value: Record<string, unknown>) {
   return fromTimeExpressionRecord({
     calendarEra: (value.fromCalendarEra as "BCE" | "CE" | null) ?? "CE",
-    startYear: (value.fromYear as number | null) ?? null,
-    endYear: (value.toYear as number | null) ?? null,
+    startYear: normalizeStoredBoundaryYear("from", value.fromYear as number | null | undefined),
+    endYear: normalizeStoredBoundaryYear("to", value.toYear as number | null | undefined),
     isApproximate: Boolean(value.fromIsApproximate || value.toIsApproximate),
     precision: "year",
     displayLabel: null
@@ -306,7 +311,7 @@ function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknow
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
   const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
-  const startYear = (value[yearKey] as number | null) ?? null;
+  const startYear = normalizeStoredBoundaryYear(prefix, value[yearKey] as number | null | undefined);
   const isApproximate = Boolean(value[approximateKey]);
 
   if (startYear === null && !isApproximate && calendarEra == null) {
@@ -327,7 +332,7 @@ function extractPolityTimeExpression(prefix: "from" | "to", value: Record<string
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
   const calendarEra = (value[calendarEraKey] as "BCE" | "CE" | null | undefined) ?? null;
-  const startYear = (value[yearKey] as number | null) ?? null;
+  const startYear = normalizeStoredBoundaryYear(prefix, value[yearKey] as number | null | undefined);
   const isApproximate = Boolean(value[approximateKey]);
 
   if (startYear === null && !isApproximate && calendarEra == null) {
@@ -352,6 +357,15 @@ function formatStoredPolityTime(value: Record<string, unknown>) {
   const from = extractPolityTimeExpression("from", value);
   const to = extractPolityTimeExpression("to", value);
   return [from ? formatTimeExpression(from) : "年未詳", to ? formatTimeExpression(to) : "年未詳"].join(" - ");
+}
+
+function formatPolityOptionTime(value: Record<string, unknown>) {
+  return formatStoredBoundaryRangeForOption(
+    (value.fromCalendarEra as "BCE" | "CE" | null) ?? null,
+    value.fromYear as number | null | undefined,
+    (value.toCalendarEra as "BCE" | "CE" | null) ?? null,
+    value.toYear as number | null | undefined
+  );
 }
 
 function normalizeQuery(value?: string) {

@@ -29,7 +29,7 @@ import {
 } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
-type Option = { id: number; name: string; parentRegionId?: number | null };
+type Option = { id: number; name: string; parentRegionId?: number | null; timeLabel?: string };
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
 type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" };
@@ -195,7 +195,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         </div>
 
         <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
-        <SelectionGroup name="polityIds" label="国家" options={options.polities} selectedIds={defaultValues?.polityIds ?? []} />
+        <SelectionGroup name="polityIds" label="国家" options={options.polities} selectedIds={defaultValues?.polityIds ?? []} optionLabel={formatPolityOptionLabel} />
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
         <ReligionSectSelectionGroup
           religions={options.religions}
@@ -520,7 +520,8 @@ function SelectionGroup({
   options,
   selectedIds,
   collapsible = false,
-  hierarchical = false
+  hierarchical = false,
+  optionLabel = (option: Option) => option.name
 }: {
   name: string;
   label: string;
@@ -528,6 +529,7 @@ function SelectionGroup({
   selectedIds: number[];
   collapsible?: boolean;
   hierarchical?: boolean;
+  optionLabel?: (option: Option) => string;
 }) {
   const content = (
     options.length === 0 ? (
@@ -539,7 +541,7 @@ function SelectionGroup({
         {options.map((option) => (
           <label key={option.id} className={checkboxCardClassName}>
             <input type="checkbox" name={name} value={option.id} defaultChecked={selectedIds.includes(option.id)} />
-            {option.name}
+            {optionLabel(option)}
           </label>
         ))}
       </div>
@@ -562,6 +564,10 @@ function SelectionGroup({
       {content}
     </fieldset>
   );
+}
+
+function formatPolityOptionLabel(option: Option) {
+  return option.timeLabel ? `${option.name}（${option.timeLabel}）` : option.name;
 }
 
 function ReligionSectSelectionGroup({

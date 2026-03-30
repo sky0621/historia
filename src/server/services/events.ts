@@ -33,6 +33,7 @@ import { listSects } from "@/server/repositories/sects";
 import { createTag, getEventTagLinks, getTagsByIds, getTagsByNames, listTags } from "@/server/repositories/tags";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getCitationListForTarget } from "@/server/services/sources";
+import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 
 type EventListFilters = {
   query?: string;
@@ -53,7 +54,7 @@ type EventListFilters = {
 export function getEventFormOptions() {
   return {
     person: listPersonDetailed().map((item) => ({ id: item.id, name: item.name })),
-    polities: listPolities().map((item) => ({ id: item.id, name: item.name })),
+    polities: listPolities().map((item) => ({ id: item.id, name: item.name, timeLabel: formatPolityOptionTime(item) })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
@@ -649,10 +650,10 @@ function nullable(value: string | undefined) {
 function toStoredEventRange(from: TimeExpressionInput | undefined, to: TimeExpressionInput | undefined) {
   return {
     fromCalendarEra: from?.calendarEra ?? null,
-    fromYear: from?.startYear ?? null,
+    fromYear: toStoredBoundaryYear("from", from?.startYear),
     fromIsApproximate: from?.isApproximate ?? false,
     toCalendarEra: to?.calendarEra ?? null,
-    toYear: to?.startYear ?? null,
+    toYear: toStoredBoundaryYear("to", to?.startYear),
     toIsApproximate: to?.isApproximate ?? false
   };
 }
@@ -661,7 +662,7 @@ function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknow
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
   const eraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
-  const year = value[yearKey] as number | null;
+  const year = normalizeStoredBoundaryYear(prefix, value[yearKey] as number | null | undefined);
   const era = value[eraKey] as "BCE" | "CE" | null;
   if (year === null || year === undefined) {
     return undefined;
@@ -679,9 +680,9 @@ function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknow
 function formatEventTime(value: Record<string, unknown>) {
   const rangeLabel = toStandaloneYearLabel(
     (value.fromCalendarEra as "BCE" | "CE" | null) ?? null,
-    (value.fromYear as number | null) ?? null,
+    normalizeStoredBoundaryYear("from", value.fromYear as number | null | undefined),
     (value.toCalendarEra as "BCE" | "CE" | null) ?? null,
-    (value.toYear as number | null) ?? null
+    normalizeStoredBoundaryYear("to", value.toYear as number | null | undefined)
   );
 
   return rangeLabel ?? "年未詳";
@@ -829,6 +830,15 @@ function toStandaloneYearLabel(
   }
 
   return start === end ? start : `${start} - ${end}`;
+}
+
+function formatPolityOptionTime(value: Record<string, unknown>) {
+  return formatStoredBoundaryRangeForOption(
+    (value.fromCalendarEra as "BCE" | "CE" | null) ?? null,
+    value.fromYear as number | null | undefined,
+    (value.toCalendarEra as "BCE" | "CE" | null) ?? null,
+    value.toYear as number | null | undefined
+  );
 }
 
 function toComparableYear(era: string | null, year: number) {

@@ -29,6 +29,7 @@ type RegionOption = {
 type PolityOption = {
   id: number;
   name: string;
+  timeLabel?: string;
 };
 
 type Props = {
@@ -83,7 +84,7 @@ export function DynastyForm({
                     value={polity.id}
                     defaultChecked={defaultValues?.polityIds.includes(polity.id) ?? false}
                   />
-                  {polity.name}
+                  {formatPolityOptionLabel(polity)}
                 </label>
               ))}
             </div>
@@ -166,4 +167,8 @@ export function DynastyForm({
       </form>
     </section>
   );
+}
+
+function formatPolityOptionLabel(polity: PolityOption) {
+  return polity.timeLabel ? `${polity.name}（${polity.timeLabel}）` : polity.name;
 }
