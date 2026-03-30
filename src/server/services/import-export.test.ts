@@ -120,6 +120,22 @@ describe("import export service", () => {
     );
   });
 
+  it("exports dynasty region links csv", () => {
+    sqlite.prepare("INSERT INTO dynasties (id, name) VALUES (1, '漢'), (2, '唐')").run();
+    sqlite.prepare("INSERT INTO regions (id, name) VALUES (3, '中国')").run();
+    sqlite.prepare("INSERT INTO dynasty_region_links (dynasty_id, region_id) VALUES (1, 1), (2, 2)").run();
+
+    const csv = importExportModule.buildDynastyRegionLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "dynasty_id,dynasty_name,region_id,region_name",
+        "1,漢,1,中国",
+        "2,唐,2,東アジア"
+      ].join("\n")
+    );
+  });
+
   it("exports religions csv with table columns only", () => {
     sqlite.prepare("DELETE FROM sect_founder_links").run();
     sqlite.prepare("DELETE FROM sects").run();

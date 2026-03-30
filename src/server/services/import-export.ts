@@ -129,6 +129,24 @@ export function buildPolityRegionLinksCsv() {
   return toCsv(rows, ["polity_id", "polity_name", "region_id", "region_name"]);
 }
 
+export function buildDynastyRegionLinksCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         d.id AS dynasty_id,
+         d.name AS dynasty_name,
+         r.id AS region_id,
+         r.name AS region_name
+       FROM dynasty_region_links drl
+       INNER JOIN dynasties d ON drl.dynasty_id = d.id
+       INNER JOIN regions r ON drl.region_id = r.id
+       ORDER BY d.id, r.id`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["dynasty_id", "dynasty_name", "region_id", "region_name"]);
+}
+
 export function buildPolitiesCsv() {
   const rows = sqlite
     .prepare(

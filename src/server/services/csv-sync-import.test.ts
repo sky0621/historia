@@ -405,6 +405,33 @@ describe("csv sync import service", () => {
     ]);
   });
 
+  it("syncs dynasty region links by dynasty_id and region_id", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "dynasty-region-links",
+      [
+        "dynasty_id,dynasty_name,region_id,region_name",
+        "1,漢,1,日本",
+        "2,唐,1,日本"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT dynasty_id, region_id FROM dynasty_region_links ORDER BY dynasty_id, region_id")
+      .all() as Array<{ dynasty_id: number; region_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "dynasty-region-links",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { dynasty_id: 1, region_id: 1 },
+      { dynasty_id: 2, region_id: 1 }
+    ]);
+  });
+
   it("syncs religions and founder links", () => {
     const result = csvSyncImportModule.importCsvSync(
       "religions",
