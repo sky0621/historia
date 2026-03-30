@@ -38,10 +38,11 @@ export default async function SourcesPage({ searchParams }: SourcesPageProps) {
           <span>検索</span>
           <input name="q" defaultValue={params.q ?? ""} className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2" />
         </label>
-        <div className="mt-4 flex justify-end">
-          <button type="submit" className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">
+        <div className="mt-4 flex items-center gap-3">
+          <button type="submit" className="whitespace-nowrap rounded-full border border-[var(--border)] px-4 py-2 text-sm">
             絞り込む
           </button>
+          <p className="ml-auto whitespace-nowrap text-sm text-[var(--muted)]">検索結果：{sources.length}件</p>
         </div>
       </form>
 

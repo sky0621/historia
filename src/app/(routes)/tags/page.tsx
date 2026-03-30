@@ -42,13 +42,14 @@ export default async function TagsPage({ searchParams }: TagsPageProps) {
             <option value="1">関連イベントあり</option>
           </select>
         </label>
-        <div className="flex items-end gap-3">
-          <button type="submit" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+        <div className="flex items-center gap-3">
+          <button type="submit" className="inline-flex whitespace-nowrap rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
             検索
           </button>
-          <Link href="/tags" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
+          <Link href="/tags" className="inline-flex whitespace-nowrap rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
             リセット
           </Link>
+          <p className="ml-auto whitespace-nowrap text-sm text-[var(--muted)]">検索結果：{tags.length}件</p>
         </div>
       </form>
 

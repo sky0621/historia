@@ -15,7 +15,7 @@ import { getRelatedEvents } from "@/server/services/event-references";
 export function getRegionOptions(excludeId?: number) {
   return listRegions()
     .filter((region) => region.id !== excludeId)
-    .map((region) => ({ id: region.id, name: region.name }));
+    .map((region) => ({ id: region.id, name: region.name, parentRegionId: region.parentRegionId }));
 }
 
 type RegionListFilters = {

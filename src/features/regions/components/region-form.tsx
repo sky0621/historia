@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import { RegionRadioTree } from "@/components/forms/region-radio-tree";
 import {
+  checkboxCardClassName,
   fieldLabelClassName,
   fieldMetaClassName,
   formCardClassName,
@@ -18,6 +20,7 @@ import { createRegionAction, updateRegionAction } from "@/features/regions/actio
 type RegionOption = {
   id: number;
   name: string;
+  parentRegionId?: number | null;
 };
 
 type RegionFormProps = {
@@ -66,18 +69,23 @@ export function RegionForm({
 
           <label className={fieldLabelClassName}>
             <span className={fieldMetaClassName}>親地域</span>
-            <select
-              name="parentRegionId"
-              defaultValue={defaultValues?.parentRegionId ?? ""}
-              className={inputClassName}
-            >
-              <option value="">未設定</option>
-              {parentOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-4">
+              <label className={checkboxCardClassName}>
+                <input
+                  type="radio"
+                  name="parentRegionId"
+                  value=""
+                  defaultChecked={defaultValues?.parentRegionId == null}
+                />
+                未設定
+              </label>
+              <RegionRadioTree
+                name="parentRegionId"
+                options={parentOptions}
+                selectedId={defaultValues?.parentRegionId ?? null}
+                itemClassName={checkboxCardClassName}
+              />
+            </div>
           </label>
 
           <label className={fieldLabelClassName}>
