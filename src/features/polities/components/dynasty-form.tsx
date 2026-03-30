@@ -85,24 +85,6 @@ export function DynastyForm({
 
         <section className={formCardClassName}>
           <div className="grid gap-5">
-          <fieldset className={formCardClassName}>
-            <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">関連国家</legend>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {filteredPolityOptions.length === 0 ? <p className="text-sm text-[var(--muted)]">該当する国家・政体はありません。</p> : null}
-              {filteredPolityOptions.map((polity) => (
-                <label key={polity.id} className={checkboxCardClassName}>
-                  <input
-                    type="checkbox"
-                    name="polityIds"
-                    value={polity.id}
-                    defaultChecked={defaultValues?.polityIds.includes(polity.id) ?? false}
-                  />
-                  {formatPolityOptionLabel(polity)}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
           <label className={fieldLabelClassName}>
             <span className={fieldMetaClassName}>名称</span>
             <input
@@ -150,6 +132,26 @@ export function DynastyForm({
             onStartYearChange={setToYearInput}
           />
         </div>
+
+        <section className={formCardClassName}>
+          <fieldset className={formCardClassName}>
+            <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">関連国家</legend>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {filteredPolityOptions.length === 0 ? <p className="text-sm text-[var(--muted)]">該当する国家・政体はありません。</p> : null}
+              {filteredPolityOptions.map((polity) => (
+                <label key={polity.id} className={checkboxCardClassName}>
+                  <input
+                    type="checkbox"
+                    name="polityIds"
+                    value={polity.id}
+                    defaultChecked={defaultValues?.polityIds.includes(polity.id) ?? false}
+                  />
+                  {formatPolityOptionLabel(polity)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </section>
 
         <section className={formCardClassName}>
           <CollapsibleFormSection title="関連地域" defaultOpen={(defaultValues?.regionIds.length ?? 0) > 0}>
