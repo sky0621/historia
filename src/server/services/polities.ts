@@ -109,7 +109,7 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
   const normalizedQuery = normalizeQuery(filters.query);
   const dynasties = listDynasties();
   const polities = listPolities();
-  const polityNameById = new Map(polities.map((polity) => [polity.id, polity.name]));
+  const polityById = new Map(polities.map((polity) => [polity.id, polity]));
   const regions = listRegions();
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
   const links = getDynastyRegionIds(dynasties.map((dynasty) => dynasty.id));
@@ -117,7 +117,11 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
   return dynasties
     .map((dynasty) => ({
       ...dynasty,
-      polityNames: dynasty.polityIds.map((polityId) => polityNameById.get(polityId) ?? `#${polityId}`),
+      polityNames: dynasty.polityIds.map((polityId) => polityById.get(polityId)?.name ?? `#${polityId}`),
+      polityTimeLabels: dynasty.polityIds.map((polityId) => {
+        const polity = polityById.get(polityId);
+        return polity ? formatPolityOptionTime(polity) : null;
+      }),
       timeLabel: formatPolityOptionTime(dynasty),
       regionNames: links
         .filter((link) => link.dynastyId === dynasty.id)

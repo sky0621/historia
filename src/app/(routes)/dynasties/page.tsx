@@ -102,6 +102,7 @@ export default async function DynastiesPage({ searchParams }: DynastiesPageProps
                             {index > 0 ? ", " : null}
                             <Link href={`/polities/${polityId}`} className="underline-offset-4 hover:underline">
                               {dynasty.polityNames[index] ?? `#${polityId}`}
+                              {dynasty.polityTimeLabels[index] ? `（${dynasty.polityTimeLabels[index]}）` : null}
                             </Link>
                           </span>
                         ))}
