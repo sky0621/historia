@@ -9,6 +9,10 @@ type Props = {
   includeDisplayLabel?: boolean;
   includeEndYear?: boolean;
   startYearLabel?: string;
+  calendarEraValue?: string;
+  onCalendarEraChange?: (value: string) => void;
+  startYearValue?: string;
+  onStartYearChange?: (value: string) => void;
 };
 
 export function TimeExpressionInputs({
@@ -18,7 +22,11 @@ export function TimeExpressionInputs({
   includePrecision = true,
   includeDisplayLabel = true,
   includeEndYear = true,
-  startYearLabel = "開始年"
+  startYearLabel = "開始年",
+  calendarEraValue,
+  onCalendarEraChange,
+  startYearValue,
+  onStartYearChange
 }: Props) {
   return (
     <fieldset className="historia-inset rounded-[14px] p-5 sm:p-6">
@@ -28,7 +36,9 @@ export function TimeExpressionInputs({
           <span className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">暦</span>
           <select
             name={`${prefix}.calendarEra`}
-            defaultValue={defaultValue?.calendarEra ?? "CE"}
+            value={calendarEraValue}
+            defaultValue={calendarEraValue == null ? defaultValue?.calendarEra ?? "CE" : undefined}
+            onChange={onCalendarEraChange ? (event) => onCalendarEraChange(event.target.value) : undefined}
             className="rounded-2xl border border-[var(--border)] bg-black/10 px-3 py-2.5 text-[var(--foreground)]"
           >
             {eraOptions.map((option) => (
@@ -52,7 +62,9 @@ export function TimeExpressionInputs({
           <span className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">{startYearLabel}</span>
           <input
             name={`${prefix}.startYear`}
-            defaultValue={defaultValue?.startYear ?? ""}
+            value={startYearValue}
+            defaultValue={startYearValue == null ? defaultValue?.startYear ?? "" : undefined}
+            onChange={onStartYearChange ? (event) => onStartYearChange(event.target.value) : undefined}
             className="rounded-2xl border border-[var(--border)] bg-black/10 px-3 py-2.5 text-[var(--foreground)]"
             inputMode="numeric"
           />

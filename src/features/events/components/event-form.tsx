@@ -28,8 +28,18 @@ import {
   eventTypeOptions
 } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
+import { polityContainsRange } from "@/lib/time-expression/polity-range";
 
-type Option = { id: number; name: string; parentRegionId?: number | null; timeLabel?: string };
+type Option = {
+  id: number;
+  name: string;
+  parentRegionId?: number | null;
+  timeLabel?: string;
+  fromCalendarEra?: string | null;
+  fromYear?: number | null;
+  toCalendarEra?: string | null;
+  toYear?: number | null;
+};
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
 type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" };
@@ -107,6 +117,13 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
     })
   );
   const isConflictEvent = eventType !== "general";
+  const [fromCalendarEra, setFromCalendarEra] = useState<"BCE" | "CE">(defaultValues?.fromTimeExpression?.calendarEra ?? "CE");
+  const [fromYearInput, setFromYearInput] = useState(defaultValues?.fromTimeExpression?.startYear?.toString() ?? "");
+  const [toCalendarEra, setToCalendarEra] = useState<"BCE" | "CE">(defaultValues?.toTimeExpression?.calendarEra ?? "CE");
+  const [toYearInput, setToYearInput] = useState(defaultValues?.toTimeExpression?.startYear?.toString() ?? "");
+  const filteredPolityOptions = options.polities.filter((polity) =>
+    polityContainsRange(polity, fromCalendarEra, fromYearInput, toCalendarEra, toYearInput)
+  );
 
   const addParticipant = () => {
     setParticipantCount((count) => count + 1);
@@ -182,6 +199,10 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             includePrecision={false}
             includeDisplayLabel={false}
             includeEndYear={false}
+            calendarEraValue={fromCalendarEra}
+            onCalendarEraChange={(value) => setFromCalendarEra(value as "BCE" | "CE")}
+            startYearValue={fromYearInput}
+            onStartYearChange={setFromYearInput}
           />
           <TimeExpressionInputs
             prefix="toTime"
@@ -191,11 +212,21 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             includeDisplayLabel={false}
             includeEndYear={false}
             startYearLabel="終了年"
+            calendarEraValue={toCalendarEra}
+            onCalendarEraChange={(value) => setToCalendarEra(value as "BCE" | "CE")}
+            startYearValue={toYearInput}
+            onStartYearChange={setToYearInput}
           />
         </div>
 
         <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
-        <SelectionGroup name="polityIds" label="国家" options={options.polities} selectedIds={defaultValues?.polityIds ?? []} optionLabel={formatPolityOptionLabel} />
+        <SelectionGroup
+          name="polityIds"
+          label="国家"
+          options={filteredPolityOptions}
+          selectedIds={defaultValues?.polityIds ?? []}
+          optionLabel={formatPolityOptionLabel}
+        />
         <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
         <ReligionSectSelectionGroup
           religions={options.religions}

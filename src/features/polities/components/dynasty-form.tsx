@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { TimeExpressionInputs } from "@/components/fields/time-expression-inputs";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
@@ -18,6 +18,7 @@ import {
 } from "@/components/forms/styles";
 import { initialCreateFormState } from "@/features/actions/create-form-state";
 import { createDynastyAction, updateDynastyAction } from "@/features/polities/actions";
+import { polityContainsRange } from "@/lib/time-expression/polity-range";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
 type RegionOption = {
@@ -30,6 +31,10 @@ type PolityOption = {
   id: number;
   name: string;
   timeLabel?: string;
+  fromCalendarEra?: string | null;
+  fromYear?: number | null;
+  toCalendarEra?: string | null;
+  toYear?: number | null;
 };
 
 type Props = {
@@ -60,6 +65,13 @@ export function DynastyForm({
 }: Props) {
   const [createState, createAction] = useActionState(createDynastyAction, initialCreateFormState);
   const action = defaultValues?.id ? updateDynastyAction : createAction;
+  const [fromCalendarEra, setFromCalendarEra] = useState<"BCE" | "CE">(defaultValues?.fromTimeExpression?.calendarEra ?? "CE");
+  const [fromYearInput, setFromYearInput] = useState(defaultValues?.fromTimeExpression?.startYear?.toString() ?? "");
+  const [toCalendarEra, setToCalendarEra] = useState<"BCE" | "CE">(defaultValues?.toTimeExpression?.calendarEra ?? "CE");
+  const [toYearInput, setToYearInput] = useState(defaultValues?.toTimeExpression?.startYear?.toString() ?? "");
+  const filteredPolityOptions = polityOptions.filter((polity) =>
+    polityContainsRange(polity, fromCalendarEra, fromYearInput, toCalendarEra, toYearInput)
+  );
 
   return (
     <section className="space-y-6">
@@ -76,7 +88,8 @@ export function DynastyForm({
           <fieldset className={formCardClassName}>
             <legend className="px-2 text-base font-semibold text-[var(--foreground-strong)]">関連国家</legend>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {polityOptions.map((polity) => (
+              {filteredPolityOptions.length === 0 ? <p className="text-sm text-[var(--muted)]">該当する国家・政体はありません。</p> : null}
+              {filteredPolityOptions.map((polity) => (
                 <label key={polity.id} className={checkboxCardClassName}>
                   <input
                     type="checkbox"
@@ -118,6 +131,10 @@ export function DynastyForm({
             includePrecision={false}
             includeDisplayLabel={false}
             includeEndYear={false}
+            calendarEraValue={fromCalendarEra}
+            onCalendarEraChange={(value) => setFromCalendarEra(value as "BCE" | "CE")}
+            startYearValue={fromYearInput}
+            onStartYearChange={setFromYearInput}
           />
           <TimeExpressionInputs
             prefix="toTime"
@@ -127,6 +144,10 @@ export function DynastyForm({
             includeDisplayLabel={false}
             includeEndYear={false}
             startYearLabel="終了年"
+            calendarEraValue={toCalendarEra}
+            onCalendarEraChange={(value) => setToCalendarEra(value as "BCE" | "CE")}
+            startYearValue={toYearInput}
+            onStartYearChange={setToYearInput}
           />
         </div>
 

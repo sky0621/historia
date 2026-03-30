@@ -54,7 +54,15 @@ type EventListFilters = {
 export function getEventFormOptions() {
   return {
     person: listPersonDetailed().map((item) => ({ id: item.id, name: item.name })),
-    polities: listPolities().map((item) => ({ id: item.id, name: item.name, timeLabel: formatPolityOptionTime(item) })),
+    polities: listPolities().map((item) => ({
+      id: item.id,
+      name: item.name,
+      timeLabel: formatPolityOptionTime(item),
+      fromCalendarEra: item.fromCalendarEra,
+      fromYear: item.fromYear,
+      toCalendarEra: item.toCalendarEra,
+      toYear: item.toYear
+    })),
     dynasties: listDynasties().map((item) => ({ id: item.id, name: item.name })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),

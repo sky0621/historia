@@ -32,7 +32,11 @@ export function getPolityOptions() {
   return listPolities().map((polity) => ({
     id: polity.id,
     name: polity.name,
-    timeLabel: formatPolityOptionTime(polity)
+    timeLabel: formatPolityOptionTime(polity),
+    fromCalendarEra: polity.fromCalendarEra,
+    fromYear: polity.fromYear,
+    toCalendarEra: polity.toCalendarEra,
+    toYear: polity.toYear
   }));
 }
 
