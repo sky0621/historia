@@ -104,6 +104,22 @@ describe("import export service", () => {
     );
   });
 
+  it("exports polity region links csv", () => {
+    sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '漢帝国'), (2, '唐帝国')").run();
+    sqlite.prepare("INSERT INTO regions (id, name) VALUES (1, '中国'), (2, '東アジア')").run();
+    sqlite.prepare("INSERT INTO polity_region_links (polity_id, region_id) VALUES (1, 1), (2, 2)").run();
+
+    const csv = importExportModule.buildPolityRegionLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "polity_id,polity_name,region_id,region_name",
+        "1,漢帝国,1,中国",
+        "2,唐帝国,2,東アジア"
+      ].join("\n")
+    );
+  });
+
   it("exports religions csv with table columns only", () => {
     sqlite.prepare("DELETE FROM sect_founder_links").run();
     sqlite.prepare("DELETE FROM sects").run();

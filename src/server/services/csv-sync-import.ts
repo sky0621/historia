@@ -24,6 +24,7 @@ export const csvSyncImportTargets = [
   "polities",
   "dynasties",
   "dynasty-polity-links",
+  "polity-region-links",
   "period-categories",
   "historical-periods",
   "historical-period-category-links",
@@ -71,6 +72,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importDynastiesCsv(rawCsv);
     case "dynasty-polity-links":
       return importDynastyPolityLinksCsv(rawCsv);
+    case "polity-region-links":
+      return importPolityRegionLinksCsv(rawCsv);
   }
 }
 
@@ -587,6 +590,80 @@ function importDynastyPolityLinksCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "dynasty-polity-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
+    };
+  });
+}
+
+function importPolityRegionLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["polity_id", "polity_name", "region_id", "region_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(polityRegionLinks).all();
+    const polityOptions = tx.select().from(polities).all();
+    const regionOptions = tx.select().from(regions).all();
+    const polityNameById = new Map(polityOptions.map((item) => [item.id, item.name]));
+    const regionNameById = new Map(regionOptions.map((item) => [item.id, item.name]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.polityId}:${item.regionId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const polityId = parseRequiredId(cells.polity_id, row.rowNumber, "polity_id");
+      const polityName = parseRequiredString(cells.polity_name, "polity_name", row.rowNumber);
+      const regionId = parseRequiredId(cells.region_id, row.rowNumber, "region_id");
+      const regionName = parseRequiredString(cells.region_name, "region_name", row.rowNumber);
+      const key = `${polityId}:${regionId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId}, region_id=${regionId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualPolityName = polityNameById.get(polityId);
+      if (!actualPolityName) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId} の国家は存在しません`);
+      }
+      if (actualPolityName !== polityName) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId} の名称が一致しません`);
+      }
+
+      const actualRegionName = regionNameById.get(regionId);
+      if (!actualRegionName) {
+        throw new Error(`row ${row.rowNumber}: region_id=${regionId} の地域は存在しません`);
+      }
+      if (actualRegionName !== regionName) {
+        throw new Error(`row ${row.rowNumber}: region_id=${regionId} の名称が一致しません`);
+      }
+
+      if (!existingKeys.has(key)) {
+        tx.insert(polityRegionLinks).values({ polityId, regionId }).run();
+        createdCount += 1;
+      } else {
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.polityId}:${link.regionId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(polityRegionLinks)
+          .where(and(eq(polityRegionLinks.polityId, link.polityId), eq(polityRegionLinks.regionId, link.regionId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.polityId}:${link.regionId}`)).length;
+
+    return {
+      targetType: "polity-region-links" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,

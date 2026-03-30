@@ -378,6 +378,33 @@ describe("csv sync import service", () => {
     ]);
   });
 
+  it("syncs polity region links by polity_id and region_id", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "polity-region-links",
+      [
+        "polity_id,polity_name,region_id,region_name",
+        "1,日本,1,日本",
+        "2,ローマ帝国,1,日本"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT polity_id, region_id FROM polity_region_links ORDER BY polity_id, region_id")
+      .all() as Array<{ polity_id: number; region_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "polity-region-links",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { polity_id: 1, region_id: 1 },
+      { polity_id: 2, region_id: 1 }
+    ]);
+  });
+
   it("syncs religions and founder links", () => {
     const result = csvSyncImportModule.importCsvSync(
       "religions",
