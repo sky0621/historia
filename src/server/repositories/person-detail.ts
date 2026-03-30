@@ -115,6 +115,42 @@ export function replaceRoleAssignments(
   }
 }
 
+export function replacePersonRoleLinks(
+  personId: number,
+  roleLinks: Array<{
+    roleId: number;
+    description?: string | null;
+    note?: string | null;
+    fromCalendarEra?: string | null;
+    fromYear?: number | null;
+    fromIsApproximate?: boolean;
+    toCalendarEra?: string | null;
+    toYear?: number | null;
+    toIsApproximate?: boolean;
+  }>
+) {
+  db.delete(personRoleLinks).where(eq(personRoleLinks.personId, personId)).run();
+
+  if (roleLinks.length === 0) {
+    return;
+  }
+
+  db.insert(personRoleLinks).values(
+    roleLinks.map((roleLink) => ({
+      personId,
+      roleId: roleLink.roleId,
+      description: roleLink.description ?? null,
+      note: roleLink.note ?? null,
+      fromCalendarEra: roleLink.fromCalendarEra ?? null,
+      fromYear: roleLink.fromYear ?? null,
+      fromIsApproximate: roleLink.fromIsApproximate ?? false,
+      toCalendarEra: roleLink.toCalendarEra ?? null,
+      toYear: roleLink.toYear ?? null,
+      toIsApproximate: roleLink.toIsApproximate ?? false
+    }))
+  ).run();
+}
+
 export function getPersonRegionLinks(personIds: number[]) {
   if (personIds.length === 0) return [];
   return db.select().from(personRegionLinks).where(inArray(personRegionLinks.personId, personIds)).all();

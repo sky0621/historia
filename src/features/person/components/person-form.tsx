@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useDeferredValue, useState } from "react";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import { formErrorClassName, secondaryButtonClassName } from "@/components/forms/styles";
@@ -12,6 +12,14 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 type Option = { id: number; name: string; parentRegionId?: number | null };
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
+type RoleOption = { id: number; title: string; polityName?: string | null };
+type PersonRoleDefaultValue = {
+  roleId?: number;
+  description: string;
+  note: string;
+  fromTimeExpression?: TimeExpressionInput;
+  toTimeExpression?: TimeExpressionInput;
+};
 
 type Props = {
   title: string;
@@ -21,6 +29,7 @@ type Props = {
     regions: Option[];
     religions: ReligionOption[];
     sects: SectOption[];
+    roles: RoleOption[];
   };
   defaultValues?: {
     id?: number;
@@ -34,12 +43,16 @@ type Props = {
     sectIds: number[];
     birthTimeExpression?: TimeExpressionInput;
     deathTimeExpression?: TimeExpressionInput;
+    roles: PersonRoleDefaultValue[];
   };
 };
 
 export function PersonForm({ title, description, submitLabel, options, defaultValues }: Props) {
   const [createState, createAction] = useActionState(createPersonAction, initialCreateFormState);
   const action = defaultValues?.id ? updatePersonAction : createAction;
+  const [roleRows, setRoleRows] = useState<PersonRoleDefaultValue[]>(
+    defaultValues?.roles.length ? defaultValues.roles : [createEmptyRoleValue()]
+  );
 
   return (
     <section className="space-y-8">
@@ -61,6 +74,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
 
       <form action={action} className="space-y-6">
         {defaultValues?.id ? <input type="hidden" name="id" value={defaultValues.id} /> : null}
+        <input type="hidden" name="roleCount" value={roleRows.length} />
 
         <SectionCard
           eyebrow="Identity"
@@ -113,6 +127,13 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
             selectedSectIds={defaultValues?.sectIds ?? []}
           />
         </div>
+
+        <RoleLinkSection
+          roleOptions={options.roles}
+          roleRows={roleRows}
+          onAdd={() => setRoleRows((current) => [...current, createEmptyRoleValue()])}
+          onRemove={(index) => setRoleRows((current) => current.filter((_, currentIndex) => currentIndex !== index))}
+        />
 
         <SectionCard
           eyebrow="Editorial"
@@ -348,5 +369,147 @@ function ReligionSectSelectionGroup({
   );
 }
 
+function RoleLinkSection({
+  roleOptions,
+  roleRows,
+  onAdd,
+  onRemove
+}: {
+  roleOptions: RoleOption[];
+  roleRows: PersonRoleDefaultValue[];
+  onAdd: () => void;
+  onRemove: (index: number) => void;
+}) {
+  return (
+    <SectionCard
+      eyebrow="Role links"
+      title="役職"
+      description="既存の役職を人物へ複数紐づけできます。人物ごとの説明や期間もここで記録します。"
+      action={(
+        <button type="button" onClick={onAdd} className={secondaryButtonClassName}>
+          役職を追加
+        </button>
+      )}
+    >
+      <div className="space-y-5">
+        {roleRows.map((roleRow, index) => (
+          <RoleLinkCard
+            key={`${roleRow.roleId ?? "new"}-${index}`}
+            index={index}
+            value={roleRow}
+            roleOptions={roleOptions}
+            removable={roleRows.length > 1}
+            onRemove={() => onRemove(index)}
+          />
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function RoleLinkCard({
+  index,
+  value,
+  roleOptions,
+  removable,
+  onRemove
+}: {
+  index: number;
+  value: PersonRoleDefaultValue;
+  roleOptions: RoleOption[];
+  removable: boolean;
+  onRemove: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
+  const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+  const filteredRoleOptions = roleOptions.filter((role) =>
+    formatRoleOptionLabel(role).toLocaleLowerCase("ja-JP").includes(normalizedQuery)
+  );
+
+  return (
+    <div className="rounded-2xl border border-[var(--border)] p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-[var(--foreground-strong)]">役職 {index + 1}</p>
+        {removable ? (
+          <button type="button" onClick={onRemove} className={secondaryButtonClassName}>
+            削除
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-5 grid gap-4">
+        <Field label="役職" required>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className={inputClassName}
+            placeholder="役職名で絞り込み"
+          />
+          <select
+            name={`roles.${index}.roleId`}
+            defaultValue={value.roleId?.toString() ?? ""}
+            className={inputClassName}
+          >
+            <option value="">選択してください</option>
+            {filteredRoleOptions.map((role) => (
+              <option key={role.id} value={role.id}>
+                {formatRoleOptionLabel(role)}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="説明">
+          <textarea
+            name={`roles.${index}.description`}
+            defaultValue={value.description}
+            className={`min-h-24 ${inputClassName}`}
+          />
+        </Field>
+
+        <div className="grid gap-6 xl:grid-cols-2">
+          <TimeExpressionInputs
+            prefix={`roles.${index}.fromTime`}
+            label="開始年"
+            defaultValue={value.fromTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
+          <TimeExpressionInputs
+            prefix={`roles.${index}.toTime`}
+            label="終了年"
+            defaultValue={value.toTimeExpression}
+            includePrecision={false}
+            includeDisplayLabel={false}
+            includeEndYear={false}
+          />
+        </div>
+
+        <Field label="メモ">
+          <textarea
+            name={`roles.${index}.note`}
+            defaultValue={value.note}
+            className={`min-h-24 ${inputClassName}`}
+          />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
 const inputClassName =
   "rounded-2xl border border-[var(--border)] bg-black/10 px-3 py-2.5 text-[var(--foreground)]";
+
+function createEmptyRoleValue(): PersonRoleDefaultValue {
+  return {
+    roleId: undefined,
+    description: "",
+    note: ""
+  };
+}
+
+function formatRoleOptionLabel(role: RoleOption) {
+  return role.polityName ? `${role.title}（${role.polityName}）` : role.title;
+}

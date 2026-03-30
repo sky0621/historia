@@ -61,12 +61,5 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
 }
 
 export function deleteRoleAssignmentsByPersonId(personId: number) {
-  const links = db.select().from(personRoleLinks).where(eq(personRoleLinks.personId, personId)).all();
-  const roleIds = links.map((link) => link.roleId);
-  if (roleIds.length === 0) {
-    return;
-  }
-
   db.delete(personRoleLinks).where(eq(personRoleLinks.personId, personId)).run();
-  db.delete(role).where(inArray(role.id, roleIds)).run();
 }

@@ -13,6 +13,7 @@ import {
   listPersonDetailed,
   replacePersonRegionLinks,
   replacePersonReligionLinks,
+  replacePersonRoleLinks,
   replacePersonSectLinks,
   replaceRoleAssignments,
   updatePerson
@@ -20,9 +21,11 @@ import {
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
 import { deleteRoleAssignmentsByPersonId, getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
+import { listRoles } from "@/server/repositories/roles";
 import { listSects } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
+import { getPolityOptions } from "@/server/services/polities";
 import { getCitationListForTarget } from "@/server/services/sources";
 import {
   compareStoredBoundaryRange,
@@ -38,10 +41,18 @@ export function getPersonOptions() {
 }
 
 export function getPersonFormOptions() {
+  const roles = listRoles();
+  const polities = new Map(getPolityOptions().map((item) => [item.id, item]));
+
   return {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
-    sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId }))
+    sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
+    roles: roles.map((item) => ({
+      id: item.id,
+      title: item.title,
+      polityName: item.polityId ? (polities.get(item.polityId)?.name ?? null) : null
+    }))
   };
 }
 
@@ -117,6 +128,7 @@ export function getPersonDetailView(id: number) {
     roles: roles.map((role) => ({
       ...role,
       timeLabel: formatStoredTime("time", role),
+      roleLabel: formatRoleLabel(role.title, role.polityId ? options.roles.find((item) => item.id === role.id)?.polityName ?? null : null),
       defaultFromTimeExpression: extractRoleBoundaryTime("from", role),
       defaultToTimeExpression: extractRoleBoundaryTime("to", role)
     })),
@@ -144,10 +156,8 @@ export function createPersonFromInput(input: PersonInput) {
     replacePersonRegionLinks(personId, input.regionIds);
     replacePersonReligionLinks(personId, input.religionIds);
     replacePersonSectLinks(personId, input.sectIds);
-    replaceRoleAssignments(personId, input.roles.map((role) => ({
-      personId,
-      title: role.title,
-      reading: nullable(role.reading),
+    replacePersonRoleLinks(personId, input.roles.map((role) => ({
+      roleId: role.roleId,
       description: nullable(role.description),
       note: nullable(role.note),
       ...toStoredRoleTime("from", role.fromTimeExpression),
@@ -181,6 +191,13 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
     replacePersonRegionLinks(id, input.regionIds);
     replacePersonReligionLinks(id, input.religionIds);
     replacePersonSectLinks(id, input.sectIds);
+    replacePersonRoleLinks(id, input.roles.map((role) => ({
+      roleId: role.roleId,
+      description: nullable(role.description),
+      note: nullable(role.note),
+      ...toStoredRoleTime("from", role.fromTimeExpression),
+      ...toStoredRoleTime("to", role.toTimeExpression)
+    })));
 
     recordChangeHistory({
       targetType: "person",
@@ -357,6 +374,10 @@ function extractPersonTimeExpression(prefix: "birth" | "death", value: Record<st
 function formatStoredTime(prefix: string, value: Record<string, unknown>) {
   const extracted = extractTimeExpression(prefix, value);
   return extracted ? formatTimeExpression(extracted) : "年未詳";
+}
+
+function formatRoleLabel(title: string, polityName: string | null) {
+  return polityName ? `${title}（${polityName}）` : title;
 }
 
 function formatStoredPersonTime(prefix: "birth" | "death", value: Record<string, unknown>) {

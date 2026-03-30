@@ -13,6 +13,14 @@ export const roleAssignmentSchema = z.object({
   toTimeExpression: timeExpressionSchema.optional()
 });
 
+export const personRoleLinkSchema = z.object({
+  roleId: z.number().int().positive("役職は必須です"),
+  description: z.string().trim().optional(),
+  note: z.string().trim().optional(),
+  fromTimeExpression: timeExpressionSchema.optional(),
+  toTimeExpression: timeExpressionSchema.optional()
+});
+
 export const personSchema = z.object({
   name: z.string().trim().min(1, "氏名は必須です"),
   description: z.string().trim().optional(),
@@ -25,11 +33,12 @@ export const personSchema = z.object({
   religionIds: idsSchema,
   sectIds: idsSchema,
   periodIds: idsSchema,
-  roles: z.array(roleAssignmentSchema).default([])
+  roles: z.array(personRoleLinkSchema).default([])
 });
 
 export type PersonInput = z.infer<typeof personSchema>;
 export type RoleAssignmentInput = z.infer<typeof roleAssignmentSchema>;
+export type PersonRoleLinkInput = z.infer<typeof personRoleLinkSchema>;
 
 export function parsePersonFormData(formData: FormData): PersonInput {
   return personSchema.parse({
@@ -53,20 +62,18 @@ function parseRoles(formData: FormData) {
   const roles = [];
 
   for (let index = 0; index < count; index += 1) {
-    const title = asString(formData.get(`roles.${index}.title`)).trim();
-    const reading = asString(formData.get(`roles.${index}.reading`)).trim();
+    const roleId = Number(formData.get(`roles.${index}.roleId`) ?? "");
     const description = asString(formData.get(`roles.${index}.description`)).trim();
     const note = asString(formData.get(`roles.${index}.note`)).trim();
     const fromTimeExpression = parseTimeExpressionFormData(formData, `roles.${index}.fromTime`);
     const toTimeExpression = parseTimeExpressionFormData(formData, `roles.${index}.toTime`);
 
-    if (!title) {
+    if (!Number.isFinite(roleId) || roleId <= 0) {
       continue;
     }
 
     roles.push({
-      title,
-      reading,
+      roleId,
       description,
       note,
       fromTimeExpression,

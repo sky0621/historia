@@ -1,4 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { persons, role } from "@/db/schema/masters";
 
 export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
   dynastyId: integer("dynasty_id").notNull(),
@@ -6,8 +7,8 @@ export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
 });
 
 export const personRoleLinks = sqliteTable("person_role_links", {
-  personId: integer("person_id").notNull(),
-  roleId: integer("role_id").notNull(),
+  personId: integer("person_id").notNull().references(() => persons.id, { onDelete: "cascade" }),
+  roleId: integer("role_id").notNull().references(() => role.id),
   description: text("description"),
   note: text("note"),
   fromCalendarEra: text("from_calendar_era"),

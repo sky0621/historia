@@ -172,7 +172,7 @@ CREATE INDEX `idx_person_sect_links_sect_id` ON `person_sect_links` (`sect_id`);
 
 -- 人物と役職の関連
 CREATE TABLE `person_role_links` (
-  `person_id` integer NOT NULL REFERENCES `persons`(`id`), -- 人物ID
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE, -- 人物ID
   `role_id` integer NOT NULL REFERENCES `role`(`id`), -- 役職記録ID
   `description` text, -- 人物ごとの役職説明
   `note` text, -- 人物ごとの役職メモ

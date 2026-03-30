@@ -105,7 +105,7 @@ normalize_legacy_person_role_links() {
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
 CREATE TABLE `person_role_links` (
-  `person_id` integer NOT NULL REFERENCES `persons`(`id`),
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE,
   `role_id` integer NOT NULL REFERENCES `role`(`id`),
   `description` text,
   `note` text,
@@ -120,6 +120,61 @@ INSERT INTO `person_role_links` (`person_id`, `role_id`)
 SELECT `person_id`, `role_id`
 FROM `role_person_links`;
 DROP TABLE `role_person_links`;
+CREATE INDEX `idx_person_role_links_person_id` ON `person_role_links` (`person_id`);
+CREATE INDEX `idx_person_role_links_role_id` ON `person_role_links` (`role_id`);
+COMMIT;
+PRAGMA foreign_keys = ON;
+SQL
+  fi
+
+  CURRENT_SQL="$(sqlite3 "$DATABASE_URL" "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'person_role_links';")"
+  HAS_PERSON_DELETE_CASCADE="0"
+  if printf '%s' "$CURRENT_SQL" | grep -Eq 'person_id[^,]*REFERENCES[[:space:]]+`?persons`?\(`?id`?\)[[:space:]]+ON[[:space:]]+DELETE[[:space:]]+CASCADE'; then
+    HAS_PERSON_DELETE_CASCADE="1"
+  fi
+
+  if [ "$HAS_PERSON_DELETE_CASCADE" = "0" ] && [ -n "$CURRENT_SQL" ]; then
+    sqlite3 "$DATABASE_URL" <<'SQL'
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+ALTER TABLE `person_role_links` RENAME TO `__legacy_person_role_links`;
+CREATE TABLE `person_role_links` (
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE,
+  `role_id` integer NOT NULL REFERENCES `role`(`id`),
+  `description` text,
+  `note` text,
+  `from_calendar_era` text REFERENCES `era`(`code`),
+  `from_year` integer,
+  `from_is_approximate` integer DEFAULT false,
+  `to_calendar_era` text REFERENCES `era`(`code`),
+  `to_year` integer,
+  `to_is_approximate` integer DEFAULT false
+);
+INSERT INTO `person_role_links` (
+  `person_id`,
+  `role_id`,
+  `description`,
+  `note`,
+  `from_calendar_era`,
+  `from_year`,
+  `from_is_approximate`,
+  `to_calendar_era`,
+  `to_year`,
+  `to_is_approximate`
+)
+SELECT
+  `person_id`,
+  `role_id`,
+  `description`,
+  `note`,
+  `from_calendar_era`,
+  `from_year`,
+  COALESCE(`from_is_approximate`, false),
+  `to_calendar_era`,
+  `to_year`,
+  COALESCE(`to_is_approximate`, false)
+FROM `__legacy_person_role_links`;
+DROP TABLE `__legacy_person_role_links`;
 CREATE INDEX `idx_person_role_links_person_id` ON `person_role_links` (`person_id`);
 CREATE INDEX `idx_person_role_links_role_id` ON `person_role_links` (`role_id`);
 COMMIT;
