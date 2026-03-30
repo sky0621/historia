@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  dynasties,
+  dynastyPolityLinks,
   dynastyRegionLinks,
   eventRegionLinks,
   historicalPeriodCategoryLinks,
@@ -20,6 +22,7 @@ import {
 export const csvSyncImportTargets = [
   "regions",
   "polities",
+  "dynasties",
   "period-categories",
   "historical-periods",
   "historical-period-category-links",
@@ -63,6 +66,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importSectsCsv(rawCsv);
     case "polities":
       return importPolitiesCsv(rawCsv);
+    case "dynasties":
+      return importDynastiesCsv(rawCsv);
   }
 }
 
@@ -262,6 +267,78 @@ function importPolitiesCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "polities" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
+    };
+  });
+}
+
+function importDynastiesCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, [
+    "id",
+    "name",
+    "reading",
+    "description",
+    "note",
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
+  ]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(dynasties).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const csvIds = new Set<number>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+
+      const values = {
+        name: parseRequiredString(cells.name, "name", row.rowNumber),
+        reading: nullable(cells.reading),
+        description: nullable(cells.description),
+        note: nullable(cells.note),
+        fromCalendarEra: parseOptionalEra(cells.from_calendar_era, row.rowNumber, "from_calendar_era"),
+        fromYear: parseOptionalInteger(cells.from_year, row.rowNumber, "from_year"),
+        fromIsApproximate: parseBooleanFlag(cells.from_is_approximate),
+        toCalendarEra: parseOptionalEra(cells.to_calendar_era, row.rowNumber, "to_calendar_era"),
+        toYear: parseOptionalInteger(cells.to_year, row.rowNumber, "to_year"),
+        toIsApproximate: parseBooleanFlag(cells.to_is_approximate)
+      };
+
+      if (id == null) {
+        tx.insert(dynasties).values(values).run();
+        createdCount += 1;
+        continue;
+      }
+
+      assertUniqueCsvId(csvIds, id, row.rowNumber);
+      if (!existingIds.has(id)) {
+        throw new Error(`row ${row.rowNumber}: id=${id} の王朝は存在しません`);
+      }
+
+      tx.update(dynasties).set(values).where(eq(dynasties.id, id)).run();
+      updatedCount += 1;
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.dynastyId, id)).run();
+      tx.delete(dynastyRegionLinks).where(eq(dynastyRegionLinks.dynastyId, id)).run();
+      tx.delete(dynasties).where(eq(dynasties.id, id)).run();
+    }
+
+    return {
+      targetType: "dynasties" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,

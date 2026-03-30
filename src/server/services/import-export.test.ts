@@ -29,6 +29,9 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM sects").run();
+  sqlite.prepare("DELETE FROM dynasty_region_links").run();
+  sqlite.prepare("DELETE FROM dynasty_polity_links").run();
+  sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
@@ -63,6 +66,24 @@ describe("import export service", () => {
         "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
         "2,ローマ帝国,,,,BCE,27,0,CE,476,0",
         "1,日本,にほん,国家の説明,注記,BCE,660,1,CE,1947,0"
+      ].join("\n")
+    );
+  });
+
+  it("exports dynasties csv with table columns only", () => {
+    sqlite
+      .prepare(
+        "INSERT INTO dynasties (id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate) VALUES (1, '漢', 'かん', '王朝の説明', '注記', 'BCE', 202, 0, 'CE', 220, 0), (2, '唐', NULL, NULL, NULL, 'CE', 618, 0, 'CE', 907, 1)"
+      )
+      .run();
+
+    const csv = importExportModule.buildDynastiesCsv();
+
+    expect(csv).toBe(
+      [
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "2,唐,,,,CE,618,0,CE,907,1",
+        "1,漢,かん,王朝の説明,注記,BCE,202,0,CE,220,0"
       ].join("\n")
     );
   });

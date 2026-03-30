@@ -29,6 +29,7 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM event_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
+  sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM historical_period_region_links").run();
@@ -85,6 +86,12 @@ beforeEach(() => {
     )
     .run();
   sqlite.prepare("INSERT INTO polity_region_links (polity_id, region_id) VALUES (1, 1), (2, 2)").run();
+  sqlite
+    .prepare(
+      "INSERT INTO dynasties (id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate) VALUES (1, '漢', 'かん', 'old dynasty', 'old note', 'BCE', 202, 0), (2, '唐', NULL, 'old tang', NULL, 'CE', 618, 0)"
+    )
+    .run();
+  sqlite.prepare("INSERT INTO dynasty_region_links (dynasty_id, region_id) VALUES (1, 1), (2, 2)").run();
 });
 
 describe("csv sync import service", () => {
@@ -253,6 +260,92 @@ describe("csv sync import service", () => {
     expect(regionLinkRows).toEqual([
       { polity_id: 1, region_id: 1 },
       { polity_id: 2, region_id: 2 }
+    ]);
+  });
+
+  it("syncs dynasties using 王朝.csv format without changing region links", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "dynasties",
+      [
+        "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,漢,かん,updated dynasty,,BCE,202,0,CE,220,0",
+        "2,唐,,updated tang,,CE,618,0,CE,907,1",
+        ",宋,,new dynasty,,CE,960,0,CE,1279,0"
+      ].join("\n")
+    );
+
+    const dynastyRows = sqlite
+      .prepare(
+        "SELECT id, name, reading, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate FROM dynasties ORDER BY id"
+      )
+      .all() as Array<{
+      id: number;
+      name: string;
+      reading: string | null;
+      description: string | null;
+      note: string | null;
+      from_calendar_era: string | null;
+      from_year: number | null;
+      from_is_approximate: number;
+      to_calendar_era: string | null;
+      to_year: number | null;
+      to_is_approximate: number;
+    }>;
+    const regionLinkRows = sqlite
+      .prepare("SELECT dynasty_id, region_id FROM dynasty_region_links ORDER BY dynasty_id, region_id")
+      .all() as Array<{ dynasty_id: number; region_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "dynasties",
+      totalRows: 3,
+      createdCount: 1,
+      updatedCount: 2,
+      deletedCount: 0
+    });
+    expect(dynastyRows).toEqual([
+      {
+        id: 1,
+        name: "漢",
+        reading: "かん",
+        description: "updated dynasty",
+        note: null,
+        from_calendar_era: "BCE",
+        from_year: 202,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 220,
+        to_is_approximate: 0
+      },
+      {
+        id: 2,
+        name: "唐",
+        reading: null,
+        description: "updated tang",
+        note: null,
+        from_calendar_era: "CE",
+        from_year: 618,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 907,
+        to_is_approximate: 1
+      },
+      {
+        id: 3,
+        name: "宋",
+        reading: null,
+        description: "new dynasty",
+        note: null,
+        from_calendar_era: "CE",
+        from_year: 960,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 1279,
+        to_is_approximate: 0
+      }
+    ]);
+    expect(regionLinkRows).toEqual([
+      { dynasty_id: 1, region_id: 1 },
+      { dynasty_id: 2, region_id: 2 }
     ]);
   });
 

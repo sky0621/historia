@@ -59,6 +59,7 @@ export async function importCsvAction(_previousState: CsvImportState, formData: 
 const revalidationPaths: Record<CsvSyncImportTarget, string[]> = {
   regions: ["/regions", "/manage/data"],
   polities: ["/polities", "/manage/data"],
+  dynasties: ["/dynasties", "/manage/data"],
   "period-categories": ["/period-categories", "/periods", "/manage/data"],
   "historical-periods": ["/periods", "/period-categories", "/manage/data"],
   "historical-period-category-links": ["/periods", "/period-categories", "/manage/data"],

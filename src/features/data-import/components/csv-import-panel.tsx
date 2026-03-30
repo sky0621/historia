@@ -16,6 +16,7 @@ const initialState: CsvImportState = {};
 const targetOptions = [
   { value: "regions", label: "地域" },
   { value: "polities", label: "国家" },
+  { value: "dynasties", label: "王朝" },
   { value: "period-categories", label: "時代区分カテゴリ" },
   { value: "historical-periods", label: "時代区分" },
   { value: "historical-period-category-links", label: "時代区分カテゴリ紐付け" },
@@ -75,6 +76,7 @@ export function CsvImportPanel() {
 const labelByTarget = {
   regions: "地域",
   polities: "国家",
+  dynasties: "王朝",
   "period-categories": "時代区分カテゴリ",
   "historical-periods": "時代区分",
   "historical-period-category-links": "時代区分カテゴリ紐付け",

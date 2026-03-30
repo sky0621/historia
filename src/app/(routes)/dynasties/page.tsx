@@ -26,9 +26,14 @@ export default async function DynastiesPage({ searchParams }: DynastiesPageProps
             王朝と、その国家横断的な関係を管理します。
           </p>
         </div>
-        <Link href="/dynasties/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
-          新規王朝
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/api/export/dynasties.csv" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium">
+            CSV エクスポート
+          </Link>
+          <Link href="/dynasties/new" className="inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white">
+            新規王朝
+          </Link>
+        </div>
       </div>
 
       <form className="grid gap-4 rounded-[32px] border border-[var(--border)] bg-white/80 p-6 shadow-sm md:grid-cols-2 xl:grid-cols-4">

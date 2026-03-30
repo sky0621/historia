@@ -128,6 +128,41 @@ export function buildPolitiesCsv() {
   ]);
 }
 
+export function buildDynastiesCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         d.id,
+         d.name,
+         d.reading,
+         d.description,
+         d.note,
+         d.from_calendar_era,
+         d.from_year,
+         d.from_is_approximate,
+         d.to_calendar_era,
+         d.to_year,
+         d.to_is_approximate
+       FROM dynasties d
+       ORDER BY d.name`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, [
+    "id",
+    "name",
+    "reading",
+    "description",
+    "note",
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
+  ]);
+}
+
 export function buildRegionsCsv() {
   const rows = sqlite
     .prepare(
