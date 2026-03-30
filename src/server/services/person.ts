@@ -3,7 +3,6 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import { fromTimeExpressionRecord } from "@/lib/time-expression/normalize";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { PersonInput, RoleAssignmentInput } from "@/features/person/schema";
-import { listDynasties } from "@/server/repositories/dynasties";
 import {
   createPerson,
   deletePerson,
@@ -18,14 +17,12 @@ import {
   replaceRoleAssignments,
   updatePerson
 } from "@/server/repositories/person-detail";
-import { listPolities } from "@/server/repositories/polities";
 import { listRegions } from "@/server/repositories/regions";
 import { listReligions } from "@/server/repositories/religions";
-import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
+import { deleteRoleAssignmentsByPersonId, getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listSects } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
-import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getCitationListForTarget } from "@/server/services/sources";
 import {
   compareStoredBoundaryRange,
@@ -41,24 +38,10 @@ export function getPersonOptions() {
 }
 
 export function getPersonFormOptions() {
-  const dynastyOptions = listDynasties()
-    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"))
-    .map((item) => ({
-      id: item.id,
-      name: item.name,
-      timeLabel: formatStoredBoundaryRangeForOption(item.fromCalendarEra, item.fromYear, item.toCalendarEra, item.toYear)
-    }));
-
   return {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
-    sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
-    polities: sortPolitiesByStartYear(listPolities()).map((item) => ({
-      id: item.id,
-      name: item.name,
-      timeLabel: formatStoredBoundaryRangeForOption(item.fromCalendarEra, item.fromYear, item.toCalendarEra, item.toYear)
-    })),
-    dynasties: dynastyOptions
+    sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId }))
   };
 }
 
@@ -67,8 +50,6 @@ type PersonListFilters = {
   regionId?: number;
   religionId?: number;
   sectId?: number;
-  polityId?: number;
-  dynastyId?: number;
   hasRoles?: boolean;
 };
 
@@ -81,12 +62,8 @@ export function getPersonListView(filters: PersonListFilters = {}) {
   const religionLinks = getPersonReligionLinks(person.map((person) => person.id));
   const sectLinks = getPersonSectLinks(person.map((person) => person.id));
   const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
-  const polities = listPolities();
-  const dynasties = listDynasties();
   const religions = listReligions();
   const sects = listSects();
-  const polityById = new Map(polities.map((polity) => [polity.id, polity.name]));
-  const dynastyById = new Map(dynasties.map((dynasty) => [dynasty.id, dynasty.name]));
   const religionById = new Map(religions.map((religion) => [religion.id, religion.name]));
   const sectById = new Map(sects.map((sect) => [sect.id, sect.name]));
 
@@ -111,13 +88,7 @@ export function getPersonListView(filters: PersonListFilters = {}) {
         .map((link) => sectById.get(link.sectId))
         .filter((name): name is string => Boolean(name)),
       sectIds: sectLinks.filter((link) => link.personId === person.id).map((link) => link.sectId),
-    roles: roles.filter((role) => role.personId === person.id).map((role) => ({
-      ...role,
-      affiliationName:
-          (role.dynastyId ? dynastyById.get(role.dynastyId) : undefined) ??
-          (role.polityId ? polityById.get(role.polityId) : undefined) ??
-          ""
-      }))
+      roles: roles.filter((role) => role.personId === person.id)
     }))
     .filter((person) =>
       matchesPersonFilters(person, normalizedQuery, filters)
@@ -145,8 +116,6 @@ export function getPersonDetailView(id: number) {
     relatedEvents: getRelatedEvents({ personId: id }),
     roles: roles.map((role) => ({
       ...role,
-      polityName: options.polities.find((item) => item.id === role.polityId)?.name ?? null,
-      dynastyName: options.dynasties.find((item) => item.id === role.dynastyId)?.name ?? null,
       timeLabel: formatStoredTime("time", role),
       defaultFromTimeExpression: extractRoleBoundaryTime("from", role),
       defaultToTimeExpression: extractRoleBoundaryTime("to", role)
@@ -178,10 +147,9 @@ export function createPersonFromInput(input: PersonInput) {
     replaceRoleAssignments(personId, input.roles.map((role) => ({
       personId,
       title: role.title,
-      polityId: role.polityId ?? null,
-      dynastyId: role.dynastyId ?? null,
+      reading: nullable(role.reading),
+      description: nullable(role.description),
       note: nullable(role.note),
-      isIncumbent: role.isIncumbent,
       ...toStoredRoleTime("from", role.fromTimeExpression),
       ...toStoredRoleTime("to", role.toTimeExpression)
     })));
@@ -229,7 +197,7 @@ export function removePerson(id: number) {
     replacePersonRegionLinks(id, []);
     replacePersonReligionLinks(id, []);
     replacePersonSectLinks(id, []);
-    replaceRoleAssignments(id, []);
+    deleteRoleAssignmentsByPersonId(id);
     deletePerson(id);
     recordChangeHistory({
       targetType: "person",
@@ -256,10 +224,9 @@ export function appendRoleAssignmentsToPerson(id: number, roles: RoleAssignmentI
       ...roles.map((role) => ({
         personId: id,
         title: role.title,
-        polityId: role.polityId ?? null,
-        dynastyId: role.dynastyId ?? null,
+        reading: nullable(role.reading),
+        description: nullable(role.description),
         note: nullable(role.note),
-        isIncumbent: role.isIncumbent,
         ...toStoredRoleTime("from", role.fromTimeExpression),
         ...toStoredRoleTime("to", role.toTimeExpression)
       }))
@@ -286,10 +253,9 @@ export function replaceRoleAssignmentsOnPerson(id: number, roles: RoleAssignment
     roles.map((role) => ({
       personId: id,
       title: role.title,
-      polityId: role.polityId ?? null,
-      dynastyId: role.dynastyId ?? null,
+      reading: nullable(role.reading),
+      description: nullable(role.description),
       note: nullable(role.note),
-      isIncumbent: role.isIncumbent,
       ...toStoredRoleTime("from", role.fromTimeExpression),
       ...toStoredRoleTime("to", role.toTimeExpression)
     }))
@@ -437,7 +403,7 @@ function matchesPersonFilters(
     regionIds: number[];
     religionIds: number[];
     sectIds: number[];
-    roles: Array<{ title: string; affiliationName: string; polityId: number | null; dynastyId: number | null }>;
+    roles: Array<{ title: string }>;
     id: number;
   },
   query: string,
@@ -453,7 +419,7 @@ function matchesPersonFilters(
         person.regionNames.join(", "),
         person.religionNames.join(", "),
         person.sectNames.join(", "),
-        person.roles.map((role) => `${role.title} ${role.affiliationName}`.trim()).join(", ")
+        person.roles.map((role) => role.title).join(", ")
       ],
       query
     )
@@ -474,14 +440,6 @@ function matchesPersonFilters(
   }
 
   if (filters.sectId && !person.sectIds.includes(filters.sectId)) {
-    return false;
-  }
-
-  if (filters.polityId && !person.roles.some((role) => role.polityId === filters.polityId)) {
-    return false;
-  }
-
-  if (filters.dynastyId && !person.roles.some((role) => role.dynastyId === filters.dynastyId)) {
     return false;
   }
 

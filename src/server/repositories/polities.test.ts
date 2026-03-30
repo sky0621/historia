@@ -58,7 +58,7 @@ beforeEach(() => {
     .run();
   sqlite
     .prepare(
-      "INSERT INTO role (id, title, polity_id) VALUES (1, '皇帝', 1)"
+      "INSERT INTO role (id, title) VALUES (1, '皇帝')"
     )
     .run();
   sqlite
@@ -94,14 +94,14 @@ describe("polities repository", () => {
     const polityRows = sqlite.prepare("SELECT id FROM polities ORDER BY id").all() as Array<{ id: number }>;
     const dynastyPolityRows = sqlite.prepare("SELECT dynasty_id, polity_id FROM dynasty_polity_links").all();
     const dynastySuccessionRows = sqlite.prepare("SELECT id FROM dynasty_successions").all();
-    const roleRows = sqlite.prepare("SELECT id, polity_id FROM role ORDER BY id").all();
+    const roleRows = sqlite.prepare("SELECT id FROM role ORDER BY id").all();
     const periodPolityRows = sqlite.prepare("SELECT period_id, polity_id FROM historical_period_polity_links").all();
     const polityTransitionRows = sqlite.prepare("SELECT id FROM polity_transitions").all();
 
     expect(polityRows).toEqual([{ id: 2 }]);
     expect(dynastyPolityRows).toEqual([]);
     expect(dynastySuccessionRows).toEqual([]);
-    expect(roleRows).toEqual([{ id: 1, polity_id: null }]);
+    expect(roleRows).toEqual([{ id: 1 }]);
     expect(periodPolityRows).toEqual([]);
     expect(polityTransitionRows).toEqual([]);
   });

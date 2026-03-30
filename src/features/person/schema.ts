@@ -6,10 +6,9 @@ const idsSchema = z.array(z.number().int().positive()).default([]);
 
 export const roleAssignmentSchema = z.object({
   title: z.string().trim().min(1, "役職名は必須です"),
-  polityId: z.number().int().positive().nullable().optional(),
-  dynastyId: z.number().int().positive().nullable().optional(),
+  reading: z.string().trim().optional(),
+  description: z.string().trim().optional(),
   note: z.string().trim().optional(),
-  isIncumbent: z.boolean().default(false),
   fromTimeExpression: timeExpressionSchema.optional(),
   toTimeExpression: timeExpressionSchema.optional()
 });
@@ -55,10 +54,9 @@ function parseRoles(formData: FormData) {
 
   for (let index = 0; index < count; index += 1) {
     const title = asString(formData.get(`roles.${index}.title`)).trim();
-    const polityId = normalizeId(formData.get(`roles.${index}.polityId`));
-    const dynastyId = normalizeId(formData.get(`roles.${index}.dynastyId`));
+    const reading = asString(formData.get(`roles.${index}.reading`)).trim();
+    const description = asString(formData.get(`roles.${index}.description`)).trim();
     const note = asString(formData.get(`roles.${index}.note`)).trim();
-    const isIncumbent = formData.get(`roles.${index}.isIncumbent`) === "on";
     const fromTimeExpression = parseTimeExpressionFormData(formData, `roles.${index}.fromTime`);
     const toTimeExpression = parseTimeExpressionFormData(formData, `roles.${index}.toTime`);
 
@@ -68,10 +66,9 @@ function parseRoles(formData: FormData) {
 
     roles.push({
       title,
-      polityId,
-      dynastyId,
+      reading,
+      description,
       note,
-      isIncumbent,
       fromTimeExpression,
       toTimeExpression
     });
@@ -90,15 +87,6 @@ function normalizeAliases(value: FormDataEntryValue | null) {
 
 function normalizeIds(values: FormDataEntryValue[]) {
   return values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
-}
-
-function normalizeId(value: FormDataEntryValue | null) {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    return null;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function asString(value: FormDataEntryValue | null) {

@@ -3,8 +3,6 @@ import { formatTimeExpression } from "@/lib/time-expression/format";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { DynastyInput, PolityInput } from "@/features/polities/schema";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
-import { listPersonDetailed } from "@/server/repositories/person-detail";
-import { getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listRegions } from "@/server/repositories/regions";
 import {
   createPolity,
@@ -161,19 +159,12 @@ export function getPolityDetailView(id: number) {
     }));
   const regions = listRegions();
   const linkedRegionIds = getPolityRegionIds([polity.id]).map((link) => link.regionId);
-  const person = listPersonDetailed();
-  const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
 
   return {
     polity,
     dynasties,
     relatedPeriods,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
-    relatedPerson: buildRelatedPerson(
-      person,
-      roles.filter((role) => role.polityId === id),
-      "polity"
-    ),
     relatedEvents: getRelatedEvents({ polityId: id }),
     polityTransitions: getPolityTransitionView(id),
     dynastySuccessions: getDynastySuccessionViewForPolity(id),
@@ -194,18 +185,11 @@ export function getDynastyDetailView(id: number) {
   const polities = listPolities().filter((polity) => dynasty.polityIds.includes(polity.id));
   const regions = listRegions();
   const linkedRegionIds = getDynastyRegionIds([dynasty.id]).map((link) => link.regionId);
-  const person = listPersonDetailed();
-  const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
 
   return {
     dynasty,
     polities,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
-    relatedPerson: buildRelatedPerson(
-      person,
-      roles.filter((role) => role.dynastyId === id),
-      "dynasty"
-    ),
     relatedEvents: getRelatedEvents({ dynastyId: id }),
     dynastySuccessions: getDynastySuccessionViewForDynasty(id),
     timeLabel: formatStoredTime("time", dynasty),
@@ -459,41 +443,6 @@ function matchesQuery(values: Array<string | null | undefined>, query: string) {
   }
 
   return values.some((value) => value?.toLocaleLowerCase("ja-JP").includes(query));
-}
-
-function buildRelatedPerson(
-  person: ReturnType<typeof listPersonDetailed>,
-  roles: ReturnType<typeof getRoleAssignmentsByPersonIds>,
-  scope: "polity" | "dynasty"
-) {
-  const personById = new Map(person.map((person) => [person.id, person]));
-  const grouped = new Map<number, Array<typeof roles[number]>>();
-
-  for (const role of roles) {
-    const current = grouped.get(role.personId) ?? [];
-    current.push(role);
-    grouped.set(role.personId, current);
-  }
-
-  return [...grouped.entries()]
-    .map(([personId, personRoles]) => {
-      const person = personById.get(personId);
-      if (!person) {
-        return null;
-      }
-
-      return {
-        id: person.id,
-        name: person.name,
-        roleLabels: personRoles.map((role) => `${role.title} (${formatStoredTime("time", role)})`),
-        primaryScopeCount:
-          scope === "polity"
-            ? personRoles.filter((role) => role.polityId != null).length
-            : personRoles.filter((role) => role.dynastyId != null).length
-      };
-    })
-    .filter((person): person is NonNullable<typeof person> => Boolean(person))
-    .sort((left, right) => right.primaryScopeCount - left.primaryScopeCount || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 function buildPolityHistorySnapshot(id: number) {

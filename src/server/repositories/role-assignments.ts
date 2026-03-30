@@ -8,8 +8,6 @@ import {
 export type RoleAssignmentInsert = typeof role.$inferInsert;
 export type RoleAssignmentRecord = typeof role.$inferSelect & {
   personId: number;
-  polityId: number | null;
-  dynastyId: number | null;
 };
 
 export function getRoleAssignmentsByPersonIds(personIds: number[]) {
@@ -40,9 +38,7 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
 
       return {
         ...item,
-        personId,
-        polityId: item.polityId ?? null,
-        dynastyId: item.dynastyId ?? null
+        personId
       };
     })
     .filter((item): item is RoleAssignmentRecord => Boolean(item));

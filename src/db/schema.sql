@@ -143,15 +143,7 @@ CREATE TABLE `role` (
   `reading` text, -- 読み方
   `description` text, -- 役職記録の説明
   `note` text, -- 編集メモ・注釈
-  `is_incumbent` integer DEFAULT false, -- 現職かどうか
-  `polity_id` integer REFERENCES `polities`(`id`), -- 関連国家ID
-  `dynasty_id` integer REFERENCES `dynasties`(`id`), -- 関連王朝ID
-  `from_calendar_era` text REFERENCES `era`(`code`), -- 就任年の紀元区分コード
-  `from_year` integer, -- 就任年
-  `from_is_approximate` integer DEFAULT false, -- 就任年がおおよそか
-  `to_calendar_era` text REFERENCES `era`(`code`), -- 離任年の紀元区分コード
-  `to_year` integer, -- 離任年
-  `to_is_approximate` integer DEFAULT false -- 離任年がおおよそか
+  `polity_id` integer REFERENCES `polities`(`id`) -- 国家ID
 );
 
 -- 人物と地域の関連

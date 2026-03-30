@@ -101,22 +101,43 @@ normalize_legacy_role_links() {
     return
   fi
 
-  HAS_POLITY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'polity_id';")"
-  HAS_DYNASTY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'dynasty_id';")"
-
-  if [ "$HAS_POLITY_COLUMN" = "0" ]; then
-    sqlite3 "$DATABASE_URL" "ALTER TABLE role ADD COLUMN polity_id integer REFERENCES polities(id);"
-  fi
-
-  if [ "$HAS_DYNASTY_COLUMN" = "0" ]; then
-    sqlite3 "$DATABASE_URL" "ALTER TABLE role ADD COLUMN dynasty_id integer REFERENCES dynasties(id);"
-  fi
-
   HAS_ROLE_POLITY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_polity_links';")"
   HAS_ROLE_DYNASTY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_dynasty_links';")"
+  HAS_POLITY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'polity_id';")"
+  HAS_DYNASTY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'dynasty_id';")"
+  HAS_IS_INCUMBENT_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'is_incumbent';")"
 
-  if [ "$HAS_ROLE_POLITY_LINKS" = "1" ]; then
-    sqlite3 "$DATABASE_URL" <<'SQL'
+  if [ "$HAS_ROLE_POLITY_LINKS" = "1" ] || [ "$HAS_ROLE_DYNASTY_LINKS" = "1" ] || [ "$HAS_DYNASTY_COLUMN" = "1" ] || [ "$HAS_IS_INCUMBENT_COLUMN" = "1" ]; then
+    if [ "$HAS_POLITY_COLUMN" = "1" ]; then
+      if [ "$HAS_ROLE_POLITY_LINKS" = "1" ]; then
+        sqlite3 "$DATABASE_URL" <<'SQL'
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+ALTER TABLE `role` RENAME TO `__legacy_role`;
+CREATE TABLE `role` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `title` text NOT NULL,
+  `reading` text,
+  `description` text,
+  `note` text,
+  `polity_id` integer REFERENCES `polities`(`id`)
+);
+INSERT INTO `role` (
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`,
+  `polity_id`
+)
+SELECT
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`,
+  `polity_id`
+FROM `__legacy_role`;
 UPDATE `role`
 SET `polity_id` = (
   SELECT `polity_id`
@@ -125,22 +146,125 @@ SET `polity_id` = (
   LIMIT 1
 )
 WHERE `polity_id` IS NULL;
-DROP TABLE `role_polity_links`;
+DROP TABLE `__legacy_role`;
+DROP TABLE IF EXISTS `role_polity_links`;
+DROP TABLE IF EXISTS `role_dynasty_links`;
+COMMIT;
+PRAGMA foreign_keys = ON;
 SQL
-  fi
-
-  if [ "$HAS_ROLE_DYNASTY_LINKS" = "1" ]; then
-    sqlite3 "$DATABASE_URL" <<'SQL'
+      else
+        sqlite3 "$DATABASE_URL" <<'SQL'
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+ALTER TABLE `role` RENAME TO `__legacy_role`;
+CREATE TABLE `role` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `title` text NOT NULL,
+  `reading` text,
+  `description` text,
+  `note` text,
+  `polity_id` integer REFERENCES `polities`(`id`)
+);
+INSERT INTO `role` (
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`,
+  `polity_id`
+)
+SELECT
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`,
+  `polity_id`
+FROM `__legacy_role`;
+DROP TABLE `__legacy_role`;
+DROP TABLE IF EXISTS `role_polity_links`;
+DROP TABLE IF EXISTS `role_dynasty_links`;
+COMMIT;
+PRAGMA foreign_keys = ON;
+SQL
+      fi
+    else
+      if [ "$HAS_ROLE_POLITY_LINKS" = "1" ]; then
+        sqlite3 "$DATABASE_URL" <<'SQL'
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+ALTER TABLE `role` RENAME TO `__legacy_role`;
+CREATE TABLE `role` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `title` text NOT NULL,
+  `reading` text,
+  `description` text,
+  `note` text,
+  `polity_id` integer REFERENCES `polities`(`id`)
+);
+INSERT INTO `role` (
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`
+)
+SELECT
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`
+FROM `__legacy_role`;
 UPDATE `role`
-SET `dynasty_id` = (
-  SELECT `dynasty_id`
-  FROM `role_dynasty_links`
-  WHERE `role_dynasty_links`.`role_id` = `role`.`id`
+SET `polity_id` = (
+  SELECT `polity_id`
+  FROM `role_polity_links`
+  WHERE `role_polity_links`.`role_id` = `role`.`id`
   LIMIT 1
 )
-WHERE `dynasty_id` IS NULL;
-DROP TABLE `role_dynasty_links`;
+WHERE `polity_id` IS NULL;
+DROP TABLE `__legacy_role`;
+DROP TABLE IF EXISTS `role_polity_links`;
+DROP TABLE IF EXISTS `role_dynasty_links`;
+COMMIT;
+PRAGMA foreign_keys = ON;
 SQL
+      else
+        sqlite3 "$DATABASE_URL" <<'SQL'
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+ALTER TABLE `role` RENAME TO `__legacy_role`;
+CREATE TABLE `role` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `title` text NOT NULL,
+  `reading` text,
+  `description` text,
+  `note` text,
+  `polity_id` integer REFERENCES `polities`(`id`)
+);
+INSERT INTO `role` (
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`
+)
+SELECT
+  `id`,
+  `title`,
+  `reading`,
+  `description`,
+  `note`
+FROM `__legacy_role`;
+DROP TABLE `__legacy_role`;
+DROP TABLE IF EXISTS `role_polity_links`;
+DROP TABLE IF EXISTS `role_dynasty_links`;
+COMMIT;
+PRAGMA foreign_keys = ON;
+SQL
+      fi
+    fi
   fi
 }
 

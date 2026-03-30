@@ -14,10 +14,8 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
   const regionId = getNumericParam(params.regionId);
   const religionId = getNumericParam(params.religionId);
   const sectId = getNumericParam(params.sectId);
-  const polityId = getNumericParam(params.polityId);
-  const dynastyId = getNumericParam(params.dynastyId);
   const hasRoles = getSingleParam(params.hasRoles) === "1";
-  const person = getPersonListView({ query, regionId, religionId, sectId, polityId, dynastyId, hasRoles });
+  const person = getPersonListView({ query, regionId, religionId, sectId, hasRoles });
   const options = getPersonFormOptions();
 
   return (
@@ -68,28 +66,6 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
             {options.sects.map((sect) => (
               <option key={sect.id} value={sect.id}>
                 {sect.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">国家</span>
-          <select name="polityId" defaultValue={polityId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
-            <option value="">すべて</option>
-            {options.polities.map((polity) => (
-              <option key={polity.id} value={polity.id}>
-                {polity.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="font-medium text-[var(--muted)]">王朝</span>
-          <select name="dynastyId" defaultValue={dynastyId?.toString() ?? ""} className="w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2">
-            <option value="">すべて</option>
-            {options.dynasties.map((dynasty) => (
-              <option key={dynasty.id} value={dynasty.id}>
-                {dynasty.name}
               </option>
             ))}
           </select>
@@ -148,24 +124,9 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
                       person.roles.map((role, index) => (
                         <span key={`${person.id}-role-${role.id}`}>
                           {index > 0 ? ", " : null}
-                          {role.title}
-                          {role.dynastyId && role.affiliationName ? (
-                            <>
-                              {" "}(
-                              <Link href={`/dynasties/${role.dynastyId}`} className="underline-offset-4 hover:underline">
-                                {role.affiliationName}
-                              </Link>
-                              )
-                            </>
-                          ) : role.polityId && role.affiliationName ? (
-                            <>
-                              {" "}(
-                              <Link href={`/polities/${role.polityId}`} className="underline-offset-4 hover:underline">
-                                {role.affiliationName}
-                              </Link>
-                              )
-                            </>
-                          ) : null}
+                          <Link href={`/roles/${role.id}`} className="underline-offset-4 hover:underline">
+                            {role.title}
+                          </Link>
                         </span>
                       ))
                     )}

@@ -23,14 +23,6 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
           <h1 className="mt-2 text-3xl font-semibold">{view.dynasty.name}</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">期間: {view.timeLabel}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {view.relatedPerson.length > 0 ? (
-              <Link href={`/person?dynastyId=${view.dynasty.id}`} className="underline-offset-4 hover:underline">
-                関連人物 {view.relatedPerson.length} 件
-              </Link>
-            ) : (
-              "関連人物 0 件"
-            )}{" "}
-            /{" "}
             {view.relatedEvents.length > 0 ? (
               <Link href={`/events?dynastyId=${view.dynasty.id}`} className="underline-offset-4 hover:underline">
                 関連イベント {view.relatedEvents.length} 件
@@ -92,24 +84,6 @@ export default async function DynastyDetailPage({ params }: { params: Promise<{ 
               <dd className="mt-1 whitespace-pre-wrap">{view.dynasty.note ?? "-"}</dd>
             </div>
           </dl>
-        </div>
-      </div>
-
-      <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
-        <h2 className="text-lg font-semibold">関連人物</h2>
-        <div className="mt-4 space-y-3">
-          {view.relatedPerson.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">この王朝に紐づく役職履歴はまだありません。</p>
-          ) : (
-            view.relatedPerson.map((person) => (
-              <div key={person.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                <Link href={`/person/${person.id}`} className="font-medium underline-offset-4 hover:underline">
-                  {person.name}
-                </Link>
-                <div className="mt-1 text-[var(--muted)]">{person.roleLabels.join(", ")}</div>
-              </div>
-            ))
-          )}
         </div>
       </div>
 

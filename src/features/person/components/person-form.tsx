@@ -21,8 +21,6 @@ type Props = {
     regions: Option[];
     religions: ReligionOption[];
     sects: SectOption[];
-    polities: Option[];
-    dynasties: Option[];
   };
   defaultValues?: {
     id?: number;

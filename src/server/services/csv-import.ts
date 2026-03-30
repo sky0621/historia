@@ -147,14 +147,13 @@ const REQUIRED_PERSON_HEADERS = ["name"] as const;
 const ROLE_ASSIGNMENT_HEADERS = [
   "person",
   "title",
-  "polity",
-  "dynasty",
+  "reading",
+  "description",
   "time_label",
   "time_calendar_era",
   "time_start_year",
   "time_end_year",
   "time_is_approximate",
-  "is_incumbent",
   "note"
 ] as const;
 const REQUIRED_ROLE_ASSIGNMENT_HEADERS = ["person", "title"] as const;
@@ -595,8 +594,6 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
   const person = listPersonDetailed();
   const personById = new Map(person.map((person) => [person.id, person.name]));
   const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
-  const polityById = new Map(listPolities().map((polity) => [polity.id, polity.name]));
-  const dynastyById = new Map(listDynasties().map((dynasty) => [dynasty.id, dynasty.name]));
 
   const rows = parsed.rows.map((row) => {
     const issues: CsvPreviewIssue[] = [];
@@ -613,16 +610,13 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
     const personName = cells.person.trim();
     const title = cells.title.trim();
     const personId = resolveSingleReference("person", personName, references.person, issues);
-    const polityId = resolveSingleReference("polities", normalizeOptionalString(cells.polity), references.polities, issues, false);
-    const dynastyId = resolveSingleReference("dynasties", normalizeOptionalString(cells.dynasty), references.dynasties, issues, false);
     const timeExpression = parseTimeExpressionFromCsv(cells, "time", issues);
 
     const inputCandidate = {
       title,
-      polityId,
-      dynastyId,
+      reading: normalizeOptionalString(cells.reading),
+      description: normalizeOptionalString(cells.description),
       note: normalizeOptionalString(cells.note),
-      isIncumbent: parseOptionalBoolean(cells.is_incumbent, "is_incumbent", issues) ?? false,
       fromTimeExpression:
         timeExpression
           ? {
@@ -672,7 +666,7 @@ export function previewRoleAssignmentCsvImport(rawCsv: string): CsvPreviewResult
         : undefined;
 
     const duplicateCandidates =
-      previewInput ? findRoleAssignmentDuplicateCandidates(roles, previewInput, polityById, dynastyById) : [];
+      previewInput ? findRoleAssignmentDuplicateCandidates(roles, previewInput) : [];
 
     const status = issues.length > 0 ? "error" : duplicateCandidates.length > 0 ? "duplicate-candidate" : "ok";
 
@@ -1375,8 +1369,8 @@ export function applyRoleAssignmentCsvImport(rawCsv: string): CsvImportResult {
         return [
           role.personId,
           role.title,
-          role.polityId ?? "",
-          role.dynastyId ?? "",
+          role.reading ?? "",
+          role.description ?? "",
           (record.fromCalendarEra as string | null) ?? (record.timeCalendarEra as string | null) ?? "",
           (record.fromYear as number | null) ?? (record.timeStartYear as number | null) ?? "",
           (record.toCalendarEra as string | null) ??
@@ -2170,8 +2164,8 @@ function buildRoleAssignmentSyncKey(input: RoleAssignmentCsvInput) {
   return [
     input.personId,
     input.role.title,
-    input.role.polityId ?? "",
-    input.role.dynastyId ?? "",
+    input.role.reading ?? "",
+    input.role.description ?? "",
     input.role.fromTimeExpression?.calendarEra ?? "",
     input.role.fromTimeExpression?.startYear ?? "",
     input.role.toTimeExpression?.calendarEra ?? "",
@@ -2574,9 +2568,7 @@ function findPersonDuplicateCandidates(existingPerson: ReturnType<typeof listPer
 
 function findRoleAssignmentDuplicateCandidates(
   existingRoles: ReturnType<typeof getRoleAssignmentsByPersonIds>,
-  input: RoleAssignmentCsvInput,
-  polityById: Map<number, string>,
-  dynastyById: Map<number, string>
+  input: RoleAssignmentCsvInput
 ): CsvDuplicateCandidate[] {
   return existingRoles
     .filter((role) => {
@@ -2589,11 +2581,11 @@ function findRoleAssignmentDuplicateCandidates(
         return false;
       }
 
-      if ((role.polityId ?? null) !== (input.role.polityId ?? null)) {
+      if ((role.reading ?? null) !== (input.role.reading ?? null)) {
         return false;
       }
 
-      if ((role.dynastyId ?? null) !== (input.role.dynastyId ?? null)) {
+      if ((role.description ?? null) !== (input.role.description ?? null)) {
         return false;
       }
 
@@ -2622,12 +2614,7 @@ function findRoleAssignmentDuplicateCandidates(
     .slice(0, 5)
     .map((role) => ({
       id: role.id,
-      label: [
-        role.title,
-        role.dynastyId ? dynastyById.get(role.dynastyId) : role.polityId ? polityById.get(role.polityId) : null
-      ]
-        .filter(Boolean)
-        .join(" / "),
+      label: role.title,
       reason: "同一人物に同じ役職履歴が登録済みです"
     }));
 }

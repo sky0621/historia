@@ -83,10 +83,7 @@ export const role = sqliteTable("role", {
   reading: text("reading"),
   description: text("description"),
   note: text("note"),
-  polityId: integer("polity_id").references(() => polities.id),
-  dynastyId: integer("dynasty_id").references(() => dynasties.id),
-  isIncumbent: integer("is_incumbent", { mode: "boolean" }).default(false),
-  ...rangeTimeColumns()
+  polityId: integer("polity_id").references(() => polities.id)
 });
 
 export const historicalPeriods = sqliteTable("historical_periods", {

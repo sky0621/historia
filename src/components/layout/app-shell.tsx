@@ -16,6 +16,7 @@ const navigationGroups = [
     title: "Entities",
     items: [
       { href: "/person", label: "人物" },
+      { href: "/roles", label: "役職" },
       { href: "/polities", label: "国家" },
       { href: "/dynasties", label: "王朝" },
       { href: "/periods", label: "時代区分" },

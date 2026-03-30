@@ -55,7 +55,7 @@ export function replacePersonSectLinks(personId: number, sectIds: number[]) {
 
 export function replaceRoleAssignments(
   personId: number,
-  roles: Array<(typeof role.$inferInsert) & { personId: number; polityId: number | null; dynastyId: number | null }>
+  roles: Array<(typeof role.$inferInsert) & { personId: number }>
 ) {
   const existingRoleIds = db
     .select()
@@ -74,8 +74,8 @@ export function replaceRoleAssignments(
   }
 
   for (const roleItem of roles) {
-    const { personId: rolePersonId, polityId, dynastyId, ...roleInput } = roleItem;
-    const result = db.insert(role).values({ ...roleInput, polityId, dynastyId }).run();
+    const { personId: rolePersonId, ...roleInput } = roleItem;
+    const result = db.insert(role).values(roleInput).run();
     const roleId = Number(result.lastInsertRowid);
     db.insert(rolePersonLinks).values({ roleId, personId: rolePersonId }).run();
   }

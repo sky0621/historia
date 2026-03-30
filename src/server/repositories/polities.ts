@@ -7,8 +7,7 @@ import {
   historicalPeriodPolityLinks,
   polities,
   polityRegionLinks,
-  polityTransitions,
-  role
+  polityTransitions
 } from "@/db/schema";
 
 export type PolityRecord = typeof polities.$inferSelect;
@@ -48,7 +47,6 @@ export function updatePolity(id: number, input: Omit<PolityInsert, "id">, region
 
 export function deletePolity(id: number) {
   db.transaction((tx) => {
-    tx.update(role).set({ polityId: null }).where(eq(role.polityId, id)).run();
     tx.delete(historicalPeriodPolityLinks).where(eq(historicalPeriodPolityLinks.polityId, id)).run();
     tx.delete(eventPolityLinks).where(eq(eventPolityLinks.polityId, id)).run();
     tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.polityId, id)).run();

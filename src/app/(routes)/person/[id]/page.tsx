@@ -113,21 +113,12 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
             ) : (
               view.roles.map((role) => (
                 <div key={role.id} className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                  <div className="font-medium">{role.title}</div>
-                  <div className="mt-1 text-[var(--muted)]">
-                    {role.dynastyId && role.dynastyName ? (
-                      <Link href={`/dynasties/${role.dynastyId}`} className="underline-offset-4 hover:underline">
-                        {role.dynastyName}
-                      </Link>
-                    ) : role.polityId && role.polityName ? (
-                      <Link href={`/polities/${role.polityId}`} className="underline-offset-4 hover:underline">
-                        {role.polityName}
-                      </Link>
-                    ) : (
-                      "所属なし"
-                    )}{" "}
-                    / {role.timeLabel}
+                  <div className="font-medium">
+                    <Link href={`/roles/${role.id}`} className="underline-offset-4 hover:underline">
+                      {role.title}
+                    </Link>
                   </div>
+                  <div className="mt-1 text-[var(--muted)]">{role.timeLabel}</div>
                   {role.note ? <div className="mt-2 whitespace-pre-wrap text-[var(--muted)]">{role.note}</div> : null}
                 </div>
               ))
