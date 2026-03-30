@@ -28,6 +28,7 @@ import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getCitationListForTarget } from "@/server/services/sources";
 import {
+  compareStoredBoundaryRange,
   formatStoredBoundaryRangeForOption,
   normalizeStoredBoundaryYear,
   normalizeStoredPersonBoundaryYear,
@@ -108,7 +109,8 @@ export function getPersonListView(filters: PersonListFilters = {}) {
     }))
     .filter((person) =>
       matchesPersonFilters(person, normalizedQuery, filters)
-    );
+    )
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 export function getPersonDetailView(id: number) {

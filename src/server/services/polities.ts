@@ -24,7 +24,7 @@ import {
 } from "@/server/repositories/dynasties";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
-import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
+import { compareStoredBoundaryRange, formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 import { getDynastySuccessionViewForDynasty, getDynastySuccessionViewForPolity, getPolityTransitionView } from "@/server/services/relations";
 import { getCitationListForTarget } from "@/server/services/sources";
 
@@ -42,9 +42,9 @@ export function getPolityOptions() {
 
 export function sortPolitiesByStartYear<T extends { name: string; fromCalendarEra?: string | null; fromYear?: number | null }>(items: T[]) {
   return [...items].sort((left, right) => {
-    const yearDiff = toComparableStartYear(left) - toComparableStartYear(right);
-    if (yearDiff !== 0) {
-      return yearDiff;
+    const rangeDiff = compareStoredBoundaryRange(left, right);
+    if (rangeDiff !== 0) {
+      return rangeDiff;
     }
 
     return left.name.localeCompare(right.name, "ja-JP");
@@ -101,7 +101,8 @@ export function getPolityListView(filters: PolityListFilters = {}) {
 
       return true;
     })
-    .filter((polity) => matchesQuery([polity.name, polity.note, polity.regionNames.join(", ")], normalizedQuery));
+    .filter((polity) => matchesQuery([polity.name, polity.note, polity.regionNames.join(", ")], normalizedQuery))
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 export function getDynastyListView(filters: DynastyListFilters = {}) {
@@ -137,7 +138,8 @@ export function getDynastyListView(filters: DynastyListFilters = {}) {
     })
     .filter((dynasty) =>
       matchesQuery([dynasty.name, dynasty.note, dynasty.polityNames.join(", "), dynasty.regionNames.join(", ")], normalizedQuery)
-    );
+    )
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 export function getPolityDetailView(id: number) {
@@ -392,15 +394,6 @@ function formatPolityOptionTime(value: Record<string, unknown>) {
     (value.toCalendarEra as "BCE" | "CE" | null) ?? null,
     value.toYear as number | null | undefined
   );
-}
-
-function toComparableStartYear(value: { fromCalendarEra?: string | null; fromYear?: number | null }) {
-  const normalizedYear = normalizeStoredBoundaryYear("from", value.fromYear);
-  if (normalizedYear == null) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
-  return value.fromCalendarEra === "BCE" ? -normalizedYear : normalizedYear;
 }
 
 function matchesPolityYearRange(

@@ -26,7 +26,7 @@ import {
 } from "@/server/repositories/sects";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getCitationListForTarget } from "@/server/services/sources";
-import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
+import { compareStoredBoundaryRange, formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 
 export function getReligionOptions() {
   return listReligions().map((religion) => ({ id: religion.id, name: religion.name }));
@@ -81,7 +81,8 @@ export function getReligionListView(filters: ReligionListFilters = {}) {
         [religion.name, religion.description, religion.note, religion.founderNames.join(", ")],
         normalizedQuery
       )
-    );
+    )
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 export function getSectListView(filters: SectListFilters = {}) {
@@ -126,7 +127,8 @@ export function getSectListView(filters: SectListFilters = {}) {
         [sect.name, sect.description, sect.note, sect.religionName, sect.founderNames.join(", ")],
         normalizedQuery
       )
-    );
+    )
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 export function getReligionDetailView(id: number) {

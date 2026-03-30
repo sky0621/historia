@@ -34,7 +34,7 @@ import { createTag, getEventTagLinks, getTagsByIds, getTagsByNames, listTags } f
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getCitationListForTarget } from "@/server/services/sources";
-import { formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
+import { compareStoredBoundaryRange, formatStoredBoundaryRangeForOption, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 
 type EventListFilters = {
   query?: string;
@@ -775,6 +775,18 @@ function compareEventListItems(
 
   if (diff !== 0) {
     return diff;
+  }
+
+  if (sortBy !== "timeDesc") {
+    const rangeDiff = compareStoredBoundaryRange(left, right);
+    if (rangeDiff !== 0) {
+      return rangeDiff;
+    }
+  } else {
+    const rangeDiff = compareStoredBoundaryRange(right, left);
+    if (rangeDiff !== 0) {
+      return rangeDiff;
+    }
   }
 
   return left.title.localeCompare(right.title, "ja");

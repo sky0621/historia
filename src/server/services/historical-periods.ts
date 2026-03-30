@@ -18,7 +18,7 @@ import { getPeriodCategoryOptions } from "@/server/services/period-categories";
 import { sortPolitiesByStartYear } from "@/server/services/polities";
 import { getHistoricalPeriodRelationView } from "@/server/services/relations";
 import { getCitationListForTarget } from "@/server/services/sources";
-import { normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
+import { compareStoredBoundaryRange, normalizeStoredBoundaryYear, toStoredBoundaryYear } from "@/server/services/time-sentinel";
 
 export function getHistoricalPeriodFormOptions() {
   return {
@@ -84,7 +84,8 @@ export function getHistoricalPeriodsListView(filters: HistoricalPeriodsListFilte
         [period.name, period.description, period.note, period.categoryName, period.polityName, period.regionNames.join(", ")],
         normalizedQuery
       )
-    );
+    )
+    .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
 export function getHistoricalPeriodDetailView(id: number) {

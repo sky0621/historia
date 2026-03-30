@@ -65,6 +65,64 @@ export function formatStoredBoundaryRangeForOption(
   return `${startLabel} - ${endLabel}`;
 }
 
+export function compareStoredBoundaryRange(
+  left: {
+    fromCalendarEra?: string | null;
+    fromYear?: number | null;
+    toCalendarEra?: string | null;
+    toYear?: number | null;
+  },
+  right: {
+    fromCalendarEra?: string | null;
+    fromYear?: number | null;
+    toCalendarEra?: string | null;
+    toYear?: number | null;
+  }
+) {
+  const leftStart = toComparableStartYear(left);
+  const rightStart = toComparableStartYear(right);
+  if (leftStart !== rightStart) {
+    return leftStart - rightStart;
+  }
+
+  const leftEnd = toComparableEndYear(left);
+  const rightEnd = toComparableEndYear(right);
+  if (leftEnd !== rightEnd) {
+    return leftEnd - rightEnd;
+  }
+
+  return 0;
+}
+
 function toEra(value: string | null | undefined): "BCE" | "CE" | null {
   return value === "BCE" || value === "CE" ? value : null;
+}
+
+function toComparableStartYear(value: {
+  fromCalendarEra?: string | null;
+  fromYear?: number | null;
+}) {
+  const normalizedYear = normalizeStoredBoundaryYear("from", value.fromYear);
+  if (normalizedYear == null) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  return toComparableYear(value.fromCalendarEra, normalizedYear);
+}
+
+function toComparableEndYear(value: {
+  fromCalendarEra?: string | null;
+  toCalendarEra?: string | null;
+  toYear?: number | null;
+}) {
+  const normalizedYear = normalizeStoredBoundaryYear("to", value.toYear);
+  if (normalizedYear == null) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return toComparableYear(value.toCalendarEra ?? value.fromCalendarEra, normalizedYear);
+}
+
+function toComparableYear(era: string | null | undefined, year: number) {
+  return era === "BCE" ? -year : year;
 }
