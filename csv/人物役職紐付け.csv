@@ -1,0 +1,7 @@
+person_id,person_name,role_id,role_title,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate
+1,推古天皇,1,天皇,,,CE,592,0,CE,628,0
+2,天智天皇（中大兄皇子）,1,天皇,,,CE,668,0,CE,671,0
+3,天武天皇,1,天皇,,,CE,673,0,CE,686,0
+4,聖武天皇,1,天皇,,,CE,724,0,CE,749,0
+5,桓武天皇,1,天皇,,,CE,781,0,CE,806,0
+6,後醍醐天皇,1,天皇,,,CE,1318,0,CE,1339,0
