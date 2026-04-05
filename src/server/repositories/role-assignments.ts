@@ -2,12 +2,14 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   personRoleLinks,
-  role
+  role,
+  rolePolityLinks
 } from "@/db/schema";
 
 export type RoleAssignmentInsert = typeof role.$inferInsert;
 export type RoleAssignmentRecord = Omit<typeof role.$inferSelect, "description" | "note" | "fromCalendarEra" | "fromYear" | "fromIsApproximate" | "toCalendarEra" | "toYear" | "toIsApproximate"> & {
   personId: number;
+  polityIds: number[];
   description: string | null;
   note: string | null;
   fromCalendarEra: string | null;
@@ -35,7 +37,15 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
   }
 
   const items = db.select().from(role).where(inArray(role.id, roleIds)).all();
+  const rolePolities = db.select().from(rolePolityLinks).where(inArray(rolePolityLinks.roleId, roleIds)).all();
   const linkByRoleId = new Map(personLinks.map((link) => [link.roleId, link]));
+  const polityIdsByRoleId = new Map<number, number[]>();
+
+  for (const rolePolity of rolePolities) {
+    const current = polityIdsByRoleId.get(rolePolity.roleId) ?? [];
+    current.push(rolePolity.polityId);
+    polityIdsByRoleId.set(rolePolity.roleId, current);
+  }
 
   return items
     .map((item) => {
@@ -44,10 +54,11 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
         return null;
       }
 
-      return {
-        ...item,
-        personId: link.personId,
-        description: link.description ?? null,
+        return {
+          ...item,
+          personId: link.personId,
+          polityIds: polityIdsByRoleId.get(item.id) ?? [],
+          description: link.description ?? null,
         note: link.note ?? null,
         fromCalendarEra: link.fromCalendarEra ?? null,
         fromYear: link.fromYear ?? null,

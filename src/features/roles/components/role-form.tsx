@@ -26,7 +26,7 @@ type RoleFormProps = {
     reading: string;
     description: string;
     note: string;
-    polityId?: number | null;
+    polityIds: number[];
   };
 };
 
@@ -71,14 +71,22 @@ export function RoleForm({ title, description, submitLabel, polityOptions, defau
                 className={inputClassName}
                 placeholder="国家名で絞り込み"
               />
-              <select name="polityId" defaultValue={defaultValues?.polityId?.toString() ?? ""} className={inputClassName}>
-                <option value="">未設定</option>
+              <div className="grid gap-3 md:grid-cols-2">
                 {filteredPolities.map((polity) => (
-                  <option key={polity.id} value={polity.id}>
+                  <label
+                    key={polity.id}
+                    className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--foreground)] hover:border-[var(--border-strong)]"
+                  >
+                    <input
+                      type="checkbox"
+                      name="polityIds"
+                      value={polity.id}
+                      defaultChecked={defaultValues?.polityIds.includes(polity.id) ?? false}
+                    />
                     {formatPolityOptionLabel(polity)}
-                  </option>
+                  </label>
                 ))}
-              </select>
+              </div>
             </label>
           </div>
         </section>

@@ -7,7 +7,8 @@ import {
   historicalPeriodPolityLinks,
   polities,
   polityRegionLinks,
-  polityTransitions
+  polityTransitions,
+  rolePolityLinks
 } from "@/db/schema";
 
 export type PolityRecord = typeof polities.$inferSelect;
@@ -53,6 +54,7 @@ export function deletePolity(id: number) {
     tx.delete(dynastySuccessions).where(eq(dynastySuccessions.polityId, id)).run();
     tx.delete(polityTransitions).where(eq(polityTransitions.predecessorPolityId, id)).run();
     tx.delete(polityTransitions).where(eq(polityTransitions.successorPolityId, id)).run();
+    tx.delete(rolePolityLinks).where(eq(rolePolityLinks.polityId, id)).run();
     tx.delete(polityRegionLinks).where(eq(polityRegionLinks.polityId, id)).run();
     tx.delete(polities).where(eq(polities.id, id)).run();
   });

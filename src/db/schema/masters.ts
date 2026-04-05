@@ -82,8 +82,7 @@ export const role = sqliteTable("roles", {
   title: text("title").notNull(),
   reading: text("reading"),
   description: text("description"),
-  note: text("note"),
-  polityId: integer("polity_id").references(() => polities.id)
+  note: text("note")
 });
 
 export const historicalPeriods = sqliteTable("historical_periods", {

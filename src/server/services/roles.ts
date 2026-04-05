@@ -14,9 +14,9 @@ export function getRoleListView(filters: RoleListFilters = {}) {
   return roles
     .map((item) => ({
       ...item,
-      polityName: item.polityId ? polityById.get(item.polityId) ?? null : null
+      polityNames: item.polityIds.map((polityId) => polityById.get(polityId) ?? `#${polityId}`)
     }))
-    .filter((item) => matchesQuery([item.title, item.reading, item.description, item.note, item.polityName], normalizedQuery))
+    .filter((item) => matchesQuery([item.title, item.reading, item.description, item.note, item.polityNames.join(", ")], normalizedQuery))
     .sort((left, right) => left.title.localeCompare(right.title, "ja-JP"));
 }
 
@@ -30,7 +30,7 @@ export function getRoleDetailView(id: number) {
 
   return {
     role,
-    polity: role.polityId ? polityOptions.find((item) => item.id === role.polityId) ?? null : null,
+    polities: polityOptions.filter((item) => role.polityIds.includes(item.id)),
     formOptions: {
       polities: polityOptions
     }
@@ -42,9 +42,8 @@ export function createRoleFromInput(input: RoleInput) {
     title: input.title,
     reading: nullable(input.reading),
     description: nullable(input.description),
-    note: nullable(input.note),
-    polityId: input.polityId ?? null
-  });
+    note: nullable(input.note)
+  }, input.polityIds);
 }
 
 export function updateRoleFromInput(id: number, input: RoleInput) {
@@ -52,9 +51,8 @@ export function updateRoleFromInput(id: number, input: RoleInput) {
     title: input.title,
     reading: nullable(input.reading),
     description: nullable(input.description),
-    note: nullable(input.note),
-    polityId: input.polityId ?? null
-  });
+    note: nullable(input.note)
+  }, input.polityIds);
 }
 
 export function removeRole(id: number) {

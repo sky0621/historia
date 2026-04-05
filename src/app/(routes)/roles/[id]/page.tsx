@@ -46,13 +46,16 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
           <div>
             <dt className="font-medium text-[var(--muted)]">国家</dt>
             <dd className="mt-1">
-              {view.polity ? (
-                <Link href={`/polities/${view.polity.id}`} className="underline-offset-4 hover:underline">
-                  {view.polity.name}
-                </Link>
-              ) : (
-                "-"
-              )}
+              {view.polities.length > 0
+                ? view.polities.map((polity, index) => (
+                    <span key={polity.id}>
+                      {index > 0 ? ", " : null}
+                      <Link href={`/polities/${polity.id}`} className="underline-offset-4 hover:underline">
+                        {polity.name}
+                      </Link>
+                    </span>
+                  ))
+                : "-"}
             </dd>
           </div>
           <div>

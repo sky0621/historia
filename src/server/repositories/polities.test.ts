@@ -32,6 +32,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM polity_transitions").run();
   sqlite.prepare("DELETE FROM dynasty_successions").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
+  sqlite.prepare("DELETE FROM role_polity_links").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM historical_period_category_links").run();
   sqlite.prepare("DELETE FROM historical_periods").run();
@@ -61,6 +62,7 @@ beforeEach(() => {
       "INSERT INTO roles (id, title) VALUES (1, '皇帝')"
     )
     .run();
+  sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1)").run();
   sqlite
     .prepare(
       "INSERT INTO historical_periods (id, name) VALUES (1, '古代')"
@@ -95,6 +97,7 @@ describe("polities repository", () => {
     const dynastyPolityRows = sqlite.prepare("SELECT dynasty_id, polity_id FROM dynasty_polity_links").all();
     const dynastySuccessionRows = sqlite.prepare("SELECT id FROM dynasty_successions").all();
     const roleRows = sqlite.prepare("SELECT id FROM roles ORDER BY id").all();
+    const rolePolityRows = sqlite.prepare("SELECT role_id, polity_id FROM role_polity_links").all();
     const periodPolityRows = sqlite.prepare("SELECT period_id, polity_id FROM historical_period_polity_links").all();
     const polityTransitionRows = sqlite.prepare("SELECT id FROM polity_transitions").all();
 
@@ -102,6 +105,7 @@ describe("polities repository", () => {
     expect(dynastyPolityRows).toEqual([]);
     expect(dynastySuccessionRows).toEqual([]);
     expect(roleRows).toEqual([{ id: 1 }]);
+    expect(rolePolityRows).toEqual([]);
     expect(periodPolityRows).toEqual([]);
     expect(polityTransitionRows).toEqual([]);
   });

@@ -51,7 +51,7 @@ export function getPersonFormOptions() {
     roles: roles.map((item) => ({
       id: item.id,
       title: item.title,
-      polityName: item.polityId ? (polities.get(item.polityId)?.name ?? null) : null
+      polityName: item.polityIds.map((polityId) => polities.get(polityId)?.name).filter((name): name is string => Boolean(name)).join(", ")
     }))
   };
 }
@@ -128,7 +128,7 @@ export function getPersonDetailView(id: number) {
     roles: roles.map((role) => ({
       ...role,
       timeLabel: formatStoredTime("time", role),
-      roleLabel: formatRoleLabel(role.title, role.polityId ? options.roles.find((item) => item.id === role.id)?.polityName ?? null : null),
+      roleLabel: formatRoleLabel(role.title, options.roles.find((item) => item.id === role.id)?.polityName ?? null),
       defaultFromTimeExpression: extractRoleBoundaryTime("from", role),
       defaultToTimeExpression: extractRoleBoundaryTime("to", role)
     })),

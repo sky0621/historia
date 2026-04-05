@@ -25,7 +25,7 @@ export default async function EditRolePage({ params }: { params: Promise<{ id: s
         reading: view.role.reading ?? "",
         description: view.role.description ?? "",
         note: view.role.note ?? "",
-        polityId: view.role.polityId ?? null
+        polityIds: view.role.polityIds
       }}
     />
   );

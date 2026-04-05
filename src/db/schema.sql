@@ -142,8 +142,7 @@ CREATE TABLE `roles` (
   `title` text NOT NULL, -- 役職名
   `reading` text, -- 読み方
   `description` text, -- 役職記録の説明
-  `note` text, -- 編集メモ・注釈
-  `polity_id` integer REFERENCES `polities`(`id`) -- 国家ID
+  `note` text -- 編集メモ・注釈
 );
 
 -- 人物と地域の関連
@@ -169,6 +168,14 @@ CREATE TABLE `person_sect_links` (
 );
 CREATE INDEX `idx_person_sect_links_person_id` ON `person_sect_links` (`person_id`);
 CREATE INDEX `idx_person_sect_links_sect_id` ON `person_sect_links` (`sect_id`);
+
+-- 人物と役職の関連
+CREATE TABLE `role_polity_links` (
+  `role_id` integer NOT NULL REFERENCES `roles`(`id`) ON DELETE CASCADE, -- 役職記録ID
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) ON DELETE CASCADE -- 国家ID
+);
+CREATE INDEX `idx_role_polity_links_role_id` ON `role_polity_links` (`role_id`);
+CREATE INDEX `idx_role_polity_links_polity_id` ON `role_polity_links` (`polity_id`);
 
 -- 人物と役職の関連
 CREATE TABLE `person_role_links` (

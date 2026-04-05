@@ -64,7 +64,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
                       {role.title}
                     </Link>
                   </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{role.polityName ?? "-"}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">{role.polityNames.length > 0 ? role.polityNames.join(", ") : "-"}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{role.reading ?? "-"}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{role.description ?? "-"}</td>
                 </tr>

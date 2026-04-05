@@ -20,6 +20,5 @@ CREATE TABLE `roles` (
   `title` text NOT NULL, -- 役職名
   `reading` text, -- 読み方
   `description` text, -- 役職記録の説明
-  `note` text, -- 編集メモ・注釈
-  `polity_id` integer REFERENCES `polities`(`id`) -- 国家ID
+  `note` text -- 編集メモ・注釈
 );

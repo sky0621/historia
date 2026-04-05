@@ -23,6 +23,14 @@ CREATE INDEX `idx_person_sect_links_person_id` ON `person_sect_links` (`person_i
 CREATE INDEX `idx_person_sect_links_sect_id` ON `person_sect_links` (`sect_id`);
 
 -- 人物と役職の関連
+CREATE TABLE `role_polity_links` (
+  `role_id` integer NOT NULL REFERENCES `roles`(`id`) ON DELETE CASCADE, -- 役職記録ID
+  `polity_id` integer NOT NULL REFERENCES `polities`(`id`) ON DELETE CASCADE -- 国家ID
+);
+CREATE INDEX `idx_role_polity_links_role_id` ON `role_polity_links` (`role_id`);
+CREATE INDEX `idx_role_polity_links_polity_id` ON `role_polity_links` (`polity_id`);
+
+-- 人物と役職の関連
 CREATE TABLE `person_role_links` (
   `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE, -- 人物ID
   `role_id` integer NOT NULL REFERENCES `roles`(`id`), -- 役職記録ID
