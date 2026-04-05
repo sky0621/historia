@@ -126,6 +126,23 @@ describe("import export service", () => {
     );
   });
 
+  it("exports role polity links csv", () => {
+    sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '日本'), (2, 'ローマ帝国')").run();
+    sqlite.prepare("INSERT INTO roles (id, title) VALUES (1, '皇帝'), (2, '執政官')").run();
+    sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1), (1, 2), (2, 2)").run();
+
+    const csv = importExportModule.buildRolePolityLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "role_id,role_title,polity_id,polity_name",
+        "1,皇帝,1,日本",
+        "1,皇帝,2,ローマ帝国",
+        "2,執政官,2,ローマ帝国"
+      ].join("\n")
+    );
+  });
+
   it("exports polity region links csv", () => {
     sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '漢帝国'), (2, '唐帝国')").run();
     sqlite.prepare("INSERT INTO regions (id, name) VALUES (1, '中国'), (2, '東アジア')").run();
