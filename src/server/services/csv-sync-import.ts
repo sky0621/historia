@@ -32,6 +32,7 @@ export const csvSyncImportTargets = [
   "dynasties",
   "dynasty-polity-links",
   "role-polity-links",
+  "person-role-links",
   "polity-region-links",
   "dynasty-region-links",
   "roles",
@@ -86,6 +87,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importDynastyPolityLinksCsv(rawCsv);
     case "role-polity-links":
       return importRolePolityLinksCsv(rawCsv);
+    case "person-role-links":
+      return importPersonRoleLinksCsv(rawCsv);
     case "polity-region-links":
       return importPolityRegionLinksCsv(rawCsv);
     case "dynasty-region-links":
@@ -831,6 +834,109 @@ function importRolePolityLinksCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "role-polity-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
+    };
+  });
+}
+
+function importPersonRoleLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, [
+    "person_id",
+    "person_name",
+    "role_id",
+    "role_title",
+    "description",
+    "note",
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
+  ]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(personRoleLinks).all();
+    const personOptions = tx.select().from(persons).all();
+    const roleOptions = tx.select().from(role).all();
+    const personNameById = new Map(personOptions.map((item) => [item.id, item.name]));
+    const roleTitleById = new Map(roleOptions.map((item) => [item.id, item.title]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.personId}:${item.roleId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const personId = parseRequiredId(cells.person_id, row.rowNumber, "person_id");
+      const personName = parseRequiredString(cells.person_name, "person_name", row.rowNumber);
+      const roleId = parseRequiredId(cells.role_id, row.rowNumber, "role_id");
+      const roleTitle = parseRequiredString(cells.role_title, "role_title", row.rowNumber);
+      const key = `${personId}:${roleId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId}, role_id=${roleId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualPersonName = personNameById.get(personId);
+      if (!actualPersonName) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId} の人物は存在しません`);
+      }
+      if (actualPersonName !== personName) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId} の名称が一致しません`);
+      }
+
+      const actualRoleTitle = roleTitleById.get(roleId);
+      if (!actualRoleTitle) {
+        throw new Error(`row ${row.rowNumber}: role_id=${roleId} の役職は存在しません`);
+      }
+      if (actualRoleTitle !== roleTitle) {
+        throw new Error(`row ${row.rowNumber}: role_id=${roleId} の名称が一致しません`);
+      }
+
+      const values = {
+        description: nullable(cells.description),
+        note: nullable(cells.note),
+        fromCalendarEra: parseOptionalEra(cells.from_calendar_era, row.rowNumber, "from_calendar_era"),
+        fromYear: parseOptionalInteger(cells.from_year, row.rowNumber, "from_year"),
+        fromIsApproximate: parseBooleanFlag(cells.from_is_approximate),
+        toCalendarEra: parseOptionalEra(cells.to_calendar_era, row.rowNumber, "to_calendar_era"),
+        toYear: parseOptionalInteger(cells.to_year, row.rowNumber, "to_year"),
+        toIsApproximate: parseBooleanFlag(cells.to_is_approximate)
+      };
+
+      if (!existingKeys.has(key)) {
+        tx.insert(personRoleLinks).values({ personId, roleId, ...values }).run();
+        createdCount += 1;
+      } else {
+        tx
+          .update(personRoleLinks)
+          .set(values)
+          .where(and(eq(personRoleLinks.personId, personId), eq(personRoleLinks.roleId, roleId)))
+          .run();
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.personId}:${link.roleId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(personRoleLinks)
+          .where(and(eq(personRoleLinks.personId, link.personId), eq(personRoleLinks.roleId, link.roleId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.personId}:${link.roleId}`)).length;
+
+    return {
+      targetType: "person-role-links" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,

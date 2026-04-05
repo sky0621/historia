@@ -129,6 +129,45 @@ export function buildRolePolityLinksCsv() {
   return toCsv(rows, ["role_id", "role_title", "polity_id", "polity_name"]);
 }
 
+export function buildPersonRoleLinksCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         p.id AS person_id,
+         p.name AS person_name,
+         r.id AS role_id,
+         r.title AS role_title,
+         prl.description,
+         prl.note,
+         prl.from_calendar_era,
+         prl.from_year,
+         prl.from_is_approximate,
+         prl.to_calendar_era,
+         prl.to_year,
+         prl.to_is_approximate
+       FROM person_role_links prl
+       INNER JOIN persons p ON prl.person_id = p.id
+       INNER JOIN roles r ON prl.role_id = r.id
+       ORDER BY p.id, r.id`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, [
+    "person_id",
+    "person_name",
+    "role_id",
+    "role_title",
+    "description",
+    "note",
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
+  ]);
+}
+
 export function buildPolityRegionLinksCsv() {
   const rows = sqlite
     .prepare(

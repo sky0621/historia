@@ -170,6 +170,25 @@ describe("import export service", () => {
     );
   });
 
+  it("exports person role links csv", () => {
+    sqlite.prepare("INSERT INTO roles (id, title) VALUES (1, '皇帝'), (2, '執政官')").run();
+    sqlite
+      .prepare(
+        "INSERT INTO person_role_links (person_id, role_id, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate) VALUES (1, 1, '最初の役職', '注記', 'CE', 600, 1, 'CE', 632, 0), (2, 2, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0)"
+      )
+      .run();
+
+    const csv = importExportModule.buildPersonRoleLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "person_id,person_name,role_id,role_title,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,最澄,1,皇帝,最初の役職,注記,CE,600,1,CE,632,0",
+        "2,空海,2,執政官,,,,,0,,,0"
+      ].join("\n")
+    );
+  });
+
   it("exports polity region links csv", () => {
     sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '漢帝国'), (2, '唐帝国')").run();
     sqlite.prepare("INSERT INTO regions (id, name) VALUES (1, '中国'), (2, '東アジア')").run();

@@ -48,6 +48,9 @@ export default function ManageDataPage() {
               <a href="/api/export/role-polity-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 役職国家紐付けCSVをダウンロード
               </a>
+              <a href="/api/export/person-role-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                人物役職紐付けCSVをダウンロード
+              </a>
               <a href="/api/export/polity-region-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 国家地域紐付けCSVをダウンロード
               </a>

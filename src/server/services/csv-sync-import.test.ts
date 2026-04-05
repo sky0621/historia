@@ -554,6 +554,60 @@ describe("csv sync import service", () => {
     ]);
   });
 
+  it("syncs person role links by person_id and role_id", () => {
+    sqlite.prepare("INSERT INTO roles (id, title) VALUES (10, '太政大臣')").run();
+    sqlite.prepare("INSERT INTO person_role_links (person_id, role_id, description) VALUES (2, 10, 'old link')").run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "person-role-links",
+      [
+        "person_id,person_name,role_id,role_title,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,ムハンマド,1,皇帝,updated role link,,CE,610,0,CE,632,0",
+        "2,ゴータマ・シッダールタ,1,皇帝,new shared role,shared note,BCE,500,1,,,0"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare(
+        "SELECT person_id, role_id, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate FROM person_role_links ORDER BY person_id, role_id"
+      )
+      .all() as Array<Record<string, unknown>>;
+
+    expect(result).toEqual({
+      targetType: "person-role-links",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      {
+        person_id: 1,
+        role_id: 1,
+        description: "updated role link",
+        note: null,
+        from_calendar_era: "CE",
+        from_year: 610,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 632,
+        to_is_approximate: 0
+      },
+      {
+        person_id: 2,
+        role_id: 1,
+        description: "new shared role",
+        note: "shared note",
+        from_calendar_era: "BCE",
+        from_year: 500,
+        from_is_approximate: 1,
+        to_calendar_era: null,
+        to_year: null,
+        to_is_approximate: 0
+      }
+    ]);
+  });
+
   it("syncs polity region links by polity_id and region_id", () => {
     const result = csvSyncImportModule.importCsvSync(
       "polity-region-links",
