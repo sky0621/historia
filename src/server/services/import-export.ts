@@ -217,6 +217,33 @@ export function buildDynastiesCsv() {
   ]);
 }
 
+export function buildRolesCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         r.id,
+         r.title,
+         (
+           SELECT group_concat(name, ', ')
+           FROM (
+             SELECT p.name AS name
+             FROM role_polity_links rpl
+             INNER JOIN polities p ON p.id = rpl.polity_id
+             WHERE rpl.role_id = r.id
+             ORDER BY p.name
+           )
+         ) AS polities,
+         r.reading,
+         r.description,
+         r.note
+       FROM roles r
+       ORDER BY r.title`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["id", "title", "polities", "reading", "description", "note"]);
+}
+
 export function buildRegionsCsv() {
   const rows = sqlite
     .prepare(

@@ -11,10 +11,13 @@ import {
   historicalPeriods,
   periodCategories,
   personRegionLinks,
+  personRoleLinks,
   polities,
   polityRegionLinks,
   religions,
   regions,
+  role,
+  rolePolityLinks,
   sectFounderLinks,
   sects
 } from "@/db/schema";
@@ -26,6 +29,7 @@ export const csvSyncImportTargets = [
   "dynasty-polity-links",
   "polity-region-links",
   "dynasty-region-links",
+  "roles",
   "period-categories",
   "historical-periods",
   "historical-period-category-links",
@@ -77,6 +81,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPolityRegionLinksCsv(rawCsv);
     case "dynasty-region-links":
       return importDynastyRegionLinksCsv(rawCsv);
+    case "roles":
+      return importRolesCsv(rawCsv);
   }
 }
 
@@ -348,6 +354,77 @@ function importDynastiesCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "dynasties" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
+    };
+  });
+}
+
+function importRolesCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["id", "title", "polities", "reading", "description", "note"]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(role).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const polityOptions = tx.select().from(polities).all();
+    const polityIdByName = new Map(polityOptions.map((item) => [item.name, item.id]));
+    const csvIds = new Set<number>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+      const polityIds = parseReferenceNames(cells.polities).map((name) => {
+        const polityId = polityIdByName.get(name);
+        if (!polityId) {
+          throw new Error(`row ${row.rowNumber}: polity "${name}" が存在しません`);
+        }
+        return polityId;
+      });
+
+      const values = {
+        title: parseRequiredString(cells.title, "title", row.rowNumber),
+        reading: nullable(cells.reading),
+        description: nullable(cells.description),
+        note: nullable(cells.note)
+      };
+
+      let roleId: number;
+      if (id == null) {
+        const result = tx.insert(role).values(values).run();
+        roleId = Number(result.lastInsertRowid);
+        createdCount += 1;
+      } else if (existingIds.has(id)) {
+        assertUniqueCsvId(csvIds, id, row.rowNumber);
+        tx.update(role).set(values).where(eq(role.id, id)).run();
+        roleId = id;
+        updatedCount += 1;
+      } else {
+        assertUniqueCsvId(csvIds, id, row.rowNumber);
+        tx.insert(role).values({ id, ...values }).run();
+        roleId = id;
+        createdCount += 1;
+      }
+
+      tx.delete(rolePolityLinks).where(eq(rolePolityLinks.roleId, roleId)).run();
+      if (polityIds.length > 0) {
+        tx.insert(rolePolityLinks).values(polityIds.map((polityId) => ({ roleId, polityId }))).run();
+      }
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(personRoleLinks).where(eq(personRoleLinks.roleId, id)).run();
+      tx.delete(rolePolityLinks).where(eq(rolePolityLinks.roleId, id)).run();
+      tx.delete(role).where(eq(role.id, id)).run();
+    }
+
+    return {
+      targetType: "roles" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,

@@ -32,6 +32,8 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
   sqlite.prepare("DELETE FROM dynasties").run();
+  sqlite.prepare("DELETE FROM role_polity_links").run();
+  sqlite.prepare("DELETE FROM roles").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
@@ -84,6 +86,26 @@ describe("import export service", () => {
         "id,name,reading,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
         "2,唐,,,,CE,618,0,CE,907,1",
         "1,漢,かん,王朝の説明,注記,BCE,202,0,CE,220,0"
+      ].join("\n")
+    );
+  });
+
+  it("exports roles csv with linked polity names", () => {
+    sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '日本'), (2, 'ローマ帝国')").run();
+    sqlite
+      .prepare(
+        "INSERT INTO roles (id, title, reading, description, note) VALUES (1, '皇帝', 'こうてい', '最高位の君主', '注記'), (2, '執政官', NULL, NULL, NULL)"
+      )
+      .run();
+    sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1), (1, 2), (2, 2)").run();
+
+    const csv = importExportModule.buildRolesCsv();
+
+    expect(csv).toBe(
+      [
+        "id,title,polities,reading,description,note",
+        "2,執政官,ローマ帝国,,,",
+        "1,皇帝,\"ローマ帝国, 日本\",こうてい,最高位の君主,注記"
       ].join("\n")
     );
   });

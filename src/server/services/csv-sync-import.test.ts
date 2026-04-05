@@ -31,6 +31,9 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
   sqlite.prepare("DELETE FROM dynasties").run();
+  sqlite.prepare("DELETE FROM person_role_links").run();
+  sqlite.prepare("DELETE FROM role_polity_links").run();
+  sqlite.prepare("DELETE FROM roles").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM historical_period_region_links").run();
@@ -94,6 +97,13 @@ beforeEach(() => {
     .run();
   sqlite.prepare("INSERT INTO dynasty_region_links (dynasty_id, region_id) VALUES (1, 1), (2, 2)").run();
   sqlite.prepare("INSERT INTO dynasty_polity_links (dynasty_id, polity_id) VALUES (1, 1), (2, 2)").run();
+  sqlite
+    .prepare(
+      "INSERT INTO roles (id, title, reading, description, note) VALUES (1, '皇帝', 'こうてい', 'old role', 'old note'), (2, '執政官', NULL, 'old consul', NULL)"
+    )
+    .run();
+  sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1), (2, 2)").run();
+  sqlite.prepare("INSERT INTO person_role_links (person_id, role_id) VALUES (1, 1)").run();
 });
 
 describe("csv sync import service", () => {
@@ -349,6 +359,51 @@ describe("csv sync import service", () => {
       { dynasty_id: 1, region_id: 1 },
       { dynasty_id: 2, region_id: 2 }
     ]);
+  });
+
+  it("syncs roles and linked polities by role id", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "roles",
+      [
+        "id,title,polities,reading,description,note",
+        "1,皇帝,\"日本, ローマ帝国\",こうてい,updated role,",
+        ",将軍,日本,しょうぐん,new role,new note"
+      ].join("\n")
+    );
+
+    const roleRows = sqlite
+      .prepare("SELECT id, title, reading, description, note FROM roles ORDER BY id")
+      .all() as Array<{
+      id: number;
+      title: string;
+      reading: string | null;
+      description: string | null;
+      note: string | null;
+    }>;
+    const rolePolityRows = sqlite
+      .prepare("SELECT role_id, polity_id FROM role_polity_links ORDER BY role_id, polity_id")
+      .all() as Array<{ role_id: number; polity_id: number }>;
+    const personRoleRows = sqlite
+      .prepare("SELECT person_id, role_id FROM person_role_links ORDER BY person_id, role_id")
+      .all() as Array<{ person_id: number; role_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "roles",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(roleRows).toEqual([
+      { id: 1, title: "皇帝", reading: "こうてい", description: "updated role", note: null },
+      { id: 3, title: "将軍", reading: "しょうぐん", description: "new role", note: "new note" }
+    ]);
+    expect(rolePolityRows).toEqual([
+      { role_id: 1, polity_id: 1 },
+      { role_id: 1, polity_id: 2 },
+      { role_id: 3, polity_id: 1 }
+    ]);
+    expect(personRoleRows).toEqual([{ person_id: 1, role_id: 1 }]);
   });
 
   it("syncs dynasty polity links by dynasty_id and polity_id", () => {

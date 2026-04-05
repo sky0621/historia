@@ -63,6 +63,7 @@ const revalidationPaths: Record<CsvSyncImportTarget, string[]> = {
   "dynasty-polity-links": ["/dynasties", "/polities", "/manage/data"],
   "polity-region-links": ["/polities", "/regions", "/manage/data"],
   "dynasty-region-links": ["/dynasties", "/regions", "/manage/data"],
+  roles: ["/roles", "/person", "/manage/data"],
   "period-categories": ["/period-categories", "/periods", "/manage/data"],
   "historical-periods": ["/periods", "/period-categories", "/manage/data"],
   "historical-period-category-links": ["/periods", "/period-categories", "/manage/data"],
