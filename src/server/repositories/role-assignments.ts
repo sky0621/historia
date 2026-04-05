@@ -38,7 +38,7 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
 
   const items = db.select().from(role).where(inArray(role.id, roleIds)).all();
   const rolePolities = db.select().from(rolePolityLinks).where(inArray(rolePolityLinks.roleId, roleIds)).all();
-  const linkByRoleId = new Map(personLinks.map((link) => [link.roleId, link]));
+  const roleById = new Map(items.map((item) => [item.id, item]));
   const polityIdsByRoleId = new Map<number, number[]>();
 
   for (const rolePolity of rolePolities) {
@@ -47,18 +47,18 @@ export function getRoleAssignmentsByPersonIds(personIds: number[]) {
     polityIdsByRoleId.set(rolePolity.roleId, current);
   }
 
-  return items
-    .map((item) => {
-      const link = linkByRoleId.get(item.id);
-      if (!link) {
+  return personLinks
+    .map((link) => {
+      const item = roleById.get(link.roleId);
+      if (!item) {
         return null;
       }
 
-        return {
-          ...item,
-          personId: link.personId,
-          polityIds: polityIdsByRoleId.get(item.id) ?? [],
-          description: link.description ?? null,
+      return {
+        ...item,
+        personId: link.personId,
+        polityIds: polityIdsByRoleId.get(item.id) ?? [],
+        description: link.description ?? null,
         note: link.note ?? null,
         fromCalendarEra: link.fromCalendarEra ?? null,
         fromYear: link.fromYear ?? null,
