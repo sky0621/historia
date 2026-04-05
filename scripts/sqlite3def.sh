@@ -144,11 +144,15 @@ SQL
 
   CURRENT_SQL="$(sqlite3 "$DATABASE_URL" "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'person_role_links';")"
   HAS_PERSON_DELETE_CASCADE="0"
+  HAS_ROLES_REFERENCE="0"
   if printf '%s' "$CURRENT_SQL" | grep -Eq 'person_id[^,]*REFERENCES[[:space:]]+`?persons`?\(`?id`?\)[[:space:]]+ON[[:space:]]+DELETE[[:space:]]+CASCADE'; then
     HAS_PERSON_DELETE_CASCADE="1"
   fi
+  if printf '%s' "$CURRENT_SQL" | grep -Eq 'role_id[^,]*REFERENCES[[:space:]]+`?roles`\(`?id`?\)'; then
+    HAS_ROLES_REFERENCE="1"
+  fi
 
-  if [ "$HAS_PERSON_DELETE_CASCADE" = "0" ] && [ -n "$CURRENT_SQL" ]; then
+  if [ -n "$CURRENT_SQL" ] && { [ "$HAS_PERSON_DELETE_CASCADE" = "0" ] || [ "$HAS_ROLES_REFERENCE" = "0" ]; }; then
     sqlite3 "$DATABASE_URL" <<'SQL'
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
