@@ -90,6 +90,21 @@ SQL
 
 normalize_legacy_religion_sect_links
 
+normalize_legacy_roles_table_name() {
+  if [ ! -f "$DATABASE_URL" ]; then
+    return
+  fi
+
+  HAS_OLD_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role';")"
+  HAS_NEW_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'roles';")"
+
+  if [ "$HAS_OLD_TABLE" = "1" ] && [ "$HAS_NEW_TABLE" = "0" ]; then
+    sqlite3 "$DATABASE_URL" "ALTER TABLE role RENAME TO roles;"
+  fi
+}
+
+normalize_legacy_roles_table_name
+
 normalize_legacy_person_role_links() {
   if [ ! -f "$DATABASE_URL" ]; then
     return
@@ -106,7 +121,7 @@ PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
 CREATE TABLE `person_role_links` (
   `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE,
-  `role_id` integer NOT NULL REFERENCES `role`(`id`),
+  `role_id` integer NOT NULL REFERENCES `roles`(`id`),
   `description` text,
   `note` text,
   `from_calendar_era` text REFERENCES `era`(`code`),
@@ -140,7 +155,7 @@ BEGIN TRANSACTION;
 ALTER TABLE `person_role_links` RENAME TO `__legacy_person_role_links`;
 CREATE TABLE `person_role_links` (
   `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE,
-  `role_id` integer NOT NULL REFERENCES `role`(`id`),
+  `role_id` integer NOT NULL REFERENCES `roles`(`id`),
   `description` text,
   `note` text,
   `from_calendar_era` text REFERENCES `era`(`code`),
@@ -190,68 +205,68 @@ SQL
   HAS_TO_CALENDAR_ERA_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('person_role_links') WHERE name = 'to_calendar_era';")"
   HAS_TO_YEAR_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('person_role_links') WHERE name = 'to_year';")"
   HAS_TO_IS_APPROXIMATE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('person_role_links') WHERE name = 'to_is_approximate';")"
-  HAS_ROLE_DESCRIPTION_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'description';")"
-  HAS_ROLE_NOTE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'note';")"
-  HAS_ROLE_FROM_CALENDAR_ERA_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'from_calendar_era';")"
-  HAS_ROLE_FROM_YEAR_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'from_year';")"
-  HAS_ROLE_FROM_IS_APPROXIMATE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'from_is_approximate';")"
-  HAS_ROLE_TO_CALENDAR_ERA_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'to_calendar_era';")"
-  HAS_ROLE_TO_YEAR_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'to_year';")"
-  HAS_ROLE_TO_IS_APPROXIMATE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'to_is_approximate';")"
+  HAS_ROLE_DESCRIPTION_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'description';")"
+  HAS_ROLE_NOTE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'note';")"
+  HAS_ROLE_FROM_CALENDAR_ERA_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'from_calendar_era';")"
+  HAS_ROLE_FROM_YEAR_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'from_year';")"
+  HAS_ROLE_FROM_IS_APPROXIMATE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'from_is_approximate';")"
+  HAS_ROLE_TO_CALENDAR_ERA_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'to_calendar_era';")"
+  HAS_ROLE_TO_YEAR_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'to_year';")"
+  HAS_ROLE_TO_IS_APPROXIMATE_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'to_is_approximate';")"
 
   if [ "$HAS_DESCRIPTION_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN description text;"
     if [ "$HAS_ROLE_DESCRIPTION_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET description = (SELECT description FROM role WHERE role.id = person_role_links.role_id) WHERE description IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET description = (SELECT description FROM roles WHERE roles.id = person_role_links.role_id) WHERE description IS NULL;"
     fi
   fi
 
   if [ "$HAS_NOTE_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN note text;"
     if [ "$HAS_ROLE_NOTE_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET note = (SELECT note FROM role WHERE role.id = person_role_links.role_id) WHERE note IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET note = (SELECT note FROM roles WHERE roles.id = person_role_links.role_id) WHERE note IS NULL;"
     fi
   fi
 
   if [ "$HAS_FROM_CALENDAR_ERA_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN from_calendar_era text REFERENCES era(code);"
     if [ "$HAS_ROLE_FROM_CALENDAR_ERA_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET from_calendar_era = (SELECT from_calendar_era FROM role WHERE role.id = person_role_links.role_id) WHERE from_calendar_era IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET from_calendar_era = (SELECT from_calendar_era FROM roles WHERE roles.id = person_role_links.role_id) WHERE from_calendar_era IS NULL;"
     fi
   fi
 
   if [ "$HAS_FROM_YEAR_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN from_year integer;"
     if [ "$HAS_ROLE_FROM_YEAR_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET from_year = (SELECT from_year FROM role WHERE role.id = person_role_links.role_id) WHERE from_year IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET from_year = (SELECT from_year FROM roles WHERE roles.id = person_role_links.role_id) WHERE from_year IS NULL;"
     fi
   fi
 
   if [ "$HAS_FROM_IS_APPROXIMATE_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN from_is_approximate integer DEFAULT false;"
     if [ "$HAS_ROLE_FROM_IS_APPROXIMATE_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET from_is_approximate = COALESCE((SELECT from_is_approximate FROM role WHERE role.id = person_role_links.role_id), false) WHERE from_is_approximate IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET from_is_approximate = COALESCE((SELECT from_is_approximate FROM roles WHERE roles.id = person_role_links.role_id), false) WHERE from_is_approximate IS NULL;"
     fi
   fi
 
   if [ "$HAS_TO_CALENDAR_ERA_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN to_calendar_era text REFERENCES era(code);"
     if [ "$HAS_ROLE_TO_CALENDAR_ERA_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET to_calendar_era = (SELECT to_calendar_era FROM role WHERE role.id = person_role_links.role_id) WHERE to_calendar_era IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET to_calendar_era = (SELECT to_calendar_era FROM roles WHERE roles.id = person_role_links.role_id) WHERE to_calendar_era IS NULL;"
     fi
   fi
 
   if [ "$HAS_TO_YEAR_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN to_year integer;"
     if [ "$HAS_ROLE_TO_YEAR_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET to_year = (SELECT to_year FROM role WHERE role.id = person_role_links.role_id) WHERE to_year IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET to_year = (SELECT to_year FROM roles WHERE roles.id = person_role_links.role_id) WHERE to_year IS NULL;"
     fi
   fi
 
   if [ "$HAS_TO_IS_APPROXIMATE_COLUMN" = "0" ]; then
     sqlite3 "$DATABASE_URL" "ALTER TABLE person_role_links ADD COLUMN to_is_approximate integer DEFAULT false;"
     if [ "$HAS_ROLE_TO_IS_APPROXIMATE_COLUMN" = "1" ]; then
-      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET to_is_approximate = COALESCE((SELECT to_is_approximate FROM role WHERE role.id = person_role_links.role_id), false) WHERE to_is_approximate IS NULL;"
+      sqlite3 "$DATABASE_URL" "UPDATE person_role_links SET to_is_approximate = COALESCE((SELECT to_is_approximate FROM roles WHERE roles.id = person_role_links.role_id), false) WHERE to_is_approximate IS NULL;"
     fi
   fi
 }
@@ -263,7 +278,7 @@ normalize_legacy_role_links() {
     return
   fi
 
-  HAS_ROLE_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role';")"
+  HAS_ROLE_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'roles';")"
 
   if [ "$HAS_ROLE_TABLE" != "1" ]; then
     return
@@ -271,9 +286,9 @@ normalize_legacy_role_links() {
 
   HAS_ROLE_POLITY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_polity_links';")"
   HAS_ROLE_DYNASTY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_dynasty_links';")"
-  HAS_POLITY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'polity_id';")"
-  HAS_DYNASTY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'dynasty_id';")"
-  HAS_IS_INCUMBENT_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('role') WHERE name = 'is_incumbent';")"
+  HAS_POLITY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'polity_id';")"
+  HAS_DYNASTY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'dynasty_id';")"
+  HAS_IS_INCUMBENT_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'is_incumbent';")"
 
   if [ "$HAS_ROLE_POLITY_LINKS" = "1" ] || [ "$HAS_ROLE_DYNASTY_LINKS" = "1" ] || [ "$HAS_DYNASTY_COLUMN" = "1" ] || [ "$HAS_IS_INCUMBENT_COLUMN" = "1" ]; then
     if [ "$HAS_POLITY_COLUMN" = "1" ]; then
@@ -281,8 +296,8 @@ normalize_legacy_role_links() {
         sqlite3 "$DATABASE_URL" <<'SQL'
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
-ALTER TABLE `role` RENAME TO `__legacy_role`;
-CREATE TABLE `role` (
+ALTER TABLE `roles` RENAME TO `__legacy_role`;
+CREATE TABLE `roles` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `title` text NOT NULL,
   `reading` text,
@@ -290,7 +305,7 @@ CREATE TABLE `role` (
   `note` text,
   `polity_id` integer REFERENCES `polities`(`id`)
 );
-INSERT INTO `role` (
+INSERT INTO `roles` (
   `id`,
   `title`,
   `reading`,
@@ -306,11 +321,11 @@ SELECT
   `note`,
   `polity_id`
 FROM `__legacy_role`;
-UPDATE `role`
+UPDATE `roles`
 SET `polity_id` = (
   SELECT `polity_id`
   FROM `role_polity_links`
-  WHERE `role_polity_links`.`role_id` = `role`.`id`
+  WHERE `role_polity_links`.`role_id` = `roles`.`id`
   LIMIT 1
 )
 WHERE `polity_id` IS NULL;
@@ -324,8 +339,8 @@ SQL
         sqlite3 "$DATABASE_URL" <<'SQL'
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
-ALTER TABLE `role` RENAME TO `__legacy_role`;
-CREATE TABLE `role` (
+ALTER TABLE `roles` RENAME TO `__legacy_role`;
+CREATE TABLE `roles` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `title` text NOT NULL,
   `reading` text,
@@ -333,7 +348,7 @@ CREATE TABLE `role` (
   `note` text,
   `polity_id` integer REFERENCES `polities`(`id`)
 );
-INSERT INTO `role` (
+INSERT INTO `roles` (
   `id`,
   `title`,
   `reading`,
@@ -361,8 +376,8 @@ SQL
         sqlite3 "$DATABASE_URL" <<'SQL'
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
-ALTER TABLE `role` RENAME TO `__legacy_role`;
-CREATE TABLE `role` (
+ALTER TABLE `roles` RENAME TO `__legacy_role`;
+CREATE TABLE `roles` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `title` text NOT NULL,
   `reading` text,
@@ -370,7 +385,7 @@ CREATE TABLE `role` (
   `note` text,
   `polity_id` integer REFERENCES `polities`(`id`)
 );
-INSERT INTO `role` (
+INSERT INTO `roles` (
   `id`,
   `title`,
   `reading`,
@@ -384,11 +399,11 @@ SELECT
   `description`,
   `note`
 FROM `__legacy_role`;
-UPDATE `role`
+UPDATE `roles`
 SET `polity_id` = (
   SELECT `polity_id`
   FROM `role_polity_links`
-  WHERE `role_polity_links`.`role_id` = `role`.`id`
+  WHERE `role_polity_links`.`role_id` = `roles`.`id`
   LIMIT 1
 )
 WHERE `polity_id` IS NULL;
@@ -402,8 +417,8 @@ SQL
         sqlite3 "$DATABASE_URL" <<'SQL'
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
-ALTER TABLE `role` RENAME TO `__legacy_role`;
-CREATE TABLE `role` (
+ALTER TABLE `roles` RENAME TO `__legacy_role`;
+CREATE TABLE `roles` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `title` text NOT NULL,
   `reading` text,
@@ -411,7 +426,7 @@ CREATE TABLE `role` (
   `note` text,
   `polity_id` integer REFERENCES `polities`(`id`)
 );
-INSERT INTO `role` (
+INSERT INTO `roles` (
   `id`,
   `title`,
   `reading`,

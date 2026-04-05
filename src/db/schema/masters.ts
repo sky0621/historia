@@ -77,7 +77,7 @@ export const persons = sqliteTable("persons", {
   toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
-export const role = sqliteTable("role", {
+export const role = sqliteTable("roles", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull(),
   reading: text("reading"),

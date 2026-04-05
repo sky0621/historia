@@ -15,7 +15,7 @@ CREATE TABLE `persons` (
 );
 
 -- 役職: 人物が持った役職・地位の記録
-CREATE TABLE `role` (
+CREATE TABLE `roles` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 役職記録ID
   `title` text NOT NULL, -- 役職名
   `reading` text, -- 読み方
