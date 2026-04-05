@@ -99,7 +99,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
           </div>
         </SectionCard>
 
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           <TimeExpressionInputs
             prefix="birthTime"
             label="生年"
