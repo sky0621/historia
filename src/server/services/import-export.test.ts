@@ -29,11 +29,15 @@ afterAll(() => {
 beforeEach(() => {
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM sects").run();
+  sqlite.prepare("DELETE FROM person_role_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
   sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM role_polity_links").run();
   sqlite.prepare("DELETE FROM roles").run();
+  sqlite.prepare("DELETE FROM person_sect_links").run();
+  sqlite.prepare("DELETE FROM person_religion_links").run();
+  sqlite.prepare("DELETE FROM person_region_links").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
@@ -54,6 +58,29 @@ beforeEach(() => {
 });
 
 describe("import export service", () => {
+  it("exports persons csv with table columns only", () => {
+    sqlite
+      .prepare(
+        "UPDATE persons SET reading = 'くうかい', aliases = '弘法大師', description = '人物の説明', note = '注記', from_calendar_era = 'CE', from_year = 774, from_is_approximate = 0, to_calendar_era = 'CE', to_year = 835, to_is_approximate = 1 WHERE id = 2"
+      )
+      .run();
+    sqlite
+      .prepare(
+        "UPDATE persons SET reading = NULL, aliases = NULL, description = NULL, note = NULL, from_calendar_era = 'CE', from_year = 767, from_is_approximate = 1, to_calendar_era = NULL, to_year = NULL, to_is_approximate = 0 WHERE id = 1"
+      )
+      .run();
+
+    const csv = importExportModule.buildPersonsCsv();
+
+    expect(csv).toBe(
+      [
+        "id,name,reading,aliases,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,最澄,,,,,CE,767,1,,,0",
+        "2,空海,くうかい,弘法大師,人物の説明,注記,CE,774,0,CE,835,1"
+      ].join("\n")
+    );
+  });
+
   it("exports polities csv with table columns only", () => {
     sqlite
       .prepare(

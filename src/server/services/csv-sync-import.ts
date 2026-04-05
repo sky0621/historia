@@ -10,8 +10,11 @@ import {
   historicalPeriodRegionLinks,
   historicalPeriods,
   periodCategories,
+  persons,
   personRegionLinks,
   personRoleLinks,
+  personReligionLinks,
+  personSectLinks,
   polities,
   polityRegionLinks,
   religions,
@@ -23,6 +26,7 @@ import {
 } from "@/db/schema";
 
 export const csvSyncImportTargets = [
+  "persons",
   "regions",
   "polities",
   "dynasties",
@@ -60,6 +64,8 @@ type CsvCells = Record<string, string>;
 
 export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): CsvSyncImportResult {
   switch (targetType) {
+    case "persons":
+      return importPersonsCsv(rawCsv);
     case "regions":
       return importRegionsCsv(rawCsv);
     case "period-categories":
@@ -87,6 +93,84 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
     case "roles":
       return importRolesCsv(rawCsv);
   }
+}
+
+function importPersonsCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, [
+    "id",
+    "name",
+    "reading",
+    "aliases",
+    "description",
+    "note",
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
+  ]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(persons).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const csvIds = new Set<number>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+
+      const values = {
+        name: parseRequiredString(cells.name, "name", row.rowNumber),
+        reading: nullable(cells.reading),
+        aliases: nullable(cells.aliases),
+        description: nullable(cells.description),
+        note: nullable(cells.note),
+        fromCalendarEra: parseOptionalEra(cells.from_calendar_era, row.rowNumber, "from_calendar_era"),
+        fromYear: parseOptionalInteger(cells.from_year, row.rowNumber, "from_year"),
+        fromIsApproximate: parseBooleanFlag(cells.from_is_approximate),
+        toCalendarEra: parseOptionalEra(cells.to_calendar_era, row.rowNumber, "to_calendar_era"),
+        toYear: parseOptionalInteger(cells.to_year, row.rowNumber, "to_year"),
+        toIsApproximate: parseBooleanFlag(cells.to_is_approximate)
+      };
+
+      if (id == null) {
+        tx.insert(persons).values(values).run();
+        createdCount += 1;
+        continue;
+      }
+
+      assertUniqueCsvId(csvIds, id, row.rowNumber);
+      if (!existingIds.has(id)) {
+        tx.insert(persons).values({ id, ...values }).run();
+        createdCount += 1;
+        continue;
+      }
+
+      tx.update(persons).set(values).where(eq(persons.id, id)).run();
+      updatedCount += 1;
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(personRoleLinks).where(eq(personRoleLinks.personId, id)).run();
+      tx.delete(personRegionLinks).where(eq(personRegionLinks.personId, id)).run();
+      tx.delete(personReligionLinks).where(eq(personReligionLinks.personId, id)).run();
+      tx.delete(personSectLinks).where(eq(personSectLinks.personId, id)).run();
+      tx.delete(persons).where(eq(persons.id, id)).run();
+    }
+
+    return {
+      targetType: "persons" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
+    };
+  });
 }
 
 function importRegionsCsv(rawCsv: string): CsvSyncImportResult {

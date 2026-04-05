@@ -14,6 +14,7 @@ import { importCsvAction, type CsvImportState } from "@/features/data-import/act
 const initialState: CsvImportState = {};
 
 const targetOptions = [
+  { value: "persons", label: "人物" },
   { value: "regions", label: "地域" },
   { value: "polities", label: "国家" },
   { value: "dynasties", label: "王朝" },
@@ -79,6 +80,7 @@ export function CsvImportPanel() {
 }
 
 const labelByTarget = {
+  persons: "人物",
   regions: "地域",
   polities: "国家",
   dynasties: "王朝",

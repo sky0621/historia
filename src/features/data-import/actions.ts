@@ -57,6 +57,7 @@ export async function importCsvAction(_previousState: CsvImportState, formData: 
 }
 
 const revalidationPaths: Record<CsvSyncImportTarget, string[]> = {
+  persons: ["/person", "/manage/data"],
   regions: ["/regions", "/manage/data"],
   polities: ["/polities", "/manage/data"],
   dynasties: ["/dynasties", "/manage/data"],

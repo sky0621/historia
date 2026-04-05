@@ -262,6 +262,43 @@ export function buildRolesCsv() {
   return toCsv(rows, ["id", "title", "polities", "reading", "description", "note"]);
 }
 
+export function buildPersonsCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         p.id,
+         p.name,
+         p.reading,
+         p.aliases,
+         p.description,
+         p.note,
+         p.from_calendar_era,
+         p.from_year,
+         p.from_is_approximate,
+         p.to_calendar_era,
+         p.to_year,
+         p.to_is_approximate
+       FROM persons p
+       ORDER BY p.name`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, [
+    "id",
+    "name",
+    "reading",
+    "aliases",
+    "description",
+    "note",
+    "from_calendar_era",
+    "from_year",
+    "from_is_approximate",
+    "to_calendar_era",
+    "to_year",
+    "to_is_approximate"
+  ]);
+}
+
 export function buildRegionsCsv() {
   const rows = sqlite
     .prepare(

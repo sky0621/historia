@@ -107,6 +107,100 @@ beforeEach(() => {
 });
 
 describe("csv sync import service", () => {
+  it("syncs persons using 人物.csv format and deletes related links for removed rows", () => {
+    sqlite.prepare("INSERT INTO regions (id, name) VALUES (10, '東アジア')").run();
+    sqlite.prepare("INSERT INTO religions (id, name) VALUES (10, '道教')").run();
+    sqlite.prepare("INSERT INTO sects (id, name) VALUES (10, '全真教')").run();
+    sqlite.prepare("INSERT INTO roles (id, title) VALUES (10, '太政大臣')").run();
+    sqlite.prepare("INSERT INTO person_region_links (person_id, region_id) VALUES (3, 10)").run();
+    sqlite.prepare("INSERT INTO person_religion_links (person_id, religion_id) VALUES (3, 10)").run();
+    sqlite.prepare("INSERT INTO person_sect_links (person_id, sect_id) VALUES (3, 10)").run();
+    sqlite.prepare("INSERT INTO person_role_links (person_id, role_id) VALUES (3, 10)").run();
+    const result = csvSyncImportModule.importCsvSync(
+      "persons",
+      [
+        "id,name,reading,aliases,description,note,from_calendar_era,from_year,from_is_approximate,to_calendar_era,to_year,to_is_approximate",
+        "1,ムハンマド,むはんまど,預言者,updated person,,CE,570,0,CE,632,0",
+        "2,ゴータマ・シッダールタ,,釈迦,updated buddha,,BCE,563,1,BCE,483,0",
+        ",空海,くうかい,弘法大師,new person,,CE,774,0,CE,835,1"
+      ].join("\n")
+    );
+
+    const personRows = sqlite
+      .prepare(
+        "SELECT id, name, reading, aliases, description, note, from_calendar_era, from_year, from_is_approximate, to_calendar_era, to_year, to_is_approximate FROM persons ORDER BY id"
+      )
+      .all() as Array<Record<string, unknown>>;
+    const deletedRoleLinks = sqlite
+      .prepare("SELECT person_id, role_id FROM person_role_links WHERE person_id = 3")
+      .all();
+    const deletedRegionLinks = sqlite
+      .prepare("SELECT person_id, region_id FROM person_region_links WHERE person_id = 3")
+      .all();
+    const deletedReligionLinks = sqlite
+      .prepare("SELECT person_id, religion_id FROM person_religion_links WHERE person_id = 3")
+      .all();
+    const deletedSectLinks = sqlite
+      .prepare("SELECT person_id, sect_id FROM person_sect_links WHERE person_id = 3")
+      .all();
+
+    expect(result).toEqual({
+      targetType: "persons",
+      totalRows: 3,
+      createdCount: 1,
+      updatedCount: 2,
+      deletedCount: 1
+    });
+    expect(personRows).toEqual([
+      {
+        id: 1,
+        name: "ムハンマド",
+        reading: "むはんまど",
+        aliases: "預言者",
+        description: "updated person",
+        note: null,
+        from_calendar_era: "CE",
+        from_year: 570,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 632,
+        to_is_approximate: 0
+      },
+      {
+        id: 2,
+        name: "ゴータマ・シッダールタ",
+        reading: null,
+        aliases: "釈迦",
+        description: "updated buddha",
+        note: null,
+        from_calendar_era: "BCE",
+        from_year: 563,
+        from_is_approximate: 1,
+        to_calendar_era: "BCE",
+        to_year: 483,
+        to_is_approximate: 0
+      },
+      {
+        id: 4,
+        name: "空海",
+        reading: "くうかい",
+        aliases: "弘法大師",
+        description: "new person",
+        note: null,
+        from_calendar_era: "CE",
+        from_year: 774,
+        from_is_approximate: 0,
+        to_calendar_era: "CE",
+        to_year: 835,
+        to_is_approximate: 1
+      }
+    ]);
+    expect(deletedRoleLinks).toEqual([]);
+    expect(deletedRegionLinks).toEqual([]);
+    expect(deletedReligionLinks).toEqual([]);
+    expect(deletedSectLinks).toEqual([]);
+  });
+
   it("syncs regions and resolves parent_region by name", () => {
     const result = csvSyncImportModule.importCsvSync(
       "regions",
