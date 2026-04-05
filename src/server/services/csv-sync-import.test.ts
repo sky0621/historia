@@ -608,6 +608,36 @@ describe("csv sync import service", () => {
     ]);
   });
 
+  it("syncs person region links by person_id and region_id", () => {
+    sqlite.prepare("INSERT INTO regions (id, name) VALUES (10, '東アジア')").run();
+    sqlite.prepare("INSERT INTO person_region_links (person_id, region_id) VALUES (2, 10)").run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "person-region-links",
+      [
+        "person_id,person_name,region_id,region_name",
+        "1,ムハンマド,1,日本",
+        "2,ゴータマ・シッダールタ,1,日本"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT person_id, region_id FROM person_region_links ORDER BY person_id, region_id")
+      .all() as Array<{ person_id: number; region_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "person-region-links",
+      totalRows: 2,
+      createdCount: 2,
+      updatedCount: 0,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { person_id: 1, region_id: 1 },
+      { person_id: 2, region_id: 1 }
+    ]);
+  });
+
   it("syncs polity region links by polity_id and region_id", () => {
     const result = csvSyncImportModule.importCsvSync(
       "polity-region-links",
