@@ -99,7 +99,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
           </div>
         </SectionCard>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
           <TimeExpressionInputs
             prefix="birthTime"
             label="生年"
@@ -118,7 +118,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
           />
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           <SelectionGroup name="regionIds" label="関連地域" description="人物の活動圏や出自に関わる地域を選択します。" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible hierarchical />
           <ReligionSectSelectionGroup
             religions={options.religions}
@@ -468,23 +468,27 @@ function RoleLinkCard({
           />
         </Field>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <TimeExpressionInputs
-            prefix={`roles.${index}.fromTime`}
-            label="開始年"
-            defaultValue={value.fromTimeExpression}
-            includePrecision={false}
-            includeDisplayLabel={false}
-            includeEndYear={false}
-          />
-          <TimeExpressionInputs
-            prefix={`roles.${index}.toTime`}
-            label="終了年"
-            defaultValue={value.toTimeExpression}
-            includePrecision={false}
-            includeDisplayLabel={false}
-            includeEndYear={false}
-          />
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
+          <div className="min-w-0">
+            <TimeExpressionInputs
+              prefix={`roles.${index}.fromTime`}
+              label="開始年"
+              defaultValue={value.fromTimeExpression}
+              includePrecision={false}
+              includeDisplayLabel={false}
+              includeEndYear={false}
+            />
+          </div>
+          <div className="min-w-0">
+            <TimeExpressionInputs
+              prefix={`roles.${index}.toTime`}
+              label="終了年"
+              defaultValue={value.toTimeExpression}
+              includePrecision={false}
+              includeDisplayLabel={false}
+              includeEndYear={false}
+            />
+          </div>
         </div>
 
         <Field label="メモ">

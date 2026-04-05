@@ -29,7 +29,7 @@ export function TimeExpressionInputs({
   onStartYearChange
 }: Props) {
   return (
-    <fieldset className="historia-inset rounded-[14px] p-5 sm:p-6">
+    <fieldset className="historia-inset min-w-0 w-full rounded-[14px] p-5 sm:p-6">
       <legend className="px-2 text-sm font-semibold text-[var(--muted-strong)]">{label}</legend>
       <div className="mt-3 space-y-4">
         <div className="grid gap-3 sm:grid-flow-col sm:auto-cols-max sm:items-end sm:justify-start">
