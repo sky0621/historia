@@ -40,6 +40,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM person_region_links").run();
   sqlite.prepare("DELETE FROM regions").run();
   sqlite.prepare("DELETE FROM sect_founder_links").run();
+  sqlite.prepare("DELETE FROM person_sect_links").run();
   sqlite.prepare("DELETE FROM sects").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM person_religion_links").run();
@@ -665,6 +666,35 @@ describe("csv sync import service", () => {
     expect(rows).toEqual([
       { person_id: 1, religion_id: 1 },
       { person_id: 2, religion_id: 1 }
+    ]);
+  });
+
+  it("syncs person sect links by person_id and sect_id", () => {
+    sqlite.prepare("INSERT INTO person_sect_links (person_id, sect_id) VALUES (2, 2)").run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "person-sect-links",
+      [
+        "person_id,person_name,sect_id,sect_name",
+        "1,ムハンマド,1,上座部仏教",
+        "2,ゴータマ・シッダールタ,1,上座部仏教"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT person_id, sect_id FROM person_sect_links ORDER BY person_id, sect_id")
+      .all() as Array<{ person_id: number; sect_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "person-sect-links",
+      totalRows: 2,
+      createdCount: 2,
+      updatedCount: 0,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { person_id: 1, sect_id: 1 },
+      { person_id: 2, sect_id: 1 }
     ]);
   });
 

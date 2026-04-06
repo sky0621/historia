@@ -57,6 +57,9 @@ export default function ManageDataPage() {
               <a href="/api/export/person-religion-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 人物宗教紐付けCSVをダウンロード
               </a>
+              <a href="/api/export/person-sect-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                人物宗派紐付けCSVをダウンロード
+              </a>
               <a href="/api/export/polity-region-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
                 国家地域紐付けCSVをダウンロード
               </a>

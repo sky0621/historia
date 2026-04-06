@@ -35,6 +35,7 @@ export const csvSyncImportTargets = [
   "person-role-links",
   "person-region-links",
   "person-religion-links",
+  "person-sect-links",
   "polity-region-links",
   "dynasty-region-links",
   "roles",
@@ -95,6 +96,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPersonRegionLinksCsv(rawCsv);
     case "person-religion-links":
       return importPersonReligionLinksCsv(rawCsv);
+    case "person-sect-links":
+      return importPersonSectLinksCsv(rawCsv);
     case "polity-region-links":
       return importPolityRegionLinksCsv(rawCsv);
     case "dynasty-region-links":
@@ -1091,6 +1094,80 @@ function importPersonReligionLinksCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "person-religion-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
+    };
+  });
+}
+
+function importPersonSectLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["person_id", "person_name", "sect_id", "sect_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(personSectLinks).all();
+    const personOptions = tx.select().from(persons).all();
+    const sectOptions = tx.select().from(sects).all();
+    const personNameById = new Map(personOptions.map((item) => [item.id, item.name]));
+    const sectNameById = new Map(sectOptions.map((item) => [item.id, item.name]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.personId}:${item.sectId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const personId = parseRequiredId(cells.person_id, row.rowNumber, "person_id");
+      const personName = parseRequiredString(cells.person_name, "person_name", row.rowNumber);
+      const sectId = parseRequiredId(cells.sect_id, row.rowNumber, "sect_id");
+      const sectName = parseRequiredString(cells.sect_name, "sect_name", row.rowNumber);
+      const key = `${personId}:${sectId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId}, sect_id=${sectId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualPersonName = personNameById.get(personId);
+      if (!actualPersonName) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId} の人物は存在しません`);
+      }
+      if (actualPersonName !== personName) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId} の名称が一致しません`);
+      }
+
+      const actualSectName = sectNameById.get(sectId);
+      if (!actualSectName) {
+        throw new Error(`row ${row.rowNumber}: sect_id=${sectId} の宗派は存在しません`);
+      }
+      if (actualSectName !== sectName) {
+        throw new Error(`row ${row.rowNumber}: sect_id=${sectId} の名称が一致しません`);
+      }
+
+      if (!existingKeys.has(key)) {
+        tx.insert(personSectLinks).values({ personId, sectId }).run();
+        createdCount += 1;
+      } else {
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.personId}:${link.sectId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(personSectLinks)
+          .where(and(eq(personSectLinks.personId, link.personId), eq(personSectLinks.sectId, link.sectId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.personId}:${link.sectId}`)).length;
+
+    return {
+      targetType: "person-sect-links" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,

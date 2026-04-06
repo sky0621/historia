@@ -28,6 +28,7 @@ afterAll(() => {
 
 beforeEach(() => {
   sqlite.prepare("DELETE FROM sect_founder_links").run();
+  sqlite.prepare("DELETE FROM person_sect_links").run();
   sqlite.prepare("DELETE FROM sects").run();
   sqlite.prepare("DELETE FROM person_role_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
@@ -35,7 +36,6 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM role_polity_links").run();
   sqlite.prepare("DELETE FROM roles").run();
-  sqlite.prepare("DELETE FROM person_sect_links").run();
   sqlite.prepare("DELETE FROM person_religion_links").run();
   sqlite.prepare("DELETE FROM person_region_links").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
@@ -214,6 +214,20 @@ describe("import export service", () => {
         "person_id,person_name,religion_id,religion_name",
         "1,最澄,1,仏教",
         "2,空海,2,イスラム教"
+      ].join("\n")
+    );
+  });
+
+  it("exports person sect links csv", () => {
+    sqlite.prepare("INSERT INTO person_sect_links (person_id, sect_id) VALUES (1, 1), (2, 2)").run();
+
+    const csv = importExportModule.buildPersonSectLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "person_id,person_name,sect_id,sect_name",
+        "1,最澄,1,天台宗",
+        "2,空海,2,真言宗"
       ].join("\n")
     );
   });
