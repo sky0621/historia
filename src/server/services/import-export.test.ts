@@ -204,6 +204,20 @@ describe("import export service", () => {
     );
   });
 
+  it("exports person religion links csv", () => {
+    sqlite.prepare("INSERT INTO person_religion_links (person_id, religion_id) VALUES (1, 1), (2, 2)").run();
+
+    const csv = importExportModule.buildPersonReligionLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "person_id,person_name,religion_id,religion_name",
+        "1,最澄,1,仏教",
+        "2,空海,2,イスラム教"
+      ].join("\n")
+    );
+  });
+
   it("exports polity region links csv", () => {
     sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '漢帝国'), (2, '唐帝国')").run();
     sqlite.prepare("INSERT INTO regions (id, name) VALUES (11, '中国'), (12, '東アジア')").run();

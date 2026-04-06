@@ -34,6 +34,7 @@ export const csvSyncImportTargets = [
   "role-polity-links",
   "person-role-links",
   "person-region-links",
+  "person-religion-links",
   "polity-region-links",
   "dynasty-region-links",
   "roles",
@@ -92,6 +93,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPersonRoleLinksCsv(rawCsv);
     case "person-region-links":
       return importPersonRegionLinksCsv(rawCsv);
+    case "person-religion-links":
+      return importPersonReligionLinksCsv(rawCsv);
     case "polity-region-links":
       return importPolityRegionLinksCsv(rawCsv);
     case "dynasty-region-links":
@@ -1014,6 +1017,80 @@ function importPersonRegionLinksCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "person-region-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
+    };
+  });
+}
+
+function importPersonReligionLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["person_id", "person_name", "religion_id", "religion_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(personReligionLinks).all();
+    const personOptions = tx.select().from(persons).all();
+    const religionOptions = tx.select().from(religions).all();
+    const personNameById = new Map(personOptions.map((item) => [item.id, item.name]));
+    const religionNameById = new Map(religionOptions.map((item) => [item.id, item.name]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.personId}:${item.religionId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const personId = parseRequiredId(cells.person_id, row.rowNumber, "person_id");
+      const personName = parseRequiredString(cells.person_name, "person_name", row.rowNumber);
+      const religionId = parseRequiredId(cells.religion_id, row.rowNumber, "religion_id");
+      const religionName = parseRequiredString(cells.religion_name, "religion_name", row.rowNumber);
+      const key = `${personId}:${religionId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId}, religion_id=${religionId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualPersonName = personNameById.get(personId);
+      if (!actualPersonName) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId} の人物は存在しません`);
+      }
+      if (actualPersonName !== personName) {
+        throw new Error(`row ${row.rowNumber}: person_id=${personId} の名称が一致しません`);
+      }
+
+      const actualReligionName = religionNameById.get(religionId);
+      if (!actualReligionName) {
+        throw new Error(`row ${row.rowNumber}: religion_id=${religionId} の宗教は存在しません`);
+      }
+      if (actualReligionName !== religionName) {
+        throw new Error(`row ${row.rowNumber}: religion_id=${religionId} の名称が一致しません`);
+      }
+
+      if (!existingKeys.has(key)) {
+        tx.insert(personReligionLinks).values({ personId, religionId }).run();
+        createdCount += 1;
+      } else {
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.personId}:${link.religionId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(personReligionLinks)
+          .where(and(eq(personReligionLinks.personId, link.personId), eq(personReligionLinks.religionId, link.religionId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.personId}:${link.religionId}`)).length;
+
+    return {
+      targetType: "person-religion-links" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,
