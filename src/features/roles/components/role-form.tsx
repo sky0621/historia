@@ -19,7 +19,7 @@ type RoleFormProps = {
   title: string;
   description: string;
   submitLabel: string;
-  polityOptions: Array<{ id: number; name: string; timeLabel?: string }>;
+  polityOptions: Array<{ id: number; name: string; timeLabel?: string; tagNames?: string[] }>;
   defaultValues?: {
     id?: number;
     title: string;
@@ -34,10 +34,19 @@ export function RoleForm({ title, description, submitLabel, polityOptions, defau
   const [createState, createAction] = useActionState(createRoleAction, initialCreateFormState);
   const action = defaultValues?.id ? updateRoleAction : createAction;
   const [polityQuery, setPolityQuery] = useState("");
+  const [polityTagQuery, setPolityTagQuery] = useState("");
   const deferredPolityQuery = useDeferredValue(polityQuery);
-  const filteredPolities = polityOptions.filter((polity) =>
-    polity.name.toLocaleLowerCase("ja-JP").includes(deferredPolityQuery.trim().toLocaleLowerCase("ja-JP"))
-  );
+  const deferredPolityTagQuery = useDeferredValue(polityTagQuery);
+  const normalizedPolityQuery = deferredPolityQuery.trim().toLocaleLowerCase("ja-JP");
+  const normalizedPolityTagQuery = deferredPolityTagQuery.trim().toLocaleLowerCase("ja-JP");
+  const filteredPolities = polityOptions.filter((polity) => {
+    const matchesName = normalizedPolityQuery.length === 0 || polity.name.toLocaleLowerCase("ja-JP").includes(normalizedPolityQuery);
+    const matchesTag =
+      normalizedPolityTagQuery.length === 0 ||
+      (polity.tagNames ?? []).some((tagName) => tagName.toLocaleLowerCase("ja-JP").includes(normalizedPolityTagQuery));
+
+    return matchesName && matchesTag;
+  });
 
   return (
     <section className="space-y-6">
@@ -70,6 +79,12 @@ export function RoleForm({ title, description, submitLabel, polityOptions, defau
                 onChange={(event) => setPolityQuery(event.target.value)}
                 className={inputClassName}
                 placeholder="国家名で絞り込み"
+              />
+              <input
+                value={polityTagQuery}
+                onChange={(event) => setPolityTagQuery(event.target.value)}
+                className={inputClassName}
+                placeholder="タグで絞り込み"
               />
               <div className="grid gap-3 md:grid-cols-2">
                 {filteredPolities.map((polity) => (

@@ -29,10 +29,17 @@ import { getDynastySuccessionViewForDynasty, getDynastySuccessionViewForPolity, 
 import { getCitationListForTarget } from "@/server/services/sources";
 
 export function getPolityOptions() {
+  const tagLinks = getPolityTagIds(listPolities().map((polity) => polity.id));
+  const tagsById = new Map(listTags().map((tag) => [tag.id, tag.name]));
+
   return sortPolitiesByStartYear(listPolities()).map((polity) => ({
     id: polity.id,
     name: polity.name,
     timeLabel: formatPolityOptionTime(polity),
+    tagNames: tagLinks
+      .filter((link) => link.polityId === polity.id)
+      .map((link) => tagsById.get(link.tagId))
+      .filter((name): name is string => Boolean(name)),
     fromCalendarEra: polity.fromCalendarEra,
     fromYear: polity.fromYear,
     toCalendarEra: polity.toCalendarEra,
