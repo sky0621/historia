@@ -40,6 +40,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM person_religion_links").run();
   sqlite.prepare("DELETE FROM person_region_links").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
+  sqlite.prepare("DELETE FROM polity_tag_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM religions").run();
@@ -260,6 +261,22 @@ describe("import export service", () => {
         "polity_id,polity_name,region_id,region_name",
         "1,漢帝国,11,中国",
         "2,唐帝国,12,東アジア"
+      ].join("\n")
+    );
+  });
+
+  it("exports polity tag links csv", () => {
+    sqlite.prepare("INSERT INTO polities (id, name) VALUES (1, '漢帝国'), (2, '唐帝国')").run();
+    sqlite.prepare("INSERT INTO tags (id, name) VALUES (11, '中国史'), (12, '帝国')").run();
+    sqlite.prepare("INSERT INTO polity_tag_links (polity_id, tag_id) VALUES (1, 11), (2, 12)").run();
+
+    const csv = importExportModule.buildPolityTagLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "polity_id,polity_name,tag_id,tag_name",
+        "1,漢帝国,11,中国史",
+        "2,唐帝国,12,帝国"
       ].join("\n")
     );
   });

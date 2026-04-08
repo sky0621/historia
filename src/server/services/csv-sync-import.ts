@@ -18,6 +18,7 @@ import {
   personSectLinks,
   polities,
   polityRegionLinks,
+  polityTagLinks,
   religions,
   regions,
   role,
@@ -39,6 +40,7 @@ export const csvSyncImportTargets = [
   "person-religion-links",
   "person-sect-links",
   "polity-region-links",
+  "polity-tag-links",
   "dynasty-region-links",
   "roles",
   "period-categories",
@@ -105,6 +107,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPersonSectLinksCsv(rawCsv);
     case "polity-region-links":
       return importPolityRegionLinksCsv(rawCsv);
+    case "polity-tag-links":
+      return importPolityTagLinksCsv(rawCsv);
     case "dynasty-region-links":
       return importDynastyRegionLinksCsv(rawCsv);
     case "roles":
@@ -363,6 +367,7 @@ function importTagsCsv(rawCsv: string): CsvSyncImportResult {
     const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
     for (const id of deletedIds) {
       tx.delete(eventTagLinks).where(eq(eventTagLinks.tagId, id)).run();
+      tx.delete(polityTagLinks).where(eq(polityTagLinks.tagId, id)).run();
       tx.delete(tags).where(eq(tags.id, id)).run();
     }
 
@@ -434,6 +439,7 @@ function importPolitiesCsv(rawCsv: string): CsvSyncImportResult {
     const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
     for (const id of deletedIds) {
       tx.delete(polityRegionLinks).where(eq(polityRegionLinks.polityId, id)).run();
+      tx.delete(polityTagLinks).where(eq(polityTagLinks.polityId, id)).run();
       tx.delete(polities).where(eq(polities.id, id)).run();
     }
 
@@ -1300,6 +1306,80 @@ function importPolityRegionLinksCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "polity-region-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
+    };
+  });
+}
+
+function importPolityTagLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["polity_id", "polity_name", "tag_id", "tag_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(polityTagLinks).all();
+    const polityOptions = tx.select().from(polities).all();
+    const tagOptions = tx.select().from(tags).all();
+    const polityNameById = new Map(polityOptions.map((item) => [item.id, item.name]));
+    const tagNameById = new Map(tagOptions.map((item) => [item.id, item.name]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.polityId}:${item.tagId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const polityId = parseRequiredId(cells.polity_id, row.rowNumber, "polity_id");
+      const polityName = parseRequiredString(cells.polity_name, "polity_name", row.rowNumber);
+      const tagId = parseRequiredId(cells.tag_id, row.rowNumber, "tag_id");
+      const tagName = parseRequiredString(cells.tag_name, "tag_name", row.rowNumber);
+      const key = `${polityId}:${tagId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId}, tag_id=${tagId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualPolityName = polityNameById.get(polityId);
+      if (!actualPolityName) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId} の国家は存在しません`);
+      }
+      if (actualPolityName !== polityName) {
+        throw new Error(`row ${row.rowNumber}: polity_id=${polityId} の名称が一致しません`);
+      }
+
+      const actualTagName = tagNameById.get(tagId);
+      if (!actualTagName) {
+        throw new Error(`row ${row.rowNumber}: tag_id=${tagId} のタグは存在しません`);
+      }
+      if (actualTagName !== tagName) {
+        throw new Error(`row ${row.rowNumber}: tag_id=${tagId} の名称が一致しません`);
+      }
+
+      if (!existingKeys.has(key)) {
+        tx.insert(polityTagLinks).values({ polityId, tagId }).run();
+        createdCount += 1;
+      } else {
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.polityId}:${link.tagId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(polityTagLinks)
+          .where(and(eq(polityTagLinks.polityId, link.polityId), eq(polityTagLinks.tagId, link.tagId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.polityId}:${link.tagId}`)).length;
+
+    return {
+      targetType: "polity-tag-links" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,

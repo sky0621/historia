@@ -255,6 +255,24 @@ export function buildPolityRegionLinksCsv() {
   return toCsv(rows, ["polity_id", "polity_name", "region_id", "region_name"]);
 }
 
+export function buildPolityTagLinksCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         p.id AS polity_id,
+         p.name AS polity_name,
+         t.id AS tag_id,
+         t.name AS tag_name
+       FROM polity_tag_links ptl
+       INNER JOIN polities p ON ptl.polity_id = p.id
+       INNER JOIN tags t ON ptl.tag_id = t.id
+       ORDER BY p.id, t.id`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["polity_id", "polity_name", "tag_id", "tag_name"]);
+}
+
 export function buildDynastyRegionLinksCsv() {
   const rows = sqlite
     .prepare(

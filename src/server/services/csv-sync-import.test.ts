@@ -36,6 +36,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM role_polity_links").run();
   sqlite.prepare("DELETE FROM roles").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
+  sqlite.prepare("DELETE FROM polity_tag_links").run();
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM historical_period_region_links").run();
   sqlite.prepare("DELETE FROM person_region_links").run();
@@ -106,14 +107,16 @@ beforeEach(() => {
       "INSERT INTO roles (id, title, reading, description, note) VALUES (1, '皇帝', 'こうてい', 'old role', 'old note'), (2, '執政官', NULL, 'old consul', NULL)"
     )
     .run();
+  sqlite.prepare("INSERT INTO tags (id, name, reading) VALUES (1, '帝国', 'ていこく'), (2, '東洋史', NULL)").run();
   sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1), (2, 2)").run();
   sqlite.prepare("INSERT INTO person_role_links (person_id, role_id) VALUES (1, 1)").run();
+  sqlite.prepare("INSERT INTO polity_tag_links (polity_id, tag_id) VALUES (1, 1), (2, 2)").run();
 });
 
 describe("csv sync import service", () => {
   it("syncs tags using タグ.csv format", () => {
-    sqlite.prepare("INSERT INTO tags (id, name, reading) VALUES (1, '都城', 'old'), (2, '旧分類', NULL)").run();
-    sqlite.prepare("INSERT INTO event_tag_links (event_id, tag_id) SELECT 1, 2 WHERE 0").run();
+    sqlite.prepare("INSERT INTO tags (id, name, reading) VALUES (10, '都城', 'old'), (11, '旧分類', NULL)").run();
+    sqlite.prepare("INSERT INTO event_tag_links (event_id, tag_id) SELECT 1, 11 WHERE 0").run();
 
     const result = csvSyncImportModule.importCsvSync(
       "tags",
@@ -133,11 +136,11 @@ describe("csv sync import service", () => {
       totalRows: 2,
       createdCount: 1,
       updatedCount: 1,
-      deletedCount: 1
+      deletedCount: 3
     });
     expect(rows).toEqual([
       { id: 1, name: "都城", reading: "とじょう" },
-      { id: 3, name: "日本史", reading: null }
+      { id: 12, name: "日本史", reading: null }
     ]);
   });
 
@@ -754,6 +757,33 @@ describe("csv sync import service", () => {
     expect(rows).toEqual([
       { polity_id: 1, region_id: 1 },
       { polity_id: 2, region_id: 1 }
+    ]);
+  });
+
+  it("syncs polity tag links by polity_id and tag_id", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "polity-tag-links",
+      [
+        "polity_id,polity_name,tag_id,tag_name",
+        "1,日本,1,帝国",
+        "2,ローマ帝国,1,帝国"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT polity_id, tag_id FROM polity_tag_links ORDER BY polity_id, tag_id")
+      .all() as Array<{ polity_id: number; tag_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "polity-tag-links",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { polity_id: 1, tag_id: 1 },
+      { polity_id: 2, tag_id: 1 }
     ]);
   });
 
