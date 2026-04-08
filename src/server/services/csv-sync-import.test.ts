@@ -27,6 +27,7 @@ afterAll(() => {
 });
 
 beforeEach(() => {
+  sqlite.prepare("DELETE FROM event_tag_links").run();
   sqlite.prepare("DELETE FROM event_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
@@ -45,6 +46,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM person_religion_links").run();
   sqlite.prepare("DELETE FROM religions").run();
+  sqlite.prepare("DELETE FROM tags").run();
   sqlite.prepare("DELETE FROM historical_period_category_links").run();
   sqlite.prepare("DELETE FROM historical_periods").run();
   sqlite.prepare("DELETE FROM persons").run();
@@ -109,6 +111,36 @@ beforeEach(() => {
 });
 
 describe("csv sync import service", () => {
+  it("syncs tags using タグ.csv format", () => {
+    sqlite.prepare("INSERT INTO tags (id, name, reading) VALUES (1, '都城', 'old'), (2, '旧分類', NULL)").run();
+    sqlite.prepare("INSERT INTO event_tag_links (event_id, tag_id) SELECT 1, 2 WHERE 0").run();
+
+    const result = csvSyncImportModule.importCsvSync(
+      "tags",
+      [
+        "id,name,reading",
+        "1,都城,とじょう",
+        ",日本史,"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT id, name, reading FROM tags ORDER BY id")
+      .all() as Array<{ id: number; name: string; reading: string | null }>;
+
+    expect(result).toEqual({
+      targetType: "tags",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { id: 1, name: "都城", reading: "とじょう" },
+      { id: 3, name: "日本史", reading: null }
+    ]);
+  });
+
   it("syncs persons using 人物.csv format and deletes related links for removed rows", () => {
     sqlite.prepare("INSERT INTO regions (id, name) VALUES (10, '東アジア')").run();
     sqlite.prepare("INSERT INTO religions (id, name) VALUES (10, '道教')").run();

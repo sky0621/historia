@@ -27,6 +27,7 @@ afterAll(() => {
 });
 
 beforeEach(() => {
+  sqlite.prepare("DELETE FROM event_tag_links").run();
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM person_sect_links").run();
   sqlite.prepare("DELETE FROM sects").run();
@@ -42,6 +43,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM polities").run();
   sqlite.prepare("DELETE FROM religion_founder_links").run();
   sqlite.prepare("DELETE FROM religions").run();
+  sqlite.prepare("DELETE FROM tags").run();
   sqlite.prepare("DELETE FROM persons").run();
   sqlite.prepare("DELETE FROM era").run();
   sqlite.prepare("DELETE FROM sqlite_sequence").run();
@@ -58,6 +60,20 @@ beforeEach(() => {
 });
 
 describe("import export service", () => {
+  it("exports tags csv with table columns only", () => {
+    sqlite.prepare("INSERT INTO tags (id, name, reading) VALUES (1, '都城', 'とじょう'), (2, '日本史', NULL)").run();
+
+    const csv = importExportModule.buildTagsCsv();
+
+    expect(csv).toBe(
+      [
+        "id,name,reading",
+        "2,日本史,",
+        "1,都城,とじょう"
+      ].join("\n")
+    );
+  });
+
   it("exports persons csv with table columns only", () => {
     sqlite
       .prepare(

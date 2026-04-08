@@ -5,6 +5,7 @@ import {
   dynastyPolityLinks,
   dynastyRegionLinks,
   eventRegionLinks,
+  eventTagLinks,
   historicalPeriodCategoryLinks,
   historicalPeriodPolityLinks,
   historicalPeriodRegionLinks,
@@ -22,7 +23,8 @@ import {
   role,
   rolePolityLinks,
   sectFounderLinks,
-  sects
+  sects,
+  tags
 } from "@/db/schema";
 
 export const csvSyncImportTargets = [
@@ -40,6 +42,7 @@ export const csvSyncImportTargets = [
   "dynasty-region-links",
   "roles",
   "period-categories",
+  "tags",
   "historical-periods",
   "historical-period-category-links",
   "religions",
@@ -74,6 +77,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importRegionsCsv(rawCsv);
     case "period-categories":
       return importPeriodCategoriesCsv(rawCsv);
+    case "tags":
+      return importTagsCsv(rawCsv);
     case "historical-periods":
       return importHistoricalPeriodsCsv(rawCsv);
     case "historical-period-category-links":
@@ -310,6 +315,59 @@ function importPeriodCategoriesCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "period-categories" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount: deletedIds.length
+    };
+  });
+}
+
+function importTagsCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["id", "name", "reading"]);
+
+  return db.transaction((tx) => {
+    const existingItems = tx.select().from(tags).all();
+    const existingIds = new Set(existingItems.map((item) => item.id));
+    const csvIds = new Set<number>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const id = parseOptionalId(cells.id, row.rowNumber);
+
+      const values = {
+        name: parseRequiredString(cells.name, "name", row.rowNumber),
+        reading: nullable(cells.reading)
+      };
+
+      if (id == null) {
+        tx.insert(tags).values(values).run();
+        createdCount += 1;
+        continue;
+      }
+
+      assertUniqueCsvId(csvIds, id, row.rowNumber);
+      if (!existingIds.has(id)) {
+        tx.insert(tags).values({ id, ...values }).run();
+        createdCount += 1;
+        continue;
+      }
+
+      tx.update(tags).set(values).where(eq(tags.id, id)).run();
+      updatedCount += 1;
+    }
+
+    const deletedIds = existingItems.map((item) => item.id).filter((id) => !csvIds.has(id));
+    for (const id of deletedIds) {
+      tx.delete(eventTagLinks).where(eq(eventTagLinks.tagId, id)).run();
+      tx.delete(tags).where(eq(tags.id, id)).run();
+    }
+
+    return {
+      targetType: "tags" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,
