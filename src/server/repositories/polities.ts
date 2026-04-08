@@ -7,6 +7,7 @@ import {
   historicalPeriodPolityLinks,
   polities,
   polityRegionLinks,
+  polityTagLinks,
   polityTransitions,
   rolePolityLinks
 } from "@/db/schema";
@@ -22,7 +23,7 @@ export function getPolityById(id: number) {
   return db.select().from(polities).where(eq(polities.id, id)).get();
 }
 
-export function createPolity(input: PolityInsert, regionIds: number[]) {
+export function createPolity(input: PolityInsert, regionIds: number[], tagIds: number[]) {
   return db.transaction((tx) => {
     const result = tx.insert(polities).values(input).run();
     const polityId = Number(result.lastInsertRowid);
@@ -30,18 +31,25 @@ export function createPolity(input: PolityInsert, regionIds: number[]) {
     if (regionIds.length > 0) {
       tx.insert(polityRegionLinks).values(regionIds.map((regionId) => ({ polityId, regionId }))).run();
     }
+    if (tagIds.length > 0) {
+      tx.insert(polityTagLinks).values(tagIds.map((tagId) => ({ polityId, tagId }))).run();
+    }
 
     return polityId;
   });
 }
 
-export function updatePolity(id: number, input: Omit<PolityInsert, "id">, regionIds: number[]) {
+export function updatePolity(id: number, input: Omit<PolityInsert, "id">, regionIds: number[], tagIds: number[]) {
   db.transaction((tx) => {
     tx.update(polities).set(input).where(eq(polities.id, id)).run();
     tx.delete(polityRegionLinks).where(eq(polityRegionLinks.polityId, id)).run();
+    tx.delete(polityTagLinks).where(eq(polityTagLinks.polityId, id)).run();
 
     if (regionIds.length > 0) {
       tx.insert(polityRegionLinks).values(regionIds.map((regionId) => ({ polityId: id, regionId }))).run();
+    }
+    if (tagIds.length > 0) {
+      tx.insert(polityTagLinks).values(tagIds.map((tagId) => ({ polityId: id, tagId }))).run();
     }
   });
 }
@@ -56,6 +64,7 @@ export function deletePolity(id: number) {
     tx.delete(polityTransitions).where(eq(polityTransitions.successorPolityId, id)).run();
     tx.delete(rolePolityLinks).where(eq(rolePolityLinks.polityId, id)).run();
     tx.delete(polityRegionLinks).where(eq(polityRegionLinks.polityId, id)).run();
+    tx.delete(polityTagLinks).where(eq(polityTagLinks.polityId, id)).run();
     tx.delete(polities).where(eq(polities.id, id)).run();
   });
 }
@@ -69,5 +78,17 @@ export function getPolityRegionIds(polityIds: number[]) {
     .select()
     .from(polityRegionLinks)
     .where(inArray(polityRegionLinks.polityId, polityIds))
+    .all();
+}
+
+export function getPolityTagIds(polityIds: number[]) {
+  if (polityIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(polityTagLinks)
+    .where(inArray(polityTagLinks.polityId, polityIds))
     .all();
 }

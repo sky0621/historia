@@ -72,6 +72,17 @@ export default async function PolityDetailPage({ params }: { params: Promise<{ i
               </dd>
             </div>
             <div>
+              <dt className="font-medium text-[var(--muted)]">タグ</dt>
+              <dd className="mt-1">
+                {view.tags.length === 0 ? "-" : view.tags.map((tag, index) => (
+                  <span key={tag.id}>
+                    {index > 0 ? ", " : null}
+                    {tag.name}
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
               <dt className="font-medium text-[var(--muted)]">メモ</dt>
               <dd className="mt-1 whitespace-pre-wrap">{view.polity.note ?? "-"}</dd>
             </div>

@@ -83,12 +83,13 @@ export default async function PolitiesPage({ searchParams }: PolitiesPageProps) 
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">名称</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">期間</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">地域</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">タグ</th>
             </tr>
           </thead>
           <tbody>
             {polities.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">
                   まだ国家・政体はありません。
                 </td>
               </tr>
@@ -104,6 +105,7 @@ export default async function PolitiesPage({ searchParams }: PolitiesPageProps) 
                   <td className="px-5 py-4 text-[var(--muted)]">
                     {renderLinkedRegions(polity.regionIds, polity.regionNames)}
                   </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">{polity.tagNames.length === 0 ? "-" : polity.tagNames.join(", ")}</td>
                 </tr>
               ))
             )}

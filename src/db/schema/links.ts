@@ -1,5 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { persons, polities, role } from "@/db/schema/masters";
+import { persons, polities, role, tags } from "@/db/schema/masters";
 
 export const dynastyPolityLinks = sqliteTable("dynasty_polity_links", {
   dynastyId: integer("dynasty_id").notNull(),
@@ -67,6 +67,11 @@ export const eventRegionLinks = sqliteTable("event_region_links", {
 export const eventTagLinks = sqliteTable("event_tag_links", {
   eventId: integer("event_id").notNull(),
   tagId: integer("tag_id").notNull()
+});
+
+export const polityTagLinks = sqliteTable("polity_tag_links", {
+  polityId: integer("polity_id").notNull().references(() => polities.id, { onDelete: "cascade" }),
+  tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" })
 });
 
 export const personRegionLinks = sqliteTable("person_region_links", {

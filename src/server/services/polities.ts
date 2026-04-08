@@ -4,11 +4,13 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 import type { DynastyInput, PolityInput } from "@/features/polities/schema";
 import { listHistoricalPeriods } from "@/server/repositories/historical-periods";
 import { listRegions } from "@/server/repositories/regions";
+import { getTagsByIds, listTags } from "@/server/repositories/tags";
 import {
   createPolity,
   deletePolity,
   getPolityById,
   getPolityRegionIds,
+  getPolityTagIds,
   listPolities,
   updatePolity
 } from "@/server/repositories/polities";
@@ -53,6 +55,10 @@ export function getRegionOptions() {
   return listRegions().map((region) => ({ id: region.id, name: region.name, parentRegionId: region.parentRegionId }));
 }
 
+export function getTagOptions() {
+  return listTags().map((tag) => ({ id: tag.id, name: tag.name }));
+}
+
 type PolityListFilters = {
   query?: string;
   regionId?: number;
@@ -72,7 +78,10 @@ export function getPolityListView(filters: PolityListFilters = {}) {
   const polities = listPolities();
   const regions = listRegions();
   const links = getPolityRegionIds(polities.map((polity) => polity.id));
+  const tagLinks = getPolityTagIds(polities.map((polity) => polity.id));
+  const tags = listTags();
   const regionNameById = new Map(regions.map((region) => [region.id, region.name]));
+  const tagNameById = new Map(tags.map((tag) => [tag.id, tag.name]));
 
   return polities
     .map((polity) => ({
@@ -82,7 +91,11 @@ export function getPolityListView(filters: PolityListFilters = {}) {
         .filter((link) => link.polityId === polity.id)
         .map((link) => regionNameById.get(link.regionId))
         .filter((name): name is string => Boolean(name)),
-      regionIds: links.filter((link) => link.polityId === polity.id).map((link) => link.regionId)
+      regionIds: links.filter((link) => link.polityId === polity.id).map((link) => link.regionId),
+      tagNames: tagLinks
+        .filter((link) => link.polityId === polity.id)
+        .map((link) => tagNameById.get(link.tagId))
+        .filter((name): name is string => Boolean(name))
     }))
     .filter((polity) => {
       if (filters.regionId && !polity.regionIds.includes(filters.regionId)) {
@@ -99,7 +112,7 @@ export function getPolityListView(filters: PolityListFilters = {}) {
 
       return true;
     })
-    .filter((polity) => matchesQuery([polity.name, polity.note, polity.regionNames.join(", ")], normalizedQuery))
+    .filter((polity) => matchesQuery([polity.name, polity.note, polity.regionNames.join(", "), polity.tagNames.join(", ")], normalizedQuery))
     .sort((left, right) => compareStoredBoundaryRange(left, right) || left.name.localeCompare(right.name, "ja-JP"));
 }
 
@@ -159,12 +172,14 @@ export function getPolityDetailView(id: number) {
     }));
   const regions = listRegions();
   const linkedRegionIds = getPolityRegionIds([polity.id]).map((link) => link.regionId);
+  const linkedTagIds = getPolityTagIds([polity.id]).map((link) => link.tagId);
 
   return {
     polity,
     dynasties,
     relatedPeriods,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
+    tags: getTagsByIds(linkedTagIds),
     relatedEvents: getRelatedEvents({ polityId: id }),
     polityTransitions: getPolityTransitionView(id),
     dynastySuccessions: getDynastySuccessionViewForPolity(id),
@@ -207,7 +222,8 @@ export function createPolityFromInput(input: PolityInput) {
       ...toStoredPolityTime("from", input.fromTimeExpression),
       ...toStoredPolityTime("to", input.toTimeExpression)
     },
-    input.regionIds
+    input.regionIds,
+    input.tagIds
   );
   recordChangeHistory({
     targetType: "polity",
@@ -229,7 +245,8 @@ export function updatePolityFromInput(id: number, input: PolityInput) {
       ...toStoredPolityTime("from", input.fromTimeExpression),
       ...toStoredPolityTime("to", input.toTimeExpression)
     },
-    input.regionIds
+    input.regionIds,
+    input.tagIds
   );
   recordChangeHistory({
     targetType: "polity",

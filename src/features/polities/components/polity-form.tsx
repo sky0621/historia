@@ -26,23 +26,30 @@ type RegionOption = {
   parentRegionId?: number | null;
 };
 
+type TagOption = {
+  id: number;
+  name: string;
+};
+
 type Props = {
   title: string;
   description: string;
   submitLabel: string;
   regionOptions: RegionOption[];
+  tagOptions: TagOption[];
   defaultValues?: {
     id?: number;
     name: string;
     description: string;
     note: string;
     regionIds: number[];
+    tagIds: number[];
     fromTimeExpression?: TimeExpressionInput;
     toTimeExpression?: TimeExpressionInput;
   };
 };
 
-export function PolityForm({ title, description, submitLabel, regionOptions, defaultValues }: Props) {
+export function PolityForm({ title, description, submitLabel, regionOptions, tagOptions, defaultValues }: Props) {
   const [createState, createAction] = useActionState(createPolityAction, initialCreateFormState);
   const action = defaultValues?.id ? updatePolityAction : createAction;
 
@@ -106,6 +113,24 @@ export function PolityForm({ title, description, submitLabel, regionOptions, def
               selectedIds={defaultValues?.regionIds ?? []}
               itemClassName={checkboxCardClassName}
             />
+          </CollapsibleFormSection>
+        </section>
+
+        <section className={formCardClassName}>
+          <CollapsibleFormSection title="タグ" defaultOpen={(defaultValues?.tagIds.length ?? 0) > 0}>
+            <div className="grid gap-3 md:grid-cols-2">
+              {tagOptions.map((tag) => (
+                <label key={tag.id} className={checkboxCardClassName}>
+                  <input
+                    type="checkbox"
+                    name="tagIds"
+                    value={tag.id}
+                    defaultChecked={(defaultValues?.tagIds ?? []).includes(tag.id)}
+                  />
+                  <span>{tag.name}</span>
+                </label>
+              ))}
+            </div>
           </CollapsibleFormSection>
         </section>
 

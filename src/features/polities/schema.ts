@@ -3,6 +3,7 @@ import { parseTimeExpressionFormData } from "@/lib/time-expression/form-data";
 import { timeExpressionSchema } from "@/lib/time-expression/schema";
 
 const regionIdsSchema = z.array(z.number().int().positive()).default([]);
+const tagIdsSchema = z.array(z.number().int().positive()).default([]);
 
 export const politySchema = z.object({
   name: z.string().trim().min(1, "名称は必須です"),
@@ -10,7 +11,8 @@ export const politySchema = z.object({
   note: z.string().trim().optional(),
   fromTimeExpression: timeExpressionSchema.optional(),
   toTimeExpression: timeExpressionSchema.optional(),
-  regionIds: regionIdsSchema
+  regionIds: regionIdsSchema,
+  tagIds: tagIdsSchema
 });
 
 export const dynastySchema = z.object({
@@ -33,7 +35,8 @@ export function parsePolityFormData(formData: FormData): PolityInput {
     note: formData.get("note") ?? undefined,
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
-    regionIds: normalizeIds(formData.getAll("regionIds"))
+    regionIds: normalizeIds(formData.getAll("regionIds")),
+    tagIds: normalizeIds(formData.getAll("tagIds"))
   });
 }
 
