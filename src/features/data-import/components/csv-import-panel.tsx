@@ -26,6 +26,7 @@ const targetOptions = [
   { value: "person-sect-links", label: "人物宗派紐付け" },
   { value: "polity-region-links", label: "国家地域紐付け" },
   { value: "polity-tag-links", label: "国家タグ紐付け" },
+  { value: "dynasty-tag-links", label: "王朝タグ紐付け" },
   { value: "dynasty-region-links", label: "王朝地域紐付け" },
   { value: "roles", label: "役職" },
   { value: "period-categories", label: "時代区分カテゴリ" },
@@ -34,7 +35,9 @@ const targetOptions = [
   { value: "historical-period-category-links", label: "時代区分カテゴリ紐付け" },
   { value: "religions", label: "宗教" },
   { value: "sects", label: "宗派" }
-] as const;
+] as const satisfies ReadonlyArray<{ value: string; label: string }>;
+
+const sortedTargetOptions = [...targetOptions].sort((left, right) => left.label.localeCompare(right.label, "ja-JP"));
 
 export function CsvImportPanel() {
   const [state, action, pending] = useActionState(importCsvAction, initialState);
@@ -50,7 +53,7 @@ export function CsvImportPanel() {
         <label className={fieldLabelClassName}>
           <span className={fieldMetaClassName}>取込対象</span>
           <select name="targetType" className={inputClassName} defaultValue="polities" required>
-            {targetOptions.map((option) => (
+            {sortedTargetOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -98,6 +101,7 @@ const labelByTarget = {
   "person-sect-links": "人物宗派紐付け",
   "polity-region-links": "国家地域紐付け",
   "polity-tag-links": "国家タグ紐付け",
+  "dynasty-tag-links": "王朝タグ紐付け",
   "dynasty-region-links": "王朝地域紐付け",
   roles: "役職",
   "period-categories": "時代区分カテゴリ",

@@ -33,6 +33,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM sects").run();
   sqlite.prepare("DELETE FROM person_role_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
+  sqlite.prepare("DELETE FROM dynasty_tag_links").run();
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
   sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM role_polity_links").run();
@@ -293,6 +294,22 @@ describe("import export service", () => {
         "dynasty_id,dynasty_name,region_id,region_name",
         "1,漢,1,中国",
         "2,唐,2,東アジア"
+      ].join("\n")
+    );
+  });
+
+  it("exports dynasty tag links csv", () => {
+    sqlite.prepare("INSERT INTO dynasties (id, name) VALUES (1, '漢'), (2, '唐')").run();
+    sqlite.prepare("INSERT INTO tags (id, name) VALUES (21, '中国史'), (22, '帝国')").run();
+    sqlite.prepare("INSERT INTO dynasty_tag_links (dynasty_id, tag_id) VALUES (1, 21), (2, 22)").run();
+
+    const csv = importExportModule.buildDynastyTagLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "dynasty_id,dynasty_name,tag_id,tag_name",
+        "1,漢,21,中国史",
+        "2,唐,22,帝国"
       ].join("\n")
     );
   });

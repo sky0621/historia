@@ -7,6 +7,30 @@ export const metadata: Metadata = {
   title: "data"
 };
 
+const exportLinks = [
+  { href: "/api/export/dynasties.csv", label: "王朝CSVをダウンロード" },
+  { href: "/api/export/dynasty-polity-links.csv", label: "王朝国家紐付けCSVをダウンロード" },
+  { href: "/api/export/dynasty-region-links.csv", label: "王朝地域紐付けCSVをダウンロード" },
+  { href: "/api/export/dynasty-tag-links.csv", label: "王朝タグ紐付けCSVをダウンロード" },
+  { href: "/api/export/persons.csv", label: "人物CSVをダウンロード" },
+  { href: "/api/export/person-region-links.csv", label: "人物地域紐付けCSVをダウンロード" },
+  { href: "/api/export/person-religion-links.csv", label: "人物宗教紐付けCSVをダウンロード" },
+  { href: "/api/export/person-role-links.csv", label: "人物役職紐付けCSVをダウンロード" },
+  { href: "/api/export/person-sect-links.csv", label: "人物宗派紐付けCSVをダウンロード" },
+  { href: "/api/export/period-categories.csv", label: "時代区分カテゴリCSVをダウンロード" },
+  { href: "/api/export/historical-period-category-links.csv", label: "時代区分カテゴリ紐付けCSVをダウンロード" },
+  { href: "/api/export/historical-periods.csv", label: "時代区分CSVをダウンロード" },
+  { href: "/api/export/regions.csv", label: "地域CSVをダウンロード" },
+  { href: "/api/export/religions.csv", label: "宗教CSVをダウンロード" },
+  { href: "/api/export/sects.csv", label: "宗派CSVをダウンロード" },
+  { href: "/api/export/polities.csv", label: "国家CSVをダウンロード" },
+  { href: "/api/export/polity-region-links.csv", label: "国家地域紐付けCSVをダウンロード" },
+  { href: "/api/export/polity-tag-links.csv", label: "国家タグ紐付けCSVをダウンロード" },
+  { href: "/api/export/tags.csv", label: "タグCSVをダウンロード" },
+  { href: "/api/export/roles.csv", label: "役職CSVをダウンロード" },
+  { href: "/api/export/role-polity-links.csv", label: "役職国家紐付けCSVをダウンロード" }
+].sort((left, right) => left.label.localeCompare(right.label, "ja-JP"));
+
 export default function ManageDataPage() {
   const recentImportRuns = getRecentImportRuns();
 
@@ -24,66 +48,11 @@ export default function ManageDataPage() {
           <div className="rounded-[32px] border border-[var(--border)] bg-white/80 p-8 shadow-sm">
             <h2 className="text-lg font-semibold">Export</h2>
             <div className="mt-5 grid gap-3">
-              <a href="/api/export/persons.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                人物CSVをダウンロード
-              </a>
-              <a href="/api/export/regions.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                地域CSVをダウンロード
-              </a>
-              <a href="/api/export/religions.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                宗教CSVをダウンロード
-              </a>
-              <a href="/api/export/sects.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                宗派CSVをダウンロード
-              </a>
-              <a href="/api/export/polities.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                国家CSVをダウンロード
-              </a>
-              <a href="/api/export/dynasties.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                王朝CSVをダウンロード
-              </a>
-              <a href="/api/export/dynasty-polity-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                王朝国家紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/role-polity-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                役職国家紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/person-role-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                人物役職紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/person-region-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                人物地域紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/person-religion-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                人物宗教紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/person-sect-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                人物宗派紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/polity-region-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                国家地域紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/polity-tag-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                国家タグ紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/dynasty-region-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                王朝地域紐付けCSVをダウンロード
-              </a>
-              <a href="/api/export/roles.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                役職CSVをダウンロード
-              </a>
-              <a href="/api/export/tags.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                タグCSVをダウンロード
-              </a>
-              <a href="/api/export/period-categories.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                時代区分カテゴリCSVをダウンロード
-              </a>
-              <a href="/api/export/historical-periods.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                時代区分CSVをダウンロード
-              </a>
-              <a href="/api/export/historical-period-category-links.csv" download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
-                時代区分カテゴリ紐付けCSVをダウンロード
-              </a>
+              {exportLinks.map((link) => (
+                <a key={link.href} href={link.href} download className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm">
+                  {link.label}
+                </a>
+              ))}
             </div>
           </div>
 

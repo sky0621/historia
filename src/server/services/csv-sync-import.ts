@@ -4,6 +4,7 @@ import {
   dynasties,
   dynastyPolityLinks,
   dynastyRegionLinks,
+  dynastyTagLinks,
   eventRegionLinks,
   eventTagLinks,
   historicalPeriodCategoryLinks,
@@ -41,6 +42,7 @@ export const csvSyncImportTargets = [
   "person-sect-links",
   "polity-region-links",
   "polity-tag-links",
+  "dynasty-tag-links",
   "dynasty-region-links",
   "roles",
   "period-categories",
@@ -109,6 +111,8 @@ export function importCsvSync(targetType: CsvSyncImportTarget, rawCsv: string): 
       return importPolityRegionLinksCsv(rawCsv);
     case "polity-tag-links":
       return importPolityTagLinksCsv(rawCsv);
+    case "dynasty-tag-links":
+      return importDynastyTagLinksCsv(rawCsv);
     case "dynasty-region-links":
       return importDynastyRegionLinksCsv(rawCsv);
     case "roles":
@@ -368,6 +372,7 @@ function importTagsCsv(rawCsv: string): CsvSyncImportResult {
     for (const id of deletedIds) {
       tx.delete(eventTagLinks).where(eq(eventTagLinks.tagId, id)).run();
       tx.delete(polityTagLinks).where(eq(polityTagLinks.tagId, id)).run();
+      tx.delete(dynastyTagLinks).where(eq(dynastyTagLinks.tagId, id)).run();
       tx.delete(tags).where(eq(tags.id, id)).run();
     }
 
@@ -512,6 +517,7 @@ function importDynastiesCsv(rawCsv: string): CsvSyncImportResult {
     for (const id of deletedIds) {
       tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.dynastyId, id)).run();
       tx.delete(dynastyRegionLinks).where(eq(dynastyRegionLinks.dynastyId, id)).run();
+      tx.delete(dynastyTagLinks).where(eq(dynastyTagLinks.dynastyId, id)).run();
       tx.delete(dynasties).where(eq(dynasties.id, id)).run();
     }
 
@@ -1380,6 +1386,80 @@ function importPolityTagLinksCsv(rawCsv: string): CsvSyncImportResult {
 
     return {
       targetType: "polity-tag-links" as const,
+      totalRows: parsed.rows.length,
+      createdCount,
+      updatedCount,
+      deletedCount
+    };
+  });
+}
+
+function importDynastyTagLinksCsv(rawCsv: string): CsvSyncImportResult {
+  const parsed = parseCsv(rawCsv);
+  assertHeaders(parsed.headers, ["dynasty_id", "dynasty_name", "tag_id", "tag_name"]);
+
+  return db.transaction((tx) => {
+    const existingLinks = tx.select().from(dynastyTagLinks).all();
+    const dynastyOptions = tx.select().from(dynasties).all();
+    const tagOptions = tx.select().from(tags).all();
+    const dynastyNameById = new Map(dynastyOptions.map((item) => [item.id, item.name]));
+    const tagNameById = new Map(tagOptions.map((item) => [item.id, item.name]));
+    const existingKeys = new Set(existingLinks.map((item) => `${item.dynastyId}:${item.tagId}`));
+    const csvKeys = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    for (const row of parsed.rows) {
+      const cells = toCells(parsed.headers, row.values);
+      const dynastyId = parseRequiredId(cells.dynasty_id, row.rowNumber, "dynasty_id");
+      const dynastyName = parseRequiredString(cells.dynasty_name, "dynasty_name", row.rowNumber);
+      const tagId = parseRequiredId(cells.tag_id, row.rowNumber, "tag_id");
+      const tagName = parseRequiredString(cells.tag_name, "tag_name", row.rowNumber);
+      const key = `${dynastyId}:${tagId}`;
+
+      if (csvKeys.has(key)) {
+        throw new Error(`row ${row.rowNumber}: dynasty_id=${dynastyId}, tag_id=${tagId} が CSV 内で重複しています`);
+      }
+      csvKeys.add(key);
+
+      const actualDynastyName = dynastyNameById.get(dynastyId);
+      if (!actualDynastyName) {
+        throw new Error(`row ${row.rowNumber}: dynasty_id=${dynastyId} の王朝は存在しません`);
+      }
+      if (actualDynastyName !== dynastyName) {
+        throw new Error(`row ${row.rowNumber}: dynasty_id=${dynastyId} の名称が一致しません`);
+      }
+
+      const actualTagName = tagNameById.get(tagId);
+      if (!actualTagName) {
+        throw new Error(`row ${row.rowNumber}: tag_id=${tagId} のタグは存在しません`);
+      }
+      if (actualTagName !== tagName) {
+        throw new Error(`row ${row.rowNumber}: tag_id=${tagId} の名称が一致しません`);
+      }
+
+      if (!existingKeys.has(key)) {
+        tx.insert(dynastyTagLinks).values({ dynastyId, tagId }).run();
+        createdCount += 1;
+      } else {
+        updatedCount += 1;
+      }
+    }
+
+    for (const link of existingLinks) {
+      const key = `${link.dynastyId}:${link.tagId}`;
+      if (!csvKeys.has(key)) {
+        tx
+          .delete(dynastyTagLinks)
+          .where(and(eq(dynastyTagLinks.dynastyId, link.dynastyId), eq(dynastyTagLinks.tagId, link.tagId)))
+          .run();
+      }
+    }
+
+    const deletedCount = existingLinks.filter((link) => !csvKeys.has(`${link.dynastyId}:${link.tagId}`)).length;
+
+    return {
+      targetType: "dynasty-tag-links" as const,
       totalRows: parsed.rows.length,
       createdCount,
       updatedCount,
