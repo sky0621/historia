@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DynastyForm } from "@/features/polities/components/dynasty-form";
-import { getDynastyDetailView, getPolityOptions, getRegionOptions } from "@/server/services/polities";
+import { getDynastyDetailView, getPolityOptions, getRegionOptions, getTagOptions } from "@/server/services/polities";
 
 export const metadata: Metadata = { title: "dynasty" };
 
@@ -20,9 +20,11 @@ export default async function EditDynastyPage({ params }: { params: Promise<{ id
       submitLabel="王朝を更新"
       polityOptions={getPolityOptions()}
       regionOptions={getRegionOptions()}
+      tagOptions={getTagOptions()}
       defaultValues={{
         id: view.dynasty.id,
         polityIds: view.dynasty.polityIds,
+        tagIds: view.tags.map((tag) => tag.id),
         name: view.dynasty.name,
         description: view.dynasty.description ?? "",
         note: view.dynasty.note ?? "",

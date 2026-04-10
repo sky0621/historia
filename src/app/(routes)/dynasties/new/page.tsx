@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DynastyForm } from "@/features/polities/components/dynasty-form";
-import { getPolityOptions, getRegionOptions } from "@/server/services/polities";
+import { getPolityOptions, getRegionOptions, getTagOptions } from "@/server/services/polities";
 
 export const metadata: Metadata = {
   title: "dynasty"
@@ -14,6 +14,7 @@ export default function NewDynastyPage() {
       submitLabel="王朝を作成"
       polityOptions={getPolityOptions()}
       regionOptions={getRegionOptions()}
+      tagOptions={getTagOptions()}
     />
   );
 }

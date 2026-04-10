@@ -17,6 +17,7 @@ export const politySchema = z.object({
 
 export const dynastySchema = z.object({
   polityIds: regionIdsSchema,
+  tagIds: tagIdsSchema,
   name: z.string().trim().min(1, "名称は必須です"),
   description: z.string().trim().optional(),
   note: z.string().trim().optional(),
@@ -48,7 +49,8 @@ export function parseDynastyFormData(formData: FormData): DynastyInput {
     note: formData.get("note") ?? undefined,
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
-    regionIds: normalizeIds(formData.getAll("regionIds"))
+    regionIds: normalizeIds(formData.getAll("regionIds")),
+    tagIds: normalizeIds(formData.getAll("tagIds"))
   });
 }
 

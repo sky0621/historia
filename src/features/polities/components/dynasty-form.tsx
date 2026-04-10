@@ -36,15 +36,22 @@ type PolityOption = {
   toYear?: number | null;
 };
 
+type TagOption = {
+  id: number;
+  name: string;
+};
+
 type Props = {
   title: string;
   description: string;
   submitLabel: string;
   polityOptions: PolityOption[];
   regionOptions: RegionOption[];
+  tagOptions: TagOption[];
   defaultValues?: {
     id?: number;
     polityIds: number[];
+    tagIds: number[];
     name: string;
     description: string;
     note: string;
@@ -60,6 +67,7 @@ export function DynastyForm({
   submitLabel,
   polityOptions,
   regionOptions,
+  tagOptions,
   defaultValues
 }: Props) {
   const [createState, createAction] = useActionState(createDynastyAction, initialCreateFormState);
@@ -157,6 +165,24 @@ export function DynastyForm({
               selectedIds={defaultValues?.regionIds ?? []}
               itemClassName={checkboxCardClassName}
             />
+          </CollapsibleFormSection>
+        </section>
+
+        <section className={formCardClassName}>
+          <CollapsibleFormSection title="タグ" defaultOpen={(defaultValues?.tagIds.length ?? 0) > 0}>
+            <div className="grid gap-3 md:grid-cols-2">
+              {tagOptions.map((tag) => (
+                <label key={tag.id} className={checkboxCardClassName}>
+                  <input
+                    type="checkbox"
+                    name="tagIds"
+                    value={tag.id}
+                    defaultChecked={defaultValues?.tagIds.includes(tag.id) ?? false}
+                  />
+                  <span>{tag.name}</span>
+                </label>
+              ))}
+            </div>
           </CollapsibleFormSection>
         </section>
 

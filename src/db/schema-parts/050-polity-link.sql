@@ -29,3 +29,11 @@ CREATE TABLE `dynasty_region_links` (
 );
 CREATE INDEX `idx_dynasty_region_links_dynasty_id` ON `dynasty_region_links` (`dynasty_id`);
 CREATE INDEX `idx_dynasty_region_links_region_id` ON `dynasty_region_links` (`region_id`);
+
+-- 王朝とタグの関連
+CREATE TABLE `dynasty_tag_links` (
+  `dynasty_id` integer NOT NULL REFERENCES `dynasties`(`id`) ON DELETE CASCADE, -- 王朝ID
+  `tag_id` integer NOT NULL REFERENCES `tags`(`id`) ON DELETE CASCADE -- タグID
+);
+CREATE INDEX `idx_dynasty_tag_links_dynasty_id` ON `dynasty_tag_links` (`dynasty_id`);
+CREATE INDEX `idx_dynasty_tag_links_tag_id` ON `dynasty_tag_links` (`tag_id`);

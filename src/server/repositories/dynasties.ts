@@ -1,14 +1,16 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { dynasties, dynastyPolityLinks, dynastyRegionLinks } from "@/db/schema";
+import { dynasties, dynastyPolityLinks, dynastyRegionLinks, dynastyTagLinks } from "@/db/schema";
 
-export type DynastyRecord = typeof dynasties.$inferSelect & { polityIds: number[] };
+export type DynastyRecord = typeof dynasties.$inferSelect & { polityIds: number[]; tagIds: number[] };
 export type DynastyInsert = typeof dynasties.$inferInsert;
 
 export function listDynasties() {
   const items = db.select().from(dynasties).orderBy(asc(dynasties.name)).all();
   const polityLinks = getDynastyPolityLinks(items.map((item) => item.id));
+  const tagLinks = getDynastyTagIds(items.map((item) => item.id));
   const polityIdsByDynastyId = new Map<number, number[]>();
+  const tagIdsByDynastyId = new Map<number, number[]>();
 
   for (const link of polityLinks) {
     const ids = polityIdsByDynastyId.get(link.dynastyId) ?? [];
@@ -16,9 +18,16 @@ export function listDynasties() {
     polityIdsByDynastyId.set(link.dynastyId, ids);
   }
 
+  for (const link of tagLinks) {
+    const ids = tagIdsByDynastyId.get(link.dynastyId) ?? [];
+    ids.push(link.tagId);
+    tagIdsByDynastyId.set(link.dynastyId, ids);
+  }
+
   return items.map((item) => ({
     ...item,
-    polityIds: polityIdsByDynastyId.get(item.id) ?? []
+    polityIds: polityIdsByDynastyId.get(item.id) ?? [],
+    tagIds: tagIdsByDynastyId.get(item.id) ?? []
   }));
 }
 
@@ -30,11 +39,12 @@ export function getDynastyById(id: number) {
 
   return {
     ...dynasty,
-    polityIds: getDynastyPolityLinks([id]).map((link) => link.polityId)
+    polityIds: getDynastyPolityLinks([id]).map((link) => link.polityId),
+    tagIds: getDynastyTagIds([id]).map((link) => link.tagId)
   };
 }
 
-export function createDynasty(input: DynastyInsert, polityIds: number[], regionIds: number[]) {
+export function createDynasty(input: DynastyInsert, polityIds: number[], regionIds: number[], tagIds: number[]) {
   return db.transaction((tx) => {
     const result = tx.insert(dynasties).values(input).run();
     const dynastyId = Number(result.lastInsertRowid);
@@ -47,21 +57,30 @@ export function createDynasty(input: DynastyInsert, polityIds: number[], regionI
       tx.insert(dynastyRegionLinks).values(regionIds.map((regionId) => ({ dynastyId, regionId }))).run();
     }
 
+    if (tagIds.length > 0) {
+      tx.insert(dynastyTagLinks).values(tagIds.map((tagId) => ({ dynastyId, tagId }))).run();
+    }
+
     return dynastyId;
   });
 }
 
-export function updateDynasty(id: number, input: Omit<DynastyInsert, "id">, polityIds: number[], regionIds: number[]) {
+export function updateDynasty(id: number, input: Omit<DynastyInsert, "id">, polityIds: number[], regionIds: number[], tagIds: number[]) {
   db.transaction((tx) => {
     tx.update(dynasties).set(input).where(eq(dynasties.id, id)).run();
     tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.dynastyId, id)).run();
     tx.delete(dynastyRegionLinks).where(eq(dynastyRegionLinks.dynastyId, id)).run();
+    tx.delete(dynastyTagLinks).where(eq(dynastyTagLinks.dynastyId, id)).run();
     if (polityIds.length > 0) {
       tx.insert(dynastyPolityLinks).values(polityIds.map((polityId) => ({ dynastyId: id, polityId }))).run();
     }
 
     if (regionIds.length > 0) {
       tx.insert(dynastyRegionLinks).values(regionIds.map((regionId) => ({ dynastyId: id, regionId }))).run();
+    }
+
+    if (tagIds.length > 0) {
+      tx.insert(dynastyTagLinks).values(tagIds.map((tagId) => ({ dynastyId: id, tagId }))).run();
     }
   });
 }
@@ -70,6 +89,7 @@ export function deleteDynasty(id: number) {
   db.transaction((tx) => {
     tx.delete(dynastyPolityLinks).where(eq(dynastyPolityLinks.dynastyId, id)).run();
     tx.delete(dynastyRegionLinks).where(eq(dynastyRegionLinks.dynastyId, id)).run();
+    tx.delete(dynastyTagLinks).where(eq(dynastyTagLinks.dynastyId, id)).run();
     tx.delete(dynasties).where(eq(dynasties.id, id)).run();
   });
 }
@@ -95,5 +115,17 @@ export function getDynastyRegionIds(dynastyIds: number[]) {
     .select()
     .from(dynastyRegionLinks)
     .where(inArray(dynastyRegionLinks.dynastyId, dynastyIds))
+    .all();
+}
+
+export function getDynastyTagIds(dynastyIds: number[]) {
+  if (dynastyIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(dynastyTagLinks)
+    .where(inArray(dynastyTagLinks.dynastyId, dynastyIds))
     .all();
 }

@@ -19,6 +19,7 @@ import {
   deleteDynasty,
   getDynastyById,
   getDynastyRegionIds,
+  getDynastyTagIds,
   listDynasties,
   updateDynasty
 } from "@/server/repositories/dynasties";
@@ -207,11 +208,13 @@ export function getDynastyDetailView(id: number) {
   const polities = listPolities().filter((polity) => dynasty.polityIds.includes(polity.id));
   const regions = listRegions();
   const linkedRegionIds = getDynastyRegionIds([dynasty.id]).map((link) => link.regionId);
+  const linkedTagIds = getDynastyTagIds([dynasty.id]).map((link) => link.tagId);
 
   return {
     dynasty,
     polities,
     regions: regions.filter((region) => linkedRegionIds.includes(region.id)),
+    tags: getTagsByIds(linkedTagIds),
     relatedEvents: getRelatedEvents({ dynastyId: id }),
     dynastySuccessions: getDynastySuccessionViewForDynasty(id),
     timeLabel: formatStoredTime("time", dynasty),
@@ -284,7 +287,8 @@ export function createDynastyFromInput(input: DynastyInput) {
       ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.polityIds,
-    input.regionIds
+    input.regionIds,
+    input.tagIds
   );
 }
 
@@ -299,7 +303,8 @@ export function updateDynastyFromInput(id: number, input: DynastyInput) {
       ...toStoredBoundaryTime("to", input.toTimeExpression)
     },
     input.polityIds,
-    input.regionIds
+    input.regionIds,
+    input.tagIds
   );
 }
 

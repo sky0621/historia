@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { eventTagLinks, polityTagLinks, tags } from "@/db/schema";
+import { dynastyTagLinks, eventTagLinks, polityTagLinks, tags } from "@/db/schema";
 
 export function listTags() {
   return db.select().from(tags).orderBy(asc(tags.name)).all();
@@ -38,6 +38,7 @@ export function updateTag(id: number, name: string) {
 export function deleteTag(id: number) {
   db.delete(eventTagLinks).where(eq(eventTagLinks.tagId, id)).run();
   db.delete(polityTagLinks).where(eq(polityTagLinks.tagId, id)).run();
+  db.delete(dynastyTagLinks).where(eq(dynastyTagLinks.tagId, id)).run();
   db.delete(tags).where(eq(tags.id, id)).run();
 }
 
