@@ -11,6 +11,11 @@ export const rolePolityLinks = sqliteTable("role_polity_links", {
   polityId: integer("polity_id").notNull().references(() => polities.id, { onDelete: "cascade" })
 });
 
+export const roleTagLinks = sqliteTable("role_tag_links", {
+  roleId: integer("role_id").notNull().references(() => role.id, { onDelete: "cascade" }),
+  tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" })
+});
+
 export const personRoleLinks = sqliteTable("person_role_links", {
   personId: integer("person_id").notNull().references(() => persons.id, { onDelete: "cascade" }),
   roleId: integer("role_id").notNull().references(() => role.id),

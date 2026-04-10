@@ -20,6 +20,7 @@ type RoleFormProps = {
   description: string;
   submitLabel: string;
   polityOptions: Array<{ id: number; name: string; timeLabel?: string; tagNames?: string[] }>;
+  tagOptions: Array<{ id: number; name: string }>;
   defaultValues?: {
     id?: number;
     title: string;
@@ -27,10 +28,11 @@ type RoleFormProps = {
     description: string;
     note: string;
     polityIds: number[];
+    tagIds: number[];
   };
 };
 
-export function RoleForm({ title, description, submitLabel, polityOptions, defaultValues }: RoleFormProps) {
+export function RoleForm({ title, description, submitLabel, polityOptions, tagOptions, defaultValues }: RoleFormProps) {
   const [createState, createAction] = useActionState(createRoleAction, initialCreateFormState);
   const action = defaultValues?.id ? updateRoleAction : createAction;
   const [polityQuery, setPolityQuery] = useState("");
@@ -71,6 +73,25 @@ export function RoleForm({ title, description, submitLabel, polityOptions, defau
             <label className={fieldLabelClassName}>
               <span className={fieldMetaClassName}>説明</span>
               <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
+            </label>
+            <label className={fieldLabelClassName}>
+              <span className={fieldMetaClassName}>タグ</span>
+              <div className="grid gap-3 md:grid-cols-2">
+                {tagOptions.map((tag) => (
+                  <label
+                    key={tag.id}
+                    className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--foreground)] hover:border-[var(--border-strong)]"
+                  >
+                    <input
+                      type="checkbox"
+                      name="tagIds"
+                      value={tag.id}
+                      defaultChecked={defaultValues?.tagIds.includes(tag.id) ?? false}
+                    />
+                    {tag.name}
+                  </label>
+                ))}
+              </div>
             </label>
             <label className={fieldLabelClassName}>
               <span className={fieldMetaClassName}>国家</span>

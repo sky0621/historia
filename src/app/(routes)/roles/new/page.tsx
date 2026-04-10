@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { RoleForm } from "@/features/roles/components/role-form";
 import { getPolityOptions } from "@/server/services/polities";
+import { listTags } from "@/server/repositories/tags";
 
 export const metadata: Metadata = { title: "role" };
 
@@ -11,6 +12,7 @@ export default function NewRolePage() {
       description="役職名と説明を登録します。"
       submitLabel="役職を作成"
       polityOptions={getPolityOptions()}
+      tagOptions={listTags()}
     />
   );
 }

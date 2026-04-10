@@ -19,13 +19,15 @@ export default async function EditRolePage({ params }: { params: Promise<{ id: s
       description="役職名と説明を更新します。"
       submitLabel="役職を更新"
       polityOptions={view.formOptions.polities}
+      tagOptions={view.formOptions.tags}
       defaultValues={{
         id: view.role.id,
         title: view.role.title,
         reading: view.role.reading ?? "",
         description: view.role.description ?? "",
         note: view.role.note ?? "",
-        polityIds: view.role.polityIds
+        polityIds: view.role.polityIds,
+        tagIds: view.role.tagIds
       }}
     />
   );

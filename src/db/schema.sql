@@ -177,6 +177,14 @@ CREATE TABLE `role_polity_links` (
 CREATE INDEX `idx_role_polity_links_role_id` ON `role_polity_links` (`role_id`);
 CREATE INDEX `idx_role_polity_links_polity_id` ON `role_polity_links` (`polity_id`);
 
+-- 役職とタグの関連
+CREATE TABLE `role_tag_links` (
+  `role_id` integer NOT NULL REFERENCES `roles`(`id`) ON DELETE CASCADE, -- 役職記録ID
+  `tag_id` integer NOT NULL REFERENCES `tags`(`id`) ON DELETE CASCADE -- タグID
+);
+CREATE INDEX `idx_role_tag_links_role_id` ON `role_tag_links` (`role_id`);
+CREATE INDEX `idx_role_tag_links_tag_id` ON `role_tag_links` (`tag_id`);
+
 -- 人物と役職の関連
 CREATE TABLE `person_role_links` (
   `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE, -- 人物ID

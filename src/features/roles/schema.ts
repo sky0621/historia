@@ -4,7 +4,8 @@ export const roleSchema = z.object({
   reading: z.string().trim().optional(),
   description: z.string().trim().optional(),
   note: z.string().trim().optional(),
-  polityIds: z.array(z.number().int().positive()).default([])
+  polityIds: z.array(z.number().int().positive()).default([]),
+  tagIds: z.array(z.number().int().positive()).default([])
 });
 
 export type RoleInput = z.infer<typeof roleSchema>;
@@ -15,7 +16,8 @@ export function parseRoleFormData(formData: FormData): RoleInput {
     reading: formData.get("reading") ?? undefined,
     description: formData.get("description") ?? undefined,
     note: formData.get("note") ?? undefined,
-    polityIds: normalizeIds(formData.getAll("polityIds"))
+    polityIds: normalizeIds(formData.getAll("polityIds")),
+    tagIds: normalizeIds(formData.getAll("tagIds"))
   });
 }
 

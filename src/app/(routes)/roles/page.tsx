@@ -47,6 +47,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
             <tr>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">名称</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">国家</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">タグ</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">読み方</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">説明</th>
             </tr>
@@ -54,7 +55,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
           <tbody>
             {roles.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-[var(--muted)]">まだ役職はありません。</td>
+                <td colSpan={5} className="px-5 py-6 text-[var(--muted)]">まだ役職はありません。</td>
               </tr>
             ) : (
               roles.map((role) => (
@@ -65,6 +66,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
                     </Link>
                   </td>
                   <td className="px-5 py-4 text-[var(--muted)]">{role.polityNames.length > 0 ? role.polityNames.join(", ") : "-"}</td>
+                  <td className="px-5 py-4 text-[var(--muted)]">{role.tagNames.length > 0 ? role.tagNames.join(", ") : "-"}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{role.reading ?? "-"}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{role.description ?? "-"}</td>
                 </tr>
