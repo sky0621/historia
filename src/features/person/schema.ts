@@ -32,6 +32,7 @@ export const personSchema = z.object({
   regionIds: idsSchema,
   religionIds: idsSchema,
   sectIds: idsSchema,
+  tagIds: idsSchema,
   periodIds: idsSchema,
   roles: z.array(personRoleLinkSchema).default([])
 });
@@ -52,6 +53,7 @@ export function parsePersonFormData(formData: FormData): PersonInput {
     regionIds: normalizeIds(formData.getAll("regionIds")),
     religionIds: normalizeIds(formData.getAll("religionIds")),
     sectIds: normalizeIds(formData.getAll("sectIds")),
+    tagIds: normalizeIds(formData.getAll("tagIds")),
     periodIds: normalizeIds(formData.getAll("periodIds")),
     roles: parseRoles(formData)
   });

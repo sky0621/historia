@@ -1,0 +1,15 @@
+
+csv/historia-historical-period-category-links.csvをhistorical_period_category_linksテーブルにImportする機能を実装して。
+DBにあってCSVにないものはDELETEして。
+CSVにあってDBにないものはINSERTして。
+それ以外はUPDATEして。
+
+religionsテーブルのレコードをCSV Exportする機能を実装して。
+sectsテーブルのレコードをCSV Exportする機能を実装して。
+religion_sect_linksテーブルのレコードをCSV Exportする機能を実装して。
+
+csv/historia-regions.csvのフォーマットのCSVファイルをregionsテーブルにImportする機能を実装して。
+DBにあってCSVにないものはDELETEして。
+CSVにあってDBにないものはINSERTして。
+それ以外はUPDATEして。
+parent_regionは名前からidを取得してidに変換してINSERTする。

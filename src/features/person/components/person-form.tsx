@@ -12,6 +12,7 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 type Option = { id: number; name: string; parentRegionId?: number | null };
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
+type TagOption = { id: number; name: string };
 type RoleOption = { id: number; title: string; polityName?: string | null };
 type PersonRoleDefaultValue = {
   roleId?: number;
@@ -29,6 +30,7 @@ type Props = {
     regions: Option[];
     religions: ReligionOption[];
     sects: SectOption[];
+    tags: TagOption[];
     roles: RoleOption[];
   };
   defaultValues?: {
@@ -41,6 +43,7 @@ type Props = {
     regionIds: number[];
     religionIds: number[];
     sectIds: number[];
+    tagIds: number[];
     birthTimeExpression?: TimeExpressionInput;
     deathTimeExpression?: TimeExpressionInput;
     roles: PersonRoleDefaultValue[];
@@ -125,6 +128,17 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
             sects={options.sects}
             selectedReligionIds={defaultValues?.religionIds ?? []}
             selectedSectIds={defaultValues?.sectIds ?? []}
+          />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <SelectionGroup
+            name="tagIds"
+            label="タグ"
+            description="人物に関する分類タグを選択します。"
+            options={options.tags}
+            selectedIds={defaultValues?.tagIds ?? []}
+            collapsible
           />
         </div>
 

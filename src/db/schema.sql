@@ -201,6 +201,14 @@ CREATE TABLE `person_role_links` (
 CREATE INDEX `idx_person_role_links_person_id` ON `person_role_links` (`person_id`);
 CREATE INDEX `idx_person_role_links_role_id` ON `person_role_links` (`role_id`);
 
+-- 人物とタグの関連
+CREATE TABLE `person_tag_links` (
+  `person_id` integer NOT NULL REFERENCES `persons`(`id`) ON DELETE CASCADE, -- 人物ID
+  `tag_id` integer NOT NULL REFERENCES `tags`(`id`) ON DELETE CASCADE -- タグID
+);
+CREATE INDEX `idx_person_tag_links_person_id` ON `person_tag_links` (`person_id`);
+CREATE INDEX `idx_person_tag_links_tag_id` ON `person_tag_links` (`tag_id`);
+
 -- 時代区分カテゴリ: 時代区分の分類軸
 CREATE TABLE `period_categories` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- カテゴリID

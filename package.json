@@ -13,7 +13,9 @@
     "db:schema:generate": "node ./scripts/generate-schema-sql.mjs",
     "db:dry-run": "./scripts/sqlite3def.sh dry-run",
     "db:migrate": "./scripts/sqlite3def.sh apply",
-    "db:seed": "pnpm db:migrate && node src/db/seed.mjs"
+    "db:seed": "pnpm db:migrate && node src/db/seed.mjs",
+    "codex:csv_feature": "sh ./prompts/csv_feature.sh",
+    "codex:gen_n_n_relation": "sh ./prompts/gen_n_n_relation.sh"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",

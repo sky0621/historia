@@ -29,6 +29,11 @@ export const personRoleLinks = sqliteTable("person_role_links", {
   toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
+export const personTagLinks = sqliteTable("person_tag_links", {
+  personId: integer("person_id").notNull().references(() => persons.id, { onDelete: "cascade" }),
+  tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" })
+});
+
 export const historicalPeriodCategoryLinks = sqliteTable("historical_period_category_links", {
   periodId: integer("period_id").notNull(),
   categoryId: integer("category_id").notNull()

@@ -14,6 +14,7 @@ const exportLinks = [
   { href: "/api/export/dynasty-tag-links.csv", label: "王朝タグ紐付けCSVをダウンロード" },
   { href: "/api/export/persons.csv", label: "人物CSVをダウンロード" },
   { href: "/api/export/person-region-links.csv", label: "人物地域紐付けCSVをダウンロード" },
+  { href: "/api/export/person-tag-links.csv", label: "人物タグ紐付けCSVをダウンロード" },
   { href: "/api/export/person-religion-links.csv", label: "人物宗教紐付けCSVをダウンロード" },
   { href: "/api/export/person-role-links.csv", label: "人物役職紐付けCSVをダウンロード" },
   { href: "/api/export/person-sect-links.csv", label: "人物宗派紐付けCSVをダウンロード" },

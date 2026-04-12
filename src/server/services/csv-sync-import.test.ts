@@ -34,6 +34,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM dynasty_polity_links").run();
   sqlite.prepare("DELETE FROM dynasties").run();
   sqlite.prepare("DELETE FROM person_role_links").run();
+  sqlite.prepare("DELETE FROM person_tag_links").run();
   sqlite.prepare("DELETE FROM role_polity_links").run();
   sqlite.prepare("DELETE FROM roles").run();
   sqlite.prepare("DELETE FROM polity_region_links").run();
@@ -111,6 +112,7 @@ beforeEach(() => {
   sqlite.prepare("INSERT INTO tags (id, name, reading) VALUES (1, '帝国', 'ていこく'), (2, '東洋史', NULL)").run();
   sqlite.prepare("INSERT INTO role_polity_links (role_id, polity_id) VALUES (1, 1), (2, 2)").run();
   sqlite.prepare("INSERT INTO person_role_links (person_id, role_id) VALUES (1, 1)").run();
+  sqlite.prepare("INSERT INTO person_tag_links (person_id, tag_id) VALUES (1, 1), (2, 2)").run();
   sqlite.prepare("INSERT INTO polity_tag_links (polity_id, tag_id) VALUES (1, 1), (2, 2)").run();
   sqlite.prepare("INSERT INTO dynasty_tag_links (dynasty_id, tag_id) VALUES (1, 1), (2, 2)").run();
 });
@@ -272,6 +274,33 @@ describe("csv sync import service", () => {
       { id: 1, name: "日本", parent_region_id: null, description: "updated root", note: null },
       { id: 2, name: "近畿", parent_region_id: 1, description: "updated child", note: "updated note" },
       { id: 4, name: "京都", parent_region_id: 2, description: "new child", note: null }
+    ]);
+  });
+
+  it("syncs person tag links using 人物タグ紐付け.csv format", () => {
+    const result = csvSyncImportModule.importCsvSync(
+      "person-tag-links",
+      [
+        "person_id,person_name,tag_id,tag_name",
+        "1,ムハンマド,1,帝国",
+        "3,イエス,2,東洋史"
+      ].join("\n")
+    );
+
+    const rows = sqlite
+      .prepare("SELECT person_id, tag_id FROM person_tag_links ORDER BY person_id, tag_id")
+      .all() as Array<{ person_id: number; tag_id: number }>;
+
+    expect(result).toEqual({
+      targetType: "person-tag-links",
+      totalRows: 2,
+      createdCount: 1,
+      updatedCount: 1,
+      deletedCount: 1
+    });
+    expect(rows).toEqual([
+      { person_id: 1, tag_id: 1 },
+      { person_id: 3, tag_id: 2 }
     ]);
   });
 

@@ -98,12 +98,13 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">役職</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">宗教・宗派</th>
               <th className="px-5 py-4 font-semibold text-[var(--muted)]">地域</th>
+              <th className="px-5 py-4 font-semibold text-[var(--muted)]">タグ</th>
             </tr>
           </thead>
           <tbody>
             {person.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-6 text-[var(--muted)]">
+                <td colSpan={7} className="px-5 py-6 text-[var(--muted)]">
                   まだ人物はありません。
                 </td>
               </tr>
@@ -125,7 +126,7 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
                         <span key={`${person.id}-role-${role.id}`}>
                           {index > 0 ? ", " : null}
                           <Link href={`/roles/${role.id}`} className="underline-offset-4 hover:underline">
-                            {role.title}
+                            {role.displayLabel}
                           </Link>
                         </span>
                       ))
@@ -140,6 +141,11 @@ export default async function PersonPage({ searchParams }: PersonPageProps) {
                   <td className="px-5 py-4 text-[var(--muted)]">
                     {renderLinkedNames(
                       person.regionIds.map((id, index) => ({ id, name: person.regionNames[index], route: "regions" as const }))
+                    )}
+                  </td>
+                  <td className="px-5 py-4 text-[var(--muted)]">
+                    {renderLinkedNames(
+                      person.tagIds.map((id, index) => ({ id, name: person.tagNames[index], route: "tags" as const }))
                     )}
                   </td>
                 </tr>
@@ -170,10 +176,10 @@ function renderLinkedNames(
   items: Array<{
     id: number;
     name: string | undefined;
-    route: "religions" | "sects" | "regions";
+    route: "religions" | "sects" | "regions" | "tags";
   }>
 ) {
-  const filtered = items.filter((item): item is { id: number; name: string; route: "religions" | "sects" | "regions" } => Boolean(item.name));
+  const filtered = items.filter((item): item is { id: number; name: string; route: "religions" | "sects" | "regions" | "tags" } => Boolean(item.name));
 
   if (filtered.length === 0) {
     return "-";

@@ -201,6 +201,24 @@ export function buildPersonRegionLinksCsv() {
   return toCsv(rows, ["person_id", "person_name", "region_id", "region_name"]);
 }
 
+export function buildPersonTagLinksCsv() {
+  const rows = sqlite
+    .prepare(
+      `SELECT
+         p.id AS person_id,
+         p.name AS person_name,
+         t.id AS tag_id,
+         t.name AS tag_name
+       FROM person_tag_links ptl
+       INNER JOIN persons p ON ptl.person_id = p.id
+       INNER JOIN tags t ON ptl.tag_id = t.id
+       ORDER BY p.id, t.id`
+    )
+    .all() as Array<Record<string, unknown>>;
+
+  return toCsv(rows, ["person_id", "person_name", "tag_id", "tag_name"]);
+}
+
 export function buildPersonReligionLinksCsv() {
   const rows = sqlite
     .prepare(

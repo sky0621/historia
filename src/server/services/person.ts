@@ -10,11 +10,13 @@ import {
   getPersonRegionLinks,
   getPersonReligionLinks,
   getPersonSectLinks,
+  getPersonTagLinks,
   listPersonDetailed,
   replacePersonRegionLinks,
   replacePersonReligionLinks,
   replacePersonRoleLinks,
   replacePersonSectLinks,
+  replacePersonTagLinks,
   replaceRoleAssignments,
   updatePerson
 } from "@/server/repositories/person-detail";
@@ -23,6 +25,7 @@ import { listReligions } from "@/server/repositories/religions";
 import { deleteRoleAssignmentsByPersonId, getRoleAssignmentsByPersonIds } from "@/server/repositories/role-assignments";
 import { listRoles } from "@/server/repositories/roles";
 import { listSects } from "@/server/repositories/sects";
+import { listTags } from "@/server/repositories/tags";
 import { getRelatedEvents } from "@/server/services/event-references";
 import { getHistoryView, recordChangeHistory } from "@/server/services/history";
 import { getPolityOptions } from "@/server/services/polities";
@@ -48,6 +51,7 @@ export function getPersonFormOptions() {
     regions: listRegions().map((item) => ({ id: item.id, name: item.name, parentRegionId: item.parentRegionId })),
     religions: listReligions().map((item) => ({ id: item.id, name: item.name })),
     sects: listSects().map((item) => ({ id: item.id, name: item.name, religionId: item.religionId })),
+    tags: listTags().map((item) => ({ id: item.id, name: item.name })),
     roles: roles.map((item) => ({
       id: item.id,
       title: item.title,
@@ -72,11 +76,14 @@ export function getPersonListView(filters: PersonListFilters = {}) {
   const regionLinks = getPersonRegionLinks(person.map((person) => person.id));
   const religionLinks = getPersonReligionLinks(person.map((person) => person.id));
   const sectLinks = getPersonSectLinks(person.map((person) => person.id));
+  const tagLinks = getPersonTagLinks(person.map((person) => person.id));
   const roles = getRoleAssignmentsByPersonIds(person.map((person) => person.id));
   const religions = listReligions();
   const sects = listSects();
+  const tags = listTags();
   const religionById = new Map(religions.map((religion) => [religion.id, religion.name]));
   const sectById = new Map(sects.map((sect) => [sect.id, sect.name]));
+  const tagById = new Map(tags.map((tag) => [tag.id, tag.name]));
 
   return person
     .map((person) => ({
@@ -99,7 +106,22 @@ export function getPersonListView(filters: PersonListFilters = {}) {
         .map((link) => sectById.get(link.sectId))
         .filter((name): name is string => Boolean(name)),
       sectIds: sectLinks.filter((link) => link.personId === person.id).map((link) => link.sectId),
-      roles: roles.filter((role) => role.personId === person.id)
+      tagNames: tagLinks
+        .filter((link) => link.personId === person.id)
+        .map((link) => tagById.get(link.tagId))
+        .filter((name): name is string => Boolean(name)),
+      tagIds: tagLinks.filter((link) => link.personId === person.id).map((link) => link.tagId),
+      roles: roles
+        .filter((role) => role.personId === person.id)
+        .map((role) => ({
+          ...role,
+          displayLabel: `${role.title}（${formatStoredBoundaryRangeForOption(
+            role.fromCalendarEra,
+            role.fromYear,
+            role.toCalendarEra,
+            role.toYear
+          )}）`
+        }))
     }))
     .filter((person) =>
       matchesPersonFilters(person, normalizedQuery, filters)
@@ -117,6 +139,7 @@ export function getPersonDetailView(id: number) {
   const regionLinks = getPersonRegionLinks([id]).map((link) => link.regionId);
   const religionLinks = getPersonReligionLinks([id]).map((link) => link.religionId);
   const sectLinks = getPersonSectLinks([id]).map((link) => link.sectId);
+  const tagLinks = getPersonTagLinks([id]).map((link) => link.tagId);
   const roles = getRoleAssignmentsByPersonIds([id]);
 
   return {
@@ -124,6 +147,7 @@ export function getPersonDetailView(id: number) {
     regions: options.regions.filter((item) => regionLinks.includes(item.id)),
     religions: options.religions.filter((item) => religionLinks.includes(item.id)),
     sects: options.sects.filter((item) => sectLinks.includes(item.id)),
+    tags: options.tags.filter((item) => tagLinks.includes(item.id)),
     relatedEvents: getRelatedEvents({ personId: id }),
     roles: roles.map((role) => ({
       ...role,
@@ -156,6 +180,7 @@ export function createPersonFromInput(input: PersonInput) {
     replacePersonRegionLinks(personId, input.regionIds);
     replacePersonReligionLinks(personId, input.religionIds);
     replacePersonSectLinks(personId, input.sectIds);
+    replacePersonTagLinks(personId, input.tagIds);
     replacePersonRoleLinks(personId, input.roles.map((role) => ({
       roleId: role.roleId,
       description: nullable(role.description),
@@ -191,6 +216,7 @@ export function updatePersonFromInput(id: number, input: PersonInput) {
     replacePersonRegionLinks(id, input.regionIds);
     replacePersonReligionLinks(id, input.religionIds);
     replacePersonSectLinks(id, input.sectIds);
+    replacePersonTagLinks(id, input.tagIds);
     replacePersonRoleLinks(id, input.roles.map((role) => ({
       roleId: role.roleId,
       description: nullable(role.description),
@@ -214,6 +240,7 @@ export function removePerson(id: number) {
     replacePersonRegionLinks(id, []);
     replacePersonReligionLinks(id, []);
     replacePersonSectLinks(id, []);
+    replacePersonTagLinks(id, []);
     deleteRoleAssignmentsByPersonId(id);
     deletePerson(id);
     recordChangeHistory({
@@ -408,6 +435,7 @@ function buildPersonHistorySnapshot(id: number) {
     regionIds: getPersonRegionLinks([id]).map((link) => link.regionId),
     religionIds: getPersonReligionLinks([id]).map((link) => link.religionId),
     sectIds: getPersonSectLinks([id]).map((link) => link.sectId),
+    tagIds: getPersonTagLinks([id]).map((link) => link.tagId),
     roles: getRoleAssignmentsByPersonIds([id])
   };
 }
@@ -421,10 +449,11 @@ function matchesPersonFilters(
     regionNames: string[];
     religionNames: string[];
     sectNames: string[];
+    tagNames: string[];
     regionIds: number[];
     religionIds: number[];
     sectIds: number[];
-    roles: Array<{ title: string }>;
+    roles: Array<{ title: string; displayLabel: string }>;
     id: number;
   },
   query: string,
@@ -440,6 +469,7 @@ function matchesPersonFilters(
         person.regionNames.join(", "),
         person.religionNames.join(", "),
         person.sectNames.join(", "),
+        person.tagNames.join(", "),
         person.roles.map((role) => role.title).join(", ")
       ],
       query

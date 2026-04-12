@@ -6,6 +6,7 @@ import {
   personReligionLinks,
   personSectLinks,
   personRoleLinks,
+  personTagLinks,
   role
 } from "@/db/schema";
 
@@ -50,6 +51,13 @@ export function replacePersonSectLinks(personId: number, sectIds: number[]) {
   db.delete(personSectLinks).where(eq(personSectLinks.personId, personId)).run();
   if (sectIds.length > 0) {
     db.insert(personSectLinks).values(sectIds.map((sectId) => ({ personId, sectId }))).run();
+  }
+}
+
+export function replacePersonTagLinks(personId: number, tagIds: number[]) {
+  db.delete(personTagLinks).where(eq(personTagLinks.personId, personId)).run();
+  if (tagIds.length > 0) {
+    db.insert(personTagLinks).values(tagIds.map((tagId) => ({ personId, tagId }))).run();
   }
 }
 
@@ -164,4 +172,9 @@ export function getPersonReligionLinks(personIds: number[]) {
 export function getPersonSectLinks(personIds: number[]) {
   if (personIds.length === 0) return [];
   return db.select().from(personSectLinks).where(inArray(personSectLinks.personId, personIds)).all();
+}
+
+export function getPersonTagLinks(personIds: number[]) {
+  if (personIds.length === 0) return [];
+  return db.select().from(personTagLinks).where(inArray(personTagLinks.personId, personIds)).all();
 }

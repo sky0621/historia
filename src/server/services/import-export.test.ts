@@ -31,6 +31,7 @@ beforeEach(() => {
   sqlite.prepare("DELETE FROM sect_founder_links").run();
   sqlite.prepare("DELETE FROM person_sect_links").run();
   sqlite.prepare("DELETE FROM sects").run();
+  sqlite.prepare("DELETE FROM person_tag_links").run();
   sqlite.prepare("DELETE FROM person_role_links").run();
   sqlite.prepare("DELETE FROM dynasty_region_links").run();
   sqlite.prepare("DELETE FROM dynasty_tag_links").run();
@@ -218,6 +219,21 @@ describe("import export service", () => {
         "person_id,person_name,region_id,region_name",
         "1,最澄,1,中国",
         "2,空海,2,東アジア"
+      ].join("\n")
+    );
+  });
+
+  it("exports person tag links csv", () => {
+    sqlite.prepare("INSERT INTO tags (id, name) VALUES (1, '天台'), (2, '密教')").run();
+    sqlite.prepare("INSERT INTO person_tag_links (person_id, tag_id) VALUES (1, 1), (2, 2)").run();
+
+    const csv = importExportModule.buildPersonTagLinksCsv();
+
+    expect(csv).toBe(
+      [
+        "person_id,person_name,tag_id,tag_name",
+        "1,最澄,1,天台",
+        "2,空海,2,密教"
       ].join("\n")
     );
   });

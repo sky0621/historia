@@ -29,6 +29,7 @@ export default async function EditPersonPage({ params }: { params: Promise<{ id:
         regionIds: view.regions.map((item) => item.id),
         religionIds: view.religions.map((item) => item.id),
         sectIds: view.sects.map((item) => item.id),
+        tagIds: view.tags.map((item) => item.id),
         birthTimeExpression: view.defaultBirthTimeExpression,
         deathTimeExpression: view.defaultDeathTimeExpression,
         roles: view.roles.map((role) => ({

@@ -99,6 +99,19 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
               </dd>
             </div>
             <div>
+              <dt className="font-medium text-[var(--muted)]">タグ</dt>
+              <dd className="mt-1">
+                {view.tags.length === 0 ? "-" : view.tags.map((item, index) => (
+                  <span key={item.id}>
+                    {index > 0 ? ", " : null}
+                    <Link href={`/tags/${item.id}`} className="underline-offset-4 hover:underline">
+                      {item.name}
+                    </Link>
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
               <dt className="font-medium text-[var(--muted)]">メモ</dt>
               <dd className="mt-1 whitespace-pre-wrap">{view.person.note ?? "-"}</dd>
             </div>
