@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useDeferredValue, useState } from "react";
 import {
   checkboxCardClassName,
   emptyStateClassName,
@@ -215,7 +215,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           />
         </div>
 
-        <SelectionGroup name="personIds" label="人物" options={options.person} selectedIds={defaultValues?.personIds ?? []} />
+        <PersonSelectionSection options={options.person} selectedIds={defaultValues?.personIds ?? []} />
         <SelectionGroup
           name="polityIds"
           label="国家"
@@ -538,6 +538,104 @@ function OutcomeParticipantSelection({
         )}
       </div>
     </fieldset>
+  );
+}
+
+function PersonSelectionSection({
+  options,
+  selectedIds
+}: {
+  options: Option[];
+  selectedIds: number[];
+}) {
+  const [query, setQuery] = useState("");
+  const [selectedPersonIds, setSelectedPersonIds] = useState<number[]>(selectedIds);
+  const deferredQuery = useDeferredValue(query);
+  const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+
+  const selectedPeople = selectedPersonIds
+    .map((id) => options.find((option) => option.id === id))
+    .filter((option): option is Option => Boolean(option));
+
+  const filteredOptions = normalizedQuery
+    ? options.filter((option) => {
+        const haystack = `${option.name} ${option.timeLabel ?? ""}`.toLocaleLowerCase("ja-JP");
+        return haystack.includes(normalizedQuery) && !selectedPersonIds.includes(option.id);
+      })
+    : [];
+
+  return (
+    <section className={formCardClassName}>
+      <div>
+        <h2 className="text-lg font-semibold text-[var(--foreground-strong)]">人物</h2>
+        <p className="mt-1 text-sm text-[var(--muted-strong)]">人物名で絞り込み、候補から必要な人物だけ追加します。</p>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        <label className={fieldLabelClassName}>
+          <span className={fieldMetaClassName}>人物検索</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className={inputClassName}
+            placeholder="人物名で検索"
+          />
+        </label>
+
+        {selectedPeople.length > 0 ? (
+          <div className="grid gap-3">
+            <p className={fieldMetaClassName}>追加済み</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              {selectedPeople.map((person) => (
+                <div key={person.id} className={`${checkboxCardClassName} justify-between`}>
+                  <span>{person.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPersonIds((current) => current.filter((id) => id !== person.id))}
+                    className="text-xs font-semibold text-[var(--muted-strong)] hover:text-[var(--foreground-strong)]"
+                  >
+                    削除
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className={emptyStateClassName}>追加した人物はここに表示されます。</p>
+        )}
+
+        {normalizedQuery ? (
+          filteredOptions.length > 0 ? (
+            <div className="grid gap-3">
+              <p className={fieldMetaClassName}>検索結果</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {filteredOptions.map((person) => (
+                  <div key={person.id} className={`${checkboxCardClassName} justify-between`}>
+                    <span>{person.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPersonIds((current) => [...current, person.id]);
+                        setQuery("");
+                      }}
+                      className="text-xs font-semibold text-[var(--foreground-strong)]"
+                    >
+                      追加
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className={emptyStateClassName}>一致する人物はありません。</p>
+          )
+        ) : null}
+      </div>
+
+      {selectedPersonIds.map((id) => (
+        <input key={id} type="hidden" name="personIds" value={id} />
+      ))}
+    </section>
   );
 }
 
