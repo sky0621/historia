@@ -216,14 +216,8 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
         </div>
 
         <PersonSelectionSection options={options.person} selectedIds={defaultValues?.personIds ?? []} />
-        <SelectionGroup
-          name="polityIds"
-          label="国家"
-          options={options.polities}
-          selectedIds={defaultValues?.polityIds ?? []}
-          optionLabel={formatPolityOptionLabel}
-        />
-        <SelectionGroup name="dynastyIds" label="王朝" options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
+        <PolitySelectionSection options={options.polities} selectedIds={defaultValues?.polityIds ?? []} />
+        <DynastySelectionSection options={options.dynasties} selectedIds={defaultValues?.dynastyIds ?? []} />
         <ReligionSectSelectionGroup
           religions={options.religions}
           sects={options.sects}
@@ -634,6 +628,202 @@ function PersonSelectionSection({
 
       {selectedPersonIds.map((id) => (
         <input key={id} type="hidden" name="personIds" value={id} />
+      ))}
+    </section>
+  );
+}
+
+function PolitySelectionSection({
+  options,
+  selectedIds
+}: {
+  options: Option[];
+  selectedIds: number[];
+}) {
+  const [query, setQuery] = useState("");
+  const [selectedPolityIds, setSelectedPolityIds] = useState<number[]>(selectedIds);
+  const deferredQuery = useDeferredValue(query);
+  const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+
+  const selectedPolities = selectedPolityIds
+    .map((id) => options.find((option) => option.id === id))
+    .filter((option): option is Option => Boolean(option));
+
+  const filteredOptions = normalizedQuery
+    ? options.filter((option) => {
+        const haystack = `${option.name} ${option.timeLabel ?? ""}`.toLocaleLowerCase("ja-JP");
+        return haystack.includes(normalizedQuery) && !selectedPolityIds.includes(option.id);
+      })
+    : [];
+
+  return (
+    <section className={formCardClassName}>
+      <div>
+        <h2 className="text-lg font-semibold text-[var(--foreground-strong)]">国家</h2>
+        <p className="mt-1 text-sm text-[var(--muted-strong)]">国家名で絞り込み、候補から必要な国家だけ追加します。</p>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        <label className={fieldLabelClassName}>
+          <span className={fieldMetaClassName}>国家検索</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className={inputClassName}
+            placeholder="国家名で検索"
+          />
+        </label>
+
+        {selectedPolities.length > 0 ? (
+          <div className="grid gap-3">
+            <p className={fieldMetaClassName}>追加済み</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              {selectedPolities.map((polity) => (
+                <div key={polity.id} className={`${checkboxCardClassName} justify-between`}>
+                  <span>{formatPolityOptionLabel(polity)}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPolityIds((current) => current.filter((id) => id !== polity.id))}
+                    className="text-xs font-semibold text-[var(--muted-strong)] hover:text-[var(--foreground-strong)]"
+                  >
+                    削除
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className={emptyStateClassName}>追加した国家はここに表示されます。</p>
+        )}
+
+        {normalizedQuery ? (
+          filteredOptions.length > 0 ? (
+            <div className="grid gap-3">
+              <p className={fieldMetaClassName}>検索結果</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {filteredOptions.map((polity) => (
+                  <div key={polity.id} className={`${checkboxCardClassName} justify-between`}>
+                    <span>{formatPolityOptionLabel(polity)}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPolityIds((current) => [...current, polity.id]);
+                        setQuery("");
+                      }}
+                      className="text-xs font-semibold text-[var(--foreground-strong)]"
+                    >
+                      追加
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className={emptyStateClassName}>一致する国家はありません。</p>
+          )
+        ) : null}
+      </div>
+
+      {selectedPolityIds.map((id) => (
+        <input key={id} type="hidden" name="polityIds" value={id} />
+      ))}
+    </section>
+  );
+}
+
+function DynastySelectionSection({
+  options,
+  selectedIds
+}: {
+  options: Option[];
+  selectedIds: number[];
+}) {
+  const [query, setQuery] = useState("");
+  const [selectedDynastyIds, setSelectedDynastyIds] = useState<number[]>(selectedIds);
+  const deferredQuery = useDeferredValue(query);
+  const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+
+  const selectedDynasties = selectedDynastyIds
+    .map((id) => options.find((option) => option.id === id))
+    .filter((option): option is Option => Boolean(option));
+
+  const filteredOptions = normalizedQuery
+    ? options.filter((option) => {
+        const haystack = option.name.toLocaleLowerCase("ja-JP");
+        return haystack.includes(normalizedQuery) && !selectedDynastyIds.includes(option.id);
+      })
+    : [];
+
+  return (
+    <section className={formCardClassName}>
+      <div>
+        <h2 className="text-lg font-semibold text-[var(--foreground-strong)]">王朝</h2>
+        <p className="mt-1 text-sm text-[var(--muted-strong)]">王朝名で絞り込み、候補から必要な王朝だけ追加します。</p>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        <label className={fieldLabelClassName}>
+          <span className={fieldMetaClassName}>王朝検索</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className={inputClassName}
+            placeholder="王朝名で検索"
+          />
+        </label>
+
+        {selectedDynasties.length > 0 ? (
+          <div className="grid gap-3">
+            <p className={fieldMetaClassName}>追加済み</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              {selectedDynasties.map((dynasty) => (
+                <div key={dynasty.id} className={`${checkboxCardClassName} justify-between`}>
+                  <span>{dynasty.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDynastyIds((current) => current.filter((id) => id !== dynasty.id))}
+                    className="text-xs font-semibold text-[var(--muted-strong)] hover:text-[var(--foreground-strong)]"
+                  >
+                    削除
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className={emptyStateClassName}>追加した王朝はここに表示されます。</p>
+        )}
+
+        {normalizedQuery ? (
+          filteredOptions.length > 0 ? (
+            <div className="grid gap-3">
+              <p className={fieldMetaClassName}>検索結果</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {filteredOptions.map((dynasty) => (
+                  <div key={dynasty.id} className={`${checkboxCardClassName} justify-between`}>
+                    <span>{dynasty.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDynastyIds((current) => [...current, dynasty.id]);
+                        setQuery("");
+                      }}
+                      className="text-xs font-semibold text-[var(--foreground-strong)]"
+                    >
+                      追加
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className={emptyStateClassName}>一致する王朝はありません。</p>
+          )
+        ) : null}
+      </div>
+
+      {selectedDynastyIds.map((id) => (
+        <input key={id} type="hidden" name="dynastyIds" value={id} />
       ))}
     </section>
   );
