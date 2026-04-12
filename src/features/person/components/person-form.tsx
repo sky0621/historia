@@ -442,7 +442,7 @@ function RoleLinkCard({
   );
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] p-5">
+    <div className="min-w-0 rounded-2xl border border-[var(--border)] p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-[var(--foreground-strong)]">役職 {index + 1}</p>
         {removable ? (
@@ -452,7 +452,7 @@ function RoleLinkCard({
         ) : null}
       </div>
 
-      <div className="mt-5 grid gap-4">
+      <div className="mt-5 grid min-w-0 gap-4">
         <Field label="役職" required>
           <input
             value={query}
@@ -482,7 +482,7 @@ function RoleLinkCard({
           />
         </Field>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
+        <div className="grid min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="min-w-0">
             <TimeExpressionInputs
               prefix={`roles.${index}.fromTime`}
@@ -518,7 +518,7 @@ function RoleLinkCard({
 }
 
 const inputClassName =
-  "rounded-2xl border border-[var(--border)] bg-black/10 px-3 py-2.5 text-[var(--foreground)]";
+  "min-w-0 w-full rounded-2xl border border-[var(--border)] bg-black/10 px-3 py-2.5 text-[var(--foreground)]";
 
 function createEmptyRoleValue(): PersonRoleDefaultValue {
   return {

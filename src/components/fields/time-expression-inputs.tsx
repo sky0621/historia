@@ -32,7 +32,7 @@ export function TimeExpressionInputs({
     <fieldset className="historia-inset min-w-0 w-full rounded-[14px] p-5 sm:p-6">
       <legend className="px-2 text-sm font-semibold text-[var(--muted-strong)]">{label}</legend>
       <div className="mt-3 space-y-4">
-        <div className="grid gap-3 sm:grid-flow-col sm:auto-cols-max sm:items-end sm:justify-start">
+        <div className="flex flex-wrap items-end gap-3">
           <label className="grid gap-2 text-sm text-[var(--muted-strong)]">
             <span className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">暦</span>
             <select
@@ -60,7 +60,7 @@ export function TimeExpressionInputs({
               inputMode="numeric"
             />
           </label>
-          <label className="flex h-[52px] w-fit items-center gap-3 whitespace-nowrap rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--muted-strong)]">
+          <label className="flex h-[52px] max-w-full items-center gap-3 whitespace-nowrap rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--muted-strong)]">
             <input
               type="checkbox"
               name={`${prefix}.isApproximate`}
