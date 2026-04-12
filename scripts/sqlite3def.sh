@@ -105,6 +105,82 @@ normalize_legacy_roles_table_name() {
 
 normalize_legacy_roles_table_name
 
+normalize_persons_name_unique() {
+  if [ ! -f "$DATABASE_URL" ]; then
+    return
+  fi
+
+  CURRENT_SQL="$(sqlite3 "$DATABASE_URL" "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'persons';")"
+
+  if [ -z "$CURRENT_SQL" ]; then
+    return
+  fi
+
+  if printf '%s' "$CURRENT_SQL" | grep -Eq '(^|[[:space:](,])`?name`?[[:space:]]+text[[:space:]]+NOT[[:space:]]+NULL[[:space:]]+UNIQUE'; then
+    return
+  fi
+
+  DUPLICATE_NAMES="$(sqlite3 "$DATABASE_URL" "SELECT GROUP_CONCAT(name, ', ') FROM (SELECT name FROM persons GROUP BY name HAVING COUNT(*) > 1 ORDER BY name LIMIT 10);")"
+
+  if [ -n "$DUPLICATE_NAMES" ]; then
+    echo "Cannot add UNIQUE constraint to persons.name because duplicate names exist: $DUPLICATE_NAMES" >&2
+    exit 1
+  fi
+
+  sqlite3 "$DATABASE_URL" <<'SQL'
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+CREATE TABLE `__new_persons` (
+  `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `name` text NOT NULL UNIQUE,
+  `reading` text,
+  `aliases` text,
+  `description` text,
+  `note` text,
+  `from_calendar_era` text REFERENCES `era`(`code`),
+  `from_year` integer,
+  `from_is_approximate` integer DEFAULT false,
+  `to_calendar_era` text REFERENCES `era`(`code`),
+  `to_year` integer,
+  `to_is_approximate` integer DEFAULT false
+);
+INSERT INTO `__new_persons` (
+  `id`,
+  `name`,
+  `reading`,
+  `aliases`,
+  `description`,
+  `note`,
+  `from_calendar_era`,
+  `from_year`,
+  `from_is_approximate`,
+  `to_calendar_era`,
+  `to_year`,
+  `to_is_approximate`
+)
+SELECT
+  `id`,
+  `name`,
+  `reading`,
+  `aliases`,
+  `description`,
+  `note`,
+  `from_calendar_era`,
+  `from_year`,
+  COALESCE(`from_is_approximate`, false),
+  `to_calendar_era`,
+  `to_year`,
+  COALESCE(`to_is_approximate`, false)
+FROM `persons`;
+DROP TABLE `persons`;
+ALTER TABLE `__new_persons` RENAME TO `persons`;
+COMMIT;
+PRAGMA foreign_keys = ON;
+SQL
+}
+
+normalize_persons_name_unique
+
 normalize_legacy_person_role_links() {
   if [ ! -f "$DATABASE_URL" ]; then
     return

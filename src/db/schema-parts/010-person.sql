@@ -1,7 +1,7 @@
 -- 人物: 人物の基本情報
 CREATE TABLE `persons` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL, -- 人物ID
-  `name` text NOT NULL, -- 人物名
+  `name` text NOT NULL UNIQUE, -- 人物名
   `reading` text, -- 読み方
   `aliases` text, -- 別名のカンマ区切り文字列
   `description` text, -- 人物の説明

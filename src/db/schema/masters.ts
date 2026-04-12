@@ -64,7 +64,7 @@ export const dynasties = sqliteTable("dynasties", {
 
 export const persons = sqliteTable("persons", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   reading: text("reading"),
   aliases: text("aliases"),
   description: text("description"),
