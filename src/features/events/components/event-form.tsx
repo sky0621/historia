@@ -546,15 +546,17 @@ function PersonSelectionSection({
   const [selectedPersonIds, setSelectedPersonIds] = useState<number[]>(selectedIds);
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+  const selectedPersonIdSet = new Set(selectedPersonIds);
+  const personById = new Map(options.map((option) => [option.id, option]));
 
   const selectedPeople = selectedPersonIds
-    .map((id) => options.find((option) => option.id === id))
+    .map((id) => personById.get(id))
     .filter((option): option is Option => Boolean(option));
 
   const filteredOptions = normalizedQuery
     ? options.filter((option) => {
         const haystack = `${option.name} ${option.timeLabel ?? ""}`.toLocaleLowerCase("ja-JP");
-        return haystack.includes(normalizedQuery) && !selectedPersonIds.includes(option.id);
+        return haystack.includes(normalizedQuery) && !selectedPersonIdSet.has(option.id);
       })
     : [];
 
@@ -609,7 +611,7 @@ function PersonSelectionSection({
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedPersonIds((current) => [...current, person.id]);
+                        setSelectedPersonIds((current) => (current.includes(person.id) ? current : [...current, person.id]));
                         setQuery("");
                       }}
                       className="text-xs font-semibold text-[var(--foreground-strong)]"
@@ -644,15 +646,17 @@ function PolitySelectionSection({
   const [selectedPolityIds, setSelectedPolityIds] = useState<number[]>(selectedIds);
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+  const selectedPolityIdSet = new Set(selectedPolityIds);
+  const polityById = new Map(options.map((option) => [option.id, option]));
 
   const selectedPolities = selectedPolityIds
-    .map((id) => options.find((option) => option.id === id))
+    .map((id) => polityById.get(id))
     .filter((option): option is Option => Boolean(option));
 
   const filteredOptions = normalizedQuery
     ? options.filter((option) => {
         const haystack = `${option.name} ${option.timeLabel ?? ""}`.toLocaleLowerCase("ja-JP");
-        return haystack.includes(normalizedQuery) && !selectedPolityIds.includes(option.id);
+        return haystack.includes(normalizedQuery) && !selectedPolityIdSet.has(option.id);
       })
     : [];
 
@@ -707,7 +711,7 @@ function PolitySelectionSection({
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedPolityIds((current) => [...current, polity.id]);
+                        setSelectedPolityIds((current) => (current.includes(polity.id) ? current : [...current, polity.id]));
                         setQuery("");
                       }}
                       className="text-xs font-semibold text-[var(--foreground-strong)]"
@@ -742,15 +746,17 @@ function DynastySelectionSection({
   const [selectedDynastyIds, setSelectedDynastyIds] = useState<number[]>(selectedIds);
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ja-JP");
+  const selectedDynastyIdSet = new Set(selectedDynastyIds);
+  const dynastyById = new Map(options.map((option) => [option.id, option]));
 
   const selectedDynasties = selectedDynastyIds
-    .map((id) => options.find((option) => option.id === id))
+    .map((id) => dynastyById.get(id))
     .filter((option): option is Option => Boolean(option));
 
   const filteredOptions = normalizedQuery
     ? options.filter((option) => {
         const haystack = option.name.toLocaleLowerCase("ja-JP");
-        return haystack.includes(normalizedQuery) && !selectedDynastyIds.includes(option.id);
+        return haystack.includes(normalizedQuery) && !selectedDynastyIdSet.has(option.id);
       })
     : [];
 
@@ -805,7 +811,7 @@ function DynastySelectionSection({
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedDynastyIds((current) => [...current, dynasty.id]);
+                        setSelectedDynastyIds((current) => (current.includes(dynasty.id) ? current : [...current, dynasty.id]));
                         setQuery("");
                       }}
                       className="text-xs font-semibold text-[var(--foreground-strong)]"
