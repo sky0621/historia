@@ -8,7 +8,9 @@ type Props = {
   includePrecision?: boolean;
   includeDisplayLabel?: boolean;
   includeEndYear?: boolean;
+  includeStartMonth?: boolean;
   startYearLabel?: string;
+  startMonthLabel?: string;
   calendarEraValue?: string;
   onCalendarEraChange?: (value: string) => void;
   startYearValue?: string;
@@ -22,7 +24,9 @@ export function TimeExpressionInputs({
   includePrecision = true,
   includeDisplayLabel = true,
   includeEndYear = true,
+  includeStartMonth = false,
   startYearLabel = "開始年",
+  startMonthLabel = "開始月",
   calendarEraValue,
   onCalendarEraChange,
   startYearValue,
@@ -60,6 +64,17 @@ export function TimeExpressionInputs({
               inputMode="numeric"
             />
           </label>
+          {includeStartMonth ? (
+            <label className="grid gap-2 text-sm text-[var(--muted-strong)]">
+              <span className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">{startMonthLabel}</span>
+              <input
+                name={`${prefix}.startMonth`}
+                defaultValue={defaultValue?.startMonth ?? ""}
+                className="w-[calc(2ch+1.5rem)] rounded-2xl border border-[var(--border)] bg-black/10 px-2 py-2.5 text-[var(--foreground)]"
+                inputMode="numeric"
+              />
+            </label>
+          ) : null}
           <label className="flex h-[52px] max-w-full items-center gap-3 whitespace-nowrap rounded-2xl border border-[var(--border)] bg-black/10 px-4 py-3 text-sm text-[var(--muted-strong)]">
             <input
               type="checkbox"

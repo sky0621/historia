@@ -666,15 +666,18 @@ function toStoredEventRange(from: TimeExpressionInput | undefined, to: TimeExpre
   return {
     fromCalendarEra: from?.calendarEra ?? null,
     fromYear: toStoredBoundaryYear("from", from?.startYear),
+    fromMonth: from?.startMonth ?? null,
     fromIsApproximate: from?.isApproximate ?? false,
     toCalendarEra: to?.calendarEra ?? null,
     toYear: toStoredBoundaryYear("to", to?.startYear),
+    toMonth: to?.startMonth ?? null,
     toIsApproximate: to?.isApproximate ?? false
   };
 }
 
 function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknown>) {
   const yearKey = prefix === "from" ? "fromYear" : "toYear";
+  const monthKey = prefix === "from" ? "fromMonth" : "toMonth";
   const eraKey = prefix === "from" ? "fromCalendarEra" : "toCalendarEra";
   const approximateKey = prefix === "from" ? "fromIsApproximate" : "toIsApproximate";
   const year = normalizeStoredBoundaryYear(prefix, value[yearKey] as number | null | undefined);
@@ -686,6 +689,7 @@ function extractBoundaryTime(prefix: "from" | "to", value: Record<string, unknow
   return {
     calendarEra: era ?? "CE",
     startYear: year,
+    startMonth: (value[monthKey] as number | null | undefined) ?? undefined,
     isApproximate: Boolean(value[approximateKey]),
     precision: "year",
     displayLabel: ""

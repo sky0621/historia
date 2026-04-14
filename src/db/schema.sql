@@ -72,9 +72,11 @@ CREATE TABLE `events` (
   `note` text, -- 編集メモ・注釈
   `from_calendar_era` text REFERENCES `era`(`code`), -- 開始年の紀元区分コード
   `from_year` integer, -- 開始年
+  `from_month` integer, -- 開始月
   `from_is_approximate` integer DEFAULT false, -- 開始年がおおよそか
   `to_calendar_era` text REFERENCES `era`(`code`), -- 終了年の紀元区分コード
   `to_year` integer, -- 終了年
+  `to_month` integer, -- 終了月
   `to_is_approximate` integer DEFAULT false -- 終了年がおおよそか
 );
 

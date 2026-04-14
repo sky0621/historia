@@ -195,6 +195,8 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             includePrecision={false}
             includeDisplayLabel={false}
             includeEndYear={false}
+            includeStartMonth
+            startMonthLabel="開始月"
             calendarEraValue={fromCalendarEra}
             onCalendarEraChange={(value) => setFromCalendarEra(value as "BCE" | "CE")}
             startYearValue={fromYearInput}
@@ -207,7 +209,9 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             includePrecision={false}
             includeDisplayLabel={false}
             includeEndYear={false}
+            includeStartMonth
             startYearLabel="終了年"
+            startMonthLabel="終了月"
             calendarEraValue={toCalendarEra}
             onCalendarEraChange={(value) => setToCalendarEra(value as "BCE" | "CE")}
             startYearValue={toYearInput}

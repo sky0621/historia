@@ -3,6 +3,7 @@ import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 export type TimeExpressionRecord = {
   calendarEra: "BCE" | "CE";
   startYear: number | null;
+  startMonth?: number | null;
   endYear: number | null;
   isApproximate: boolean;
   precision: string;
@@ -19,6 +20,7 @@ export function toTimeExpressionRecord(
   return {
     calendarEra: value.calendarEra,
     startYear: value.startYear ?? null,
+    startMonth: value.startMonth ?? null,
     endYear: value.endYear ?? null,
     isApproximate: value.isApproximate,
     precision: value.precision,
@@ -36,6 +38,7 @@ export function fromTimeExpressionRecord(
   return {
     calendarEra: value.calendarEra,
     startYear: value.startYear ?? undefined,
+    startMonth: value.startMonth ?? undefined,
     endYear: value.endYear ?? undefined,
     isApproximate: value.isApproximate,
     precision: value.precision,

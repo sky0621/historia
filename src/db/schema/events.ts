@@ -16,9 +16,11 @@ export const events = sqliteTable("events", {
   description: text("description"),
   fromCalendarEra: text("from_calendar_era").references(() => era.code),
   fromYear: integer("from_year"),
+  fromMonth: integer("from_month"),
   fromIsApproximate: integer("from_is_approximate", { mode: "boolean" }).default(false),
   toCalendarEra: text("to_calendar_era").references(() => era.code),
   toYear: integer("to_year"),
+  toMonth: integer("to_month"),
   toIsApproximate: integer("to_is_approximate", { mode: "boolean" }).default(false)
 });
 
