@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useDeferredValue, useState } from "react";
+import { useActionState, useDeferredValue, useEffect, useState } from "react";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
 import { formErrorClassName, secondaryButtonClassName } from "@/components/forms/styles";
@@ -53,9 +53,44 @@ type Props = {
 export function PersonForm({ title, description, submitLabel, options, defaultValues }: Props) {
   const [createState, createAction] = useActionState(createPersonAction, initialCreateFormState);
   const action = defaultValues?.id ? updatePersonAction : createAction;
+  const [nameInput, setNameInput] = useState(defaultValues?.name ?? "");
+  const deferredNameInput = useDeferredValue(nameInput);
+  const [matchedNames, setMatchedNames] = useState<string[]>([]);
   const [roleRows, setRoleRows] = useState<PersonRoleDefaultValue[]>(
     defaultValues?.roles.length ? defaultValues.roles : [createEmptyRoleValue()]
   );
+
+  useEffect(() => {
+    const normalizedName = deferredNameInput.trim();
+    if (normalizedName.length === 0) {
+      setMatchedNames([]);
+      return;
+    }
+
+    const searchParams = new URLSearchParams({ name: normalizedName });
+    if (defaultValues?.id) {
+      searchParams.set("excludeId", String(defaultValues.id));
+    }
+
+    const abortController = new AbortController();
+
+    fetch(`/api/persons/search?${searchParams.toString()}`, { signal: abortController.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`person search failed: ${response.status}`);
+        }
+
+        const payload = (await response.json()) as { items: Array<{ id: number; name: string }> };
+        setMatchedNames(payload.items.map((item) => item.name));
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setMatchedNames([]);
+        }
+      });
+
+    return () => abortController.abort();
+  }, [defaultValues?.id, deferredNameInput]);
 
   return (
     <section className="space-y-8">
@@ -86,7 +121,16 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
         >
           <div className="grid gap-4 lg:grid-cols-3">
             <Field label="氏名" required>
-              <input name="name" defaultValue={defaultValues?.name ?? ""} className={inputClassName} required />
+              <input
+                name="name"
+                value={nameInput}
+                onChange={(event) => setNameInput(event.target.value)}
+                className={inputClassName}
+                required
+              />
+              {matchedNames.length > 0 ? (
+                <p className="text-xs text-[var(--muted-strong)]">登録済みの氏名：{matchedNames.join("、")}</p>
+              ) : null}
             </Field>
             <Field label="説明" className="lg:col-span-2">
               <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-28 ${inputClassName}`} />
