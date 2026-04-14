@@ -55,7 +55,6 @@ export const eventConflictOutcomes = sqliteTable("event_conflict_outcomes", {
   winnerSummary: text("winner_summary"),
   loserSummary: text("loser_summary"),
   resolutionSummary: text("resolution_summary"),
-  description: text("description"),
   note: text("note")
 });
 

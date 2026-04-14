@@ -24,7 +24,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         title: view.event.title,
         description: view.event.description ?? "",
         tags: view.linkedTags.map((tag) => tag.name),
-        eventType: view.event.eventType as "general" | "war" | "rebellion" | "civil_war",
+        eventType: view.event.eventType,
         fromTimeExpression: view.defaultFromTimeExpression,
         toTimeExpression: view.defaultToTimeExpression,
         personIds: view.linkedPerson.map((item) => item.id),

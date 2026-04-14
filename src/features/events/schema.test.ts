@@ -6,7 +6,9 @@ describe("parseEventFormData", () => {
     const formData = new FormData();
     formData.set("title", "応仁の乱");
     formData.set("description", "京都を主戦場とした内乱");
-    formData.set("tags", "内乱, 京都, 内乱");
+    formData.append("tags", "内乱");
+    formData.append("tags", "京都");
+    formData.append("tags", "内乱");
     formData.set("eventType", "civil_war");
     formData.set("participantCount", "2");
     formData.set("participants.0.participantType", "polity");

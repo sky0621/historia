@@ -43,7 +43,8 @@ CREATE TABLE `event_conflict_outcomes` (
   `event_id` integer NOT NULL REFERENCES `events`(`id`), -- 対象イベントID
   `resolution_summary` text, -- 全体としてどう終わったか
   `winner_summary` text, -- 勝者側が何を得たか
-  `loser_summary` text -- 敗者側が何を失ったか
+  `loser_summary` text, -- 敗者側が何を失ったか
+  `note` text -- 編集メモ・注釈
 );
 CREATE INDEX `idx_event_conflict_outcomes_event_id` ON `event_conflict_outcomes` (`event_id`);
 

@@ -25,6 +25,7 @@ import {
   updateEvent
 } from "@/server/repositories/events";
 import { listDynasties } from "@/server/repositories/dynasties";
+import { listEventTypes } from "@/server/repositories/event-types";
 import { listPerson } from "@/server/repositories/person";
 import { listPersonDetailed } from "@/server/repositories/person-detail";
 import { listPolities } from "@/server/repositories/polities";
@@ -55,6 +56,11 @@ type EventListFilters = {
 
 export function getEventFormOptions() {
   return {
+    eventTypes: listEventTypes().map((item) => ({
+      code: item.code,
+      label: item.label,
+      description: item.description
+    })),
     person: listPerson().map((item) => ({ id: item.id, name: item.name })),
     polities: sortPolitiesByStartYear(listPolities()).map((item) => ({
       id: item.id,

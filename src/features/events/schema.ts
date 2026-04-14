@@ -26,7 +26,7 @@ export const eventSchema = z.object({
   title: z.string().trim().min(1, "タイトルは必須です"),
   description: z.string().trim().optional(),
   tags: z.array(z.string().trim().min(1)).default([]),
-  eventType: z.enum(["general", "war", "rebellion", "civil_war"]),
+  eventType: z.string().trim().min(1, "種別は必須です"),
   fromTimeExpression: timeExpressionSchema.optional(),
   toTimeExpression: timeExpressionSchema.optional(),
   personIds: idsSchema,
@@ -56,7 +56,7 @@ export function parseEventFormData(formData: FormData): EventInput {
   return eventSchema.parse({
     title: formData.get("title"),
     description: formData.get("description") ?? undefined,
-    tags: parseTagNames(formData.get("tags")),
+    tags: parseTagNames(formData.getAll("tags")),
     eventType: formData.get("eventType"),
     fromTimeExpression: parseTimeExpressionFormData(formData, "fromTime"),
     toTimeExpression: parseTimeExpressionFormData(formData, "toTime"),
@@ -73,12 +73,15 @@ export function parseEventFormData(formData: FormData): EventInput {
   });
 }
 
-function parseTagNames(value: FormDataEntryValue | null) {
-  if (typeof value !== "string") {
-    return [];
-  }
-
-  return Array.from(new Set(value.split(",").map((item) => item.trim()).filter(Boolean)));
+function parseTagNames(values: FormDataEntryValue[]) {
+  return Array.from(
+    new Set(
+      values
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
 }
 
 function parseRelations(formData: FormData) {

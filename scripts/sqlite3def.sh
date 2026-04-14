@@ -365,13 +365,47 @@ normalize_legacy_role_links() {
   fi
 
   HAS_ROLE_POLITY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_polity_links';")"
+  HAS_LEGACY_ROLES_TABLE="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '__legacy_roles';")"
   HAS_LEGACY_ROLE_POLITY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '__legacy_role_polity_links';")"
   HAS_ROLE_DYNASTY_LINKS="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'role_dynasty_links';")"
   HAS_POLITY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'polity_id';")"
   HAS_DYNASTY_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'dynasty_id';")"
   HAS_IS_INCUMBENT_COLUMN="$(sqlite3 "$DATABASE_URL" "SELECT COUNT(*) FROM pragma_table_info('roles') WHERE name = 'is_incumbent';")"
 
-  if [ "$HAS_ROLE_POLITY_LINKS" = "1" ] || [ "$HAS_LEGACY_ROLE_POLITY_LINKS" = "1" ] || [ "$HAS_ROLE_DYNASTY_LINKS" = "1" ] || [ "$HAS_POLITY_COLUMN" = "1" ] || [ "$HAS_DYNASTY_COLUMN" = "1" ] || [ "$HAS_IS_INCUMBENT_COLUMN" = "1" ]; then
+  if [ "$HAS_POLITY_COLUMN" = "0" ] && [ "$HAS_DYNASTY_COLUMN" = "0" ] && [ "$HAS_IS_INCUMBENT_COLUMN" = "0" ] && [ "$HAS_ROLE_DYNASTY_LINKS" = "0" ]; then
+    if [ "$HAS_LEGACY_ROLES_TABLE" = "1" ]; then
+      sqlite3 "$DATABASE_URL" <<'SQL'
+INSERT INTO `roles` (`id`, `title`, `reading`, `description`, `note`)
+SELECT `id`, `title`, `reading`, `description`, `note`
+FROM `__legacy_roles`
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM `roles`
+  WHERE `roles`.`id` = `__legacy_roles`.`id`
+);
+DROP TABLE `__legacy_roles`;
+SQL
+    fi
+
+    if [ "$HAS_LEGACY_ROLE_POLITY_LINKS" = "1" ]; then
+      sqlite3 "$DATABASE_URL" <<'SQL'
+INSERT INTO `role_polity_links` (`role_id`, `polity_id`)
+SELECT `role_id`, `polity_id`
+FROM `__legacy_role_polity_links`
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM `role_polity_links`
+  WHERE `role_polity_links`.`role_id` = `__legacy_role_polity_links`.`role_id`
+    AND `role_polity_links`.`polity_id` = `__legacy_role_polity_links`.`polity_id`
+);
+DROP TABLE `__legacy_role_polity_links`;
+SQL
+    fi
+
+    return
+  fi
+
+  if [ "$HAS_ROLE_POLITY_LINKS" = "1" ] || [ "$HAS_LEGACY_ROLES_TABLE" = "1" ] || [ "$HAS_LEGACY_ROLE_POLITY_LINKS" = "1" ] || [ "$HAS_ROLE_DYNASTY_LINKS" = "1" ] || [ "$HAS_POLITY_COLUMN" = "1" ] || [ "$HAS_DYNASTY_COLUMN" = "1" ] || [ "$HAS_IS_INCUMBENT_COLUMN" = "1" ]; then
     if [ "$HAS_ROLE_POLITY_LINKS" = "1" ] && [ "$HAS_LEGACY_ROLE_POLITY_LINKS" = "0" ]; then
       sqlite3 "$DATABASE_URL" "ALTER TABLE role_polity_links RENAME TO __legacy_role_polity_links;"
     fi
@@ -443,7 +477,24 @@ VALUES
   ('general', '一般', '通常の出来事'),
   ('war', '戦争', '国家や勢力間の戦争'),
   ('rebellion', '反乱', '支配体制への反乱'),
-  ('civil_war', '内戦', '同一国家・勢力内部の武力衝突')
+  ('civil_war', '内戦', '同一国家・勢力内部の武力衝突'),
+  ('treaty', '条約', '条約締結、講和、同盟などの外交的決着'),
+  ('battle', '戦闘', '戦争を構成する個別の戦闘'),
+  ('coup', 'クーデター', '武力や政治的圧力による政権奪取'),
+  ('revolution', '革命', '既存体制を大きく転換する政治・社会変動'),
+  ('founding', '成立', '国家、組織、制度などの創設・成立'),
+  ('collapse', '崩壊', '国家、政権、体制などの滅亡・崩壊'),
+  ('succession', '継承', '即位、相続、王朝交代などの継承'),
+  ('reform', '改革', '制度、政治、宗教などの改革'),
+  ('law', '法令', '法令の制定、公布、改廃'),
+  ('migration', '移動', '移住、遷都、民族移動など'),
+  ('religious_event', '宗教', '開宗、改宗、宗教会議、宗教弾圧など'),
+  ('cultural_event', '文化', '建立、著作完成、文化事業など'),
+  ('disaster', '災害', '地震、疫病、飢饉などの災害'),
+  ('discovery', '発見', '発見、探検、到達など'),
+  ('diplomatic_event', '外交', '使節派遣、国交樹立、朝貢開始など'),
+  ('economic_event', '経済', '貨幣、税制、交易制度などの経済的変化'),
+  ('other', 'その他', '上記に当てはまらない出来事')
 ON CONFLICT(`code`) DO UPDATE SET
   `label` = excluded.`label`,
   `description` = excluded.`description`;

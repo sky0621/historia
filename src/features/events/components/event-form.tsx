@@ -24,8 +24,7 @@ import {
   eventConflictParticipantRoleOptions,
   eventConflictParticipantTypeOptions,
   eventRelationTypeOptions,
-  getEventTypeLabel,
-  eventTypeOptions
+  getEventTypeLabel
 } from "@/lib/master-labels";
 import type { TimeExpressionInput } from "@/lib/time-expression/schema";
 
@@ -41,6 +40,7 @@ type Option = {
 };
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
+type EventTypeOption = { code: string; label: string; description: string | null };
 type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" | "parent" | "child" };
 type ParticipantDefault = {
   participantType: "polity" | "person" | "religion" | "sect";
@@ -59,6 +59,7 @@ type Props = {
   description: string;
   submitLabel: string;
   options: {
+    eventTypes: EventTypeOption[];
     person: Option[];
     polities: Option[];
     dynasties: Option[];
@@ -73,7 +74,7 @@ type Props = {
     title: string;
     description: string;
     tags: string[];
-    eventType: "general" | "war" | "rebellion" | "civil_war";
+    eventType: string;
     fromTimeExpression?: TimeExpressionInput;
     toTimeExpression?: TimeExpressionInput;
     personIds: number[];
@@ -98,9 +99,7 @@ type Props = {
 export function EventForm({ title, description, submitLabel, options, defaultValues }: Props) {
   const [createState, createAction] = useActionState(createEventAction, initialCreateFormState);
   const action = defaultValues?.id ? updateEventAction : createAction;
-  const [eventType, setEventType] = useState<"general" | "war" | "rebellion" | "civil_war">(
-    defaultValues?.eventType ?? "general"
-  );
+  const [eventType, setEventType] = useState(defaultValues?.eventType ?? options.eventTypes[0]?.code ?? "general");
   const [relationCount, setRelationCount] = useState(Math.max(defaultValues?.relations.length ?? 0, 1));
   const [participantCount, setParticipantCount] = useState(
     Math.max(defaultValues?.conflictParticipants.length ?? 0, 1)
@@ -159,30 +158,19 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
             <select
               name="eventType"
               value={eventType}
-              onChange={(event) => setEventType(event.target.value as "general" | "war" | "rebellion" | "civil_war")}
+              onChange={(event) => setEventType(event.target.value)}
               className={inputClassName}
             >
-              {eventTypeOptions
-                .filter((option) => ["general", "war", "rebellion", "civil_war"].includes(option.value))
-                .map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+              {options.eventTypes.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {formatEventTypeOptionLabel(option)}
+                </option>
+              ))}
             </select>
           </label>
           <label className={fieldLabelClassName}>
             <span className={fieldMetaClassName}>説明</span>
             <textarea name="description" defaultValue={defaultValues?.description ?? ""} className={`min-h-36 ${inputClassName}`} />
-          </label>
-          <label className={fieldLabelClassName}>
-            <span className={fieldMetaClassName}>タグ</span>
-            <input
-              name="tags"
-              defaultValue={defaultValues?.tags.join(", ") ?? ""}
-              className={inputClassName}
-              placeholder="戦争, 宗教, 文化"
-            />
           </label>
         </div>
         </section>
@@ -228,6 +216,7 @@ export function EventForm({ title, description, submitLabel, options, defaultVal
           selectedReligionIds={defaultValues?.religionIds ?? []}
           selectedSectIds={defaultValues?.sectIds ?? []}
         />
+        <TagSelectionSection options={options.tags} selectedNames={defaultValues?.tags ?? []} />
         <SelectionGroup name="regionIds" label="地域" options={options.regions} selectedIds={defaultValues?.regionIds ?? []} collapsible hierarchical />
 
         <section className={formCardClassName}>
@@ -891,8 +880,36 @@ function SelectionGroup({
   );
 }
 
+function TagSelectionSection({ options, selectedNames }: { options: Option[]; selectedNames: string[] }) {
+  return (
+    <section className={formCardClassName}>
+      <CollapsibleFormSection title="タグ" defaultOpen={selectedNames.length > 0}>
+        <p className="mt-2 text-sm leading-7 text-[var(--muted-strong)]">イベントに関する分類タグを選択します。</p>
+        <div className="mt-5">
+          {options.length === 0 ? (
+            <p className={emptyStateClassName}>選択肢はまだありません。</p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {options.map((option) => (
+                <label key={option.id} className={checkboxCardClassName}>
+                  <input type="checkbox" name="tags" value={option.name} defaultChecked={selectedNames.includes(option.name)} />
+                  {option.name}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </CollapsibleFormSection>
+    </section>
+  );
+}
+
 function formatPolityOptionLabel(option: Option) {
   return option.timeLabel ? `${option.name}（${option.timeLabel}）` : option.name;
+}
+
+function formatEventTypeOptionLabel(option: EventTypeOption) {
+  return option.description ? `${option.label}（${option.description}）` : option.label;
 }
 
 function ReligionSectSelectionGroup({

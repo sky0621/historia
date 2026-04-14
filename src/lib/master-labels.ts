@@ -23,7 +23,8 @@ const EVENT_TYPE_LABELS = {
   disaster: "災害",
   discovery: "発見",
   diplomatic_event: "外交",
-  economic_event: "経済"
+  economic_event: "経済",
+  other: "その他"
 } as const;
 
 const EVENT_RELATION_TYPE_LABELS = {
