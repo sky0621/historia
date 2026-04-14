@@ -13,14 +13,17 @@
 - react-hook-form
 
 ## Setup
-1. `pnpm install`
-2. `cp .env.example .env`
-3. `sqlite3def` をインストールする
-4. `pnpm db:migrate`
-5. `pnpm db:seed`
-6. `pnpm dev`
+1. `mise install`
+2. `pnpm install`
+3. `cp .env.example .env`
+4. `sqlite3def` をインストールする
+5. `pnpm db:migrate`
+6. `pnpm db:seed`
+7. `pnpm dev`
 
 `DATABASE_URL` の既定値は `./.data/historia.db` です。
+
+`node` と `pnpm` は [mise.toml](/Users/sky0621/work/github.com/sky0621/historia-clean/mise.toml) で管理しています。
 
 macOS では `brew install sqldef/sqldef/sqlite3def` で入れられます。
 
