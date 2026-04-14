@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useDeferredValue, useEffect, useState } from "react";
 import { CollapsibleFormSection } from "@/components/forms/collapsible-form-section";
 import { RegionCheckboxTree } from "@/components/forms/region-checkbox-tree";
@@ -14,6 +15,7 @@ type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
 type TagOption = { id: number; name: string };
 type RoleOption = { id: number; title: string; polityName?: string | null };
+type MatchedPerson = { id: number; name: string };
 type PersonRoleDefaultValue = {
   roleId?: number;
   description: string;
@@ -55,7 +57,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
   const action = defaultValues?.id ? updatePersonAction : createAction;
   const [nameInput, setNameInput] = useState(defaultValues?.name ?? "");
   const deferredNameInput = useDeferredValue(nameInput);
-  const [matchedNames, setMatchedNames] = useState<string[]>([]);
+  const [matchedPersons, setMatchedPersons] = useState<MatchedPerson[]>([]);
   const [roleRows, setRoleRows] = useState<PersonRoleDefaultValue[]>(
     defaultValues?.roles.length ? defaultValues.roles : [createEmptyRoleValue()]
   );
@@ -63,7 +65,7 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
   useEffect(() => {
     const normalizedName = deferredNameInput.trim();
     if (normalizedName.length === 0) {
-      setMatchedNames([]);
+      setMatchedPersons([]);
       return;
     }
 
@@ -80,12 +82,12 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
           throw new Error(`person search failed: ${response.status}`);
         }
 
-        const payload = (await response.json()) as { items: Array<{ id: number; name: string }> };
-        setMatchedNames(payload.items.map((item) => item.name));
+        const payload = (await response.json()) as { items: MatchedPerson[] };
+        setMatchedPersons(payload.items);
       })
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setMatchedNames([]);
+          setMatchedPersons([]);
         }
       });
 
@@ -128,8 +130,18 @@ export function PersonForm({ title, description, submitLabel, options, defaultVa
                 className={inputClassName}
                 required
               />
-              {matchedNames.length > 0 ? (
-                <p className="text-xs text-[var(--muted-strong)]">登録済みの氏名：{matchedNames.join("、")}</p>
+              {matchedPersons.length > 0 ? (
+                <p className="text-xs text-[var(--muted-strong)]">
+                  登録済みの氏名：
+                  {matchedPersons.map((person, index) => (
+                    <span key={person.id}>
+                      {index > 0 ? "、" : ""}
+                      <Link href={`/person/${person.id}`} className="underline underline-offset-4 hover:text-[var(--foreground-strong)]">
+                        {person.name}
+                      </Link>
+                    </span>
+                  ))}
+                </p>
               ) : null}
             </Field>
             <Field label="説明" className="lg:col-span-2">
