@@ -60,6 +60,10 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
               <dd className="mt-1">{view.person.aliases ?? "-"}</dd>
             </div>
             <div>
+              <dt className="font-medium text-[var(--muted)]">説明</dt>
+              <dd className="mt-1 whitespace-pre-wrap">{view.person.description ?? "-"}</dd>
+            </div>
+            <div>
               <dt className="font-medium text-[var(--muted)]">関連地域</dt>
               <dd className="mt-1">
                 {view.regions.length === 0 ? "-" : view.regions.map((item, index) => (
