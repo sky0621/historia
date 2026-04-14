@@ -30,7 +30,9 @@ const EVENT_RELATION_TYPE_LABELS = {
   before: "先行",
   after: "後続",
   cause: "原因",
-  related: "関連"
+  related: "関連",
+  parent: "親",
+  child: "子"
 } as const;
 
 const EVENT_CONFLICT_PARTICIPANT_TYPE_LABELS = {

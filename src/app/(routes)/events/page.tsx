@@ -14,7 +14,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const query = getSingleParam(params.q);
   const tagId = getNumericParam(params.tagId);
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
-  const relationType = getSingleParam(params.relationType) as "before" | "after" | "cause" | "related" | undefined;
+  const relationType = getSingleParam(params.relationType) as "before" | "after" | "cause" | "related" | "parent" | "child" | undefined;
   const sortBy = (getSingleParam(params.sortBy) as "timeAsc" | "timeDesc" | "titleAsc" | "updatedDesc" | undefined) ?? "timeAsc";
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);

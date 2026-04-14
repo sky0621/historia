@@ -14,7 +14,7 @@ export default async function GraphEventsPage({ searchParams }: GraphEventsPageP
   const params = searchParams ? await searchParams : {};
   const query = getSingleParam(params.q);
   const eventType = getSingleParam(params.eventType) as "general" | "war" | "rebellion" | "civil_war" | undefined;
-  const relationType = getSingleParam(params.relationType) as "before" | "after" | "cause" | "related" | undefined;
+  const relationType = getSingleParam(params.relationType) as "before" | "after" | "cause" | "related" | "parent" | "child" | undefined;
   const personId = getNumericParam(params.personId);
   const polityId = getNumericParam(params.polityId);
   const regionId = getNumericParam(params.regionId);

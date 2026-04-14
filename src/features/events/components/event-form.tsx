@@ -41,7 +41,7 @@ type Option = {
 };
 type ReligionOption = { id: number; name: string };
 type SectOption = { id: number; name: string; religionId: number };
-type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" };
+type RelationDefault = { toEventId: number; relationType: "before" | "after" | "cause" | "related" | "parent" | "child" };
 type ParticipantDefault = {
   participantType: "polity" | "person" | "religion" | "sect";
   participantId: number;

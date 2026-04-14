@@ -35,7 +35,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         regionIds: view.linkedRegions.map((item) => item.id),
         relations: view.outgoingRelations.map((relation) => ({
           toEventId: relation.toEventId,
-          relationType: relation.relationType as "before" | "after" | "cause" | "related"
+          relationType: relation.relationType as "before" | "after" | "cause" | "related" | "parent" | "child"
         })),
         conflictParticipants: view.conflictParticipants.map((participant) => ({
           participantType: participant.participantType as "polity" | "person" | "religion" | "sect",

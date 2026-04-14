@@ -41,7 +41,7 @@ type EventListFilters = {
   query?: string;
   tagId?: number;
   eventType?: "general" | "war" | "rebellion" | "civil_war";
-  relationType?: "before" | "after" | "cause" | "related";
+  relationType?: "before" | "after" | "cause" | "related" | "parent" | "child";
   sortBy?: "timeAsc" | "timeDesc" | "titleAsc" | "updatedDesc";
   personId?: number;
   polityId?: number;
@@ -450,7 +450,7 @@ export function removeEvent(id: number) {
 
 export function appendEventRelationsToEvent(
   id: number,
-  relations: Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>
+  relations: Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" | "parent" | "child" }>
 ) {
   const event = getEventById(id);
   if (!event) {
@@ -476,7 +476,7 @@ export function appendEventRelationsToEvent(
 
 export function replaceEventRelationsOnEvent(
   id: number,
-  relations: Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>
+  relations: Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" | "parent" | "child" }>
 ) {
   const event = getEventById(id);
   if (!event) {

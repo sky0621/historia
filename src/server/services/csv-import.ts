@@ -341,7 +341,7 @@ export type EventRelationCsvInput = {
   fromEventTitle: string;
   relation: {
     toEventId: number;
-    relationType: "before" | "after" | "cause" | "related";
+    relationType: "before" | "after" | "cause" | "related" | "parent" | "child";
   };
 };
 
@@ -720,10 +720,10 @@ export function previewEventRelationCsvImport(rawCsv: string): CsvPreviewResult<
     const toEventId = resolveNamedEntity("to_event", toEventTitle, eventNameMap, issues);
     const relationType = normalizeOptionalString(cells.relation_type);
 
-    if (relationType && !["before", "after", "cause", "related"].includes(relationType)) {
+    if (relationType && !["before", "after", "cause", "related", "parent", "child"].includes(relationType)) {
       issues.push({
         field: "relation_type",
-        message: "before / after / cause / related のいずれかを指定してください"
+        message: "before / after / cause / related / parent / child のいずれかを指定してください"
       });
     }
 
@@ -748,7 +748,7 @@ export function previewEventRelationCsvImport(rawCsv: string): CsvPreviewResult<
             fromEventTitle: eventById.get(fromEventId) ?? fromEventTitle,
             relation: {
               toEventId,
-              relationType: relationType as "before" | "after" | "cause" | "related"
+              relationType: relationType as "before" | "after" | "cause" | "related" | "parent" | "child"
             }
           }
         : undefined;
@@ -1409,7 +1409,7 @@ export function applyEventRelationCsvImport(rawCsv: string): CsvImportResult {
     const existingRelations = getEventRelationsByEventIds(allEvents.map((event) => event.id));
     const existingKeys = new Set(existingRelations.map((relation) => `${relation.fromEventId}:${relation.toEventId}:${relation.relationType}`));
     const desiredKeys = new Set(syncRows.map((row) => row.key));
-    const grouped = new Map<number, Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" }>>();
+    const grouped = new Map<number, Array<{ toEventId: number; relationType: "before" | "after" | "cause" | "related" | "parent" | "child" }>>();
 
     for (const row of syncRows) {
       const list = grouped.get(row.input.fromEventId) ?? [];

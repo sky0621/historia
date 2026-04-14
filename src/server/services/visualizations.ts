@@ -11,7 +11,7 @@ import { getEventLinks, getEventRelationsByEventIds, listEvents } from "@/server
 import { getEventsListView } from "@/server/services/events";
 
 type EventType = "general" | "war" | "rebellion" | "civil_war";
-type RelationType = "before" | "after" | "cause" | "related";
+type RelationType = "before" | "after" | "cause" | "related" | "parent" | "child";
 type SubjectType = "person" | "polities" | "religions" | "regions";
 
 export type GraphFilters = {

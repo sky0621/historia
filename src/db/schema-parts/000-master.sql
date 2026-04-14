@@ -14,7 +14,7 @@ CREATE TABLE `era` (
 
 -- 出来事関連種別マスタ: event_relations.relation_type が参照する関連種別
 CREATE TABLE `event_relation_types` (
-  `code` text PRIMARY KEY NOT NULL, -- 関連種別コード: before / after / cause / related
+  `code` text PRIMARY KEY NOT NULL, -- 関連種別コード: before / after / cause / related / parent / child
   `label` text NOT NULL, -- 表示名
   `description` text -- 関連種別の説明
 );

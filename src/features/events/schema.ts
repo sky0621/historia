@@ -19,7 +19,7 @@ export const conflictOutcomeParticipantSchema = z.object({
 
 export const eventRelationSchema = z.object({
   toEventId: z.number().int().positive(),
-  relationType: z.enum(["before", "after", "cause", "related"])
+  relationType: z.enum(["before", "after", "cause", "related", "parent", "child"])
 });
 
 export const eventSchema = z.object({
