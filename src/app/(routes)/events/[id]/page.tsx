@@ -390,7 +390,7 @@ function ParticipantStack({
   return (
     <div className="space-y-3">
       {participants.map((participant) => (
-        <div key={participant.id} className="rounded-2xl border border-[var(--border)] bg-white/3 px-4 py-3 text-sm">
+        <div key={participant.id} className="rounded-2xl border border-[var(--border)] bg-[color:rgba(255,243,220,0.03)] px-4 py-3 text-sm">
           {renderParticipantLink(participant)}
         </div>
       ))}
@@ -433,7 +433,7 @@ function RelationCard({
   relatedEventTimeLabel: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-white/3 px-4 py-4 text-sm">
+    <div className="rounded-2xl border border-[var(--border)] bg-[color:rgba(255,243,220,0.03)] px-4 py-4 text-sm">
       <div>
         <Link
           href={`/events?relationType=${encodeURIComponent(relationType)}`}
@@ -443,7 +443,10 @@ function RelationCard({
         </Link>
       </div>
       <div className="mt-2">
-        <Link href={href} className="text-base font-medium underline decoration-[var(--border-strong)] underline-offset-4 hover:text-[var(--foreground-strong)]">
+        <Link
+          href={href}
+          className="text-base font-medium text-[var(--foreground-strong)] underline decoration-[var(--border-strong)] underline-offset-4 hover:text-[var(--foreground)]"
+        >
           {eventName}
         </Link>
       </div>
