@@ -348,12 +348,20 @@ function InfoSection({
 }) {
   return (
     <section id={id} className="historia-card rounded-[14px] p-6 sm:p-8">
-      <div className="border-b border-[var(--border)] pb-5">
-        <p className="historia-label">Section</p>
-        <h2 className="mt-2 text-2xl font-semibold text-[var(--foreground-strong)]">{title}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-strong)]">{description}</p>
-      </div>
-      <div className="mt-6">{children}</div>
+      <details className="group">
+        <summary className="cursor-pointer list-none border-b border-[var(--border)] pb-5 [&::-webkit-details-marker]:hidden">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="historia-label">Section</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--foreground-strong)]">{title}</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-strong)]">{description}</p>
+            </div>
+            <span className="mt-1 text-sm text-[var(--muted-strong)] group-open:hidden">開く</span>
+            <span className="mt-1 hidden text-sm text-[var(--muted-strong)] group-open:block">閉じる</span>
+          </div>
+        </summary>
+        <div className="mt-6">{children}</div>
+      </details>
     </section>
   );
 }
